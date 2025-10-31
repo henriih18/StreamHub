@@ -308,7 +308,7 @@ interface AdvancedStats {
 export default function AdminPage() {
   // Real-time stats hook
   const { stats: realTimeStats, isConnected, lastUpdate, refreshStats } = useRealTimeStats()
-  
+
   const [activeTab, setActiveTab] = useState('resumen')
   const [users, setUsers] = useState<User[]>([])
   const [streamingTypes, setStreamingTypes] = useState<StreamingType[]>([])
@@ -329,21 +329,21 @@ export default function AdminPage() {
   const [expandedOrdersInGeneral, setExpandedOrdersInGeneral] = useState<Set<string>>(new Set())
   const [expandedExclusiveAccounts, setExpandedExclusiveAccounts] = useState<Set<string>>(new Set())
   const [expandedSpecialOffers, setExpandedSpecialOffers] = useState<Set<string>>(new Set())
-  
+
   // Cart states
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [cartItems, setCartItems] = useState<any[]>([])
   const [user, setUser] = useState<any>(null)
-  
+
   // Recharge history states
   const [showRechargeHistory, setShowRechargeHistory] = useState(false)
   const [rechargeHistory, setRechargeHistory] = useState<any[]>([])
   const [loadingRechargeHistory, setLoadingRechargeHistory] = useState(false)
   const [selectedUserForRechargeHistory, setSelectedUserForRechargeHistory] = useState<string | null>(null)
-  
+
   // User action counts
   const [userActionCounts, setUserActionCounts] = useState<Record<string, number>>({})
-  
+
   // New states for enhanced functionality
   const [userSearchQuery, setUserSearchQuery] = useState('')
   const [selectedUsersForOffer, setSelectedUsersForOffer] = useState<string[]>([])
@@ -351,7 +351,7 @@ export default function AdminPage() {
   const [topUsersBySales, setTopUsersBySales] = useState<User[]>([])
   const [showPermissionManager, setShowPermissionManager] = useState(false)
   const [selectedUserForPermissions, setSelectedUserForPermissions] = useState<User | null>(null)
-  
+
   // State for broadcast message to all users
   const [showBroadcastModal, setShowBroadcastModal] = useState(false)
   const [broadcastMessage, setBroadcastMessage] = useState({
@@ -566,17 +566,17 @@ export default function AdminPage() {
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser)
-        
+
         // Check if user has admin permissions
         const isAdmin = parsedUser?.role === 'ADMIN'
-        
+
         if (!isAdmin) {
           toast.error('No tienes permisos de administrador')
           // Redirect non-admin users immediately
           window.location.href = '/'
           return
         }
-        
+
         setUser(parsedUser)
         // Pass user data directly to avoid timing issues
         fetchData(parsedUser)
@@ -643,7 +643,7 @@ export default function AdminPage() {
     const diffMs = now.getTime() - date.getTime()
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
     const diffDays = Math.floor(diffHours / 24)
-    
+
     if (diffDays > 0) return `Hace ${diffDays} día${diffDays > 1 ? 's' : ''}`
     if (diffHours > 0) return `Hace ${diffHours} hora${diffHours > 1 ? 's' : ''}`
     return 'Hace unos minutos'
@@ -659,7 +659,7 @@ export default function AdminPage() {
     const now = new Date()
     const diffMs = expiryDate.getTime() - now.getTime()
     const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
-    
+
     if (expired) {
       return {
         status: 'Expirado',
@@ -726,8 +726,8 @@ export default function AdminPage() {
   }
 
   const calculateAdvancedStats = (
-    usersData: User[], 
-    ordersData: Order[], 
+    usersData: User[],
+    ordersData: Order[],
     accountsData: StreamingAccount[],
     performanceData?: any,
     onlineUsersData?: any
@@ -736,7 +736,7 @@ export default function AdminPage() {
     const totalRevenue = ordersData.reduce((sum: number, order: Order) => sum + order.totalPrice, 0)
     const totalUsers = usersData.length
     const totalOrders = ordersData.length
-    
+
     // Sales by type
     const salesByTypeMap = new Map<string, { count: number; revenue: number }>()
     ordersData.forEach(order => {
@@ -752,7 +752,7 @@ export default function AdminPage() {
       count: data.count,
       revenue: data.revenue
     }))
-    
+
     // Revenue by month (last 6 months)
     const revenueByMonth = []
     const now = new Date()
@@ -761,7 +761,7 @@ export default function AdminPage() {
       const monthName = month.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })
       const monthOrders = ordersData.filter(order => {
         const orderDate = new Date(order.createdAt)
-        return orderDate.getMonth() === month.getMonth() && 
+        return orderDate.getMonth() === month.getMonth() &&
                orderDate.getFullYear() === month.getFullYear()
       })
       revenueByMonth.push({
@@ -770,7 +770,7 @@ export default function AdminPage() {
         orders: monthOrders.length
       })
     }
-    
+
     // Top products
     const productMap = new Map<string, { name: string; type: string; sales: number; revenue: number }>()
     ordersData.forEach(order => {
@@ -785,7 +785,7 @@ export default function AdminPage() {
     const topProducts = Array.from(productMap.values())
       .sort((a, b) => b.sales - a.sales)
       .slice(0, 5)
-    
+
     // User growth
     const userGrowth = []
     for (let i = 5; i >= 0; i--) {
@@ -793,10 +793,10 @@ export default function AdminPage() {
       const monthName = month.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })
       const monthUsers = usersData.filter(user => {
         const userDate = new Date(user.createdAt)
-        return userDate.getMonth() === month.getMonth() && 
+        return userDate.getMonth() === month.getMonth() &&
                userDate.getFullYear() === month.getFullYear()
       })
-      const totalUsersUntilMonth = usersData.filter(user => 
+      const totalUsersUntilMonth = usersData.filter(user =>
         new Date(user.createdAt) <= new Date(now.getFullYear(), now.getMonth() - i + 1, 0)
       ).length
       userGrowth.push({
@@ -805,7 +805,7 @@ export default function AdminPage() {
         newUsers: monthUsers.length
       })
     }
-    
+
     // Recent activity
     const recentActivity = []
     const recentOrders = ordersData.slice(-5).reverse()
@@ -817,20 +817,20 @@ export default function AdminPage() {
         icon: 'ShoppingCart'
       })
     })
-    
+
     // Additional metrics
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
-    const activeUsers = usersData.filter(user => 
+    const activeUsers = usersData.filter(user =>
       ordersData.some(order => order.user.email === user.email)
     ).length
     const totalCredits = usersData.reduce((sum, user) => sum + user.credits, 0)
     const conversionRate = totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0
-    
+
     // Top users by spending
     const topUsers = usersData
       .sort((a, b) => b.totalSpent - a.totalSpent)
       .slice(0, 5)
-    
+
     return {
       totalUsers,
       totalOrders,
@@ -942,7 +942,7 @@ export default function AdminPage() {
         toast.error(errorData.error || 'Error al actualizar contacto')
       }
     } catch (error) {
-      console.error('Error toggling support contact:', error)
+      //console.error('Error toggling support contact:', error)
       toast.error('Error de conexión')
     }
   }
@@ -951,13 +951,13 @@ export default function AdminPage() {
     try {
       // Use provided user or fall back to state
       const currentUser = userOverride || user
-      
+
       // Create a temporary adminFetch that uses the provided user
       const tempAdminFetch = async (url: string, options: RequestInit = {}) => {
         if (!currentUser?.id) {
           throw new Error('Usuario no autenticado')
         }
-        
+
         try {
           const response = await fetch(url, {
             ...options,
@@ -967,11 +967,11 @@ export default function AdminPage() {
               ...options.headers
             }
           })
-          
+
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`)
           }
-          
+
           return response
         } catch (error) {
           console.error('tempAdminFetch error for', url, ':', error)
@@ -1007,7 +1007,7 @@ export default function AdminPage() {
         adminFetch('/api/admin/online-users'), // Online status
         adminFetch('/api/admin/support-contacts'), // Support info
       ]
-      
+
       // Execute prefetches in background without blocking
       Promise.allSettled(prefetchPromises).then(results => {
         results.forEach((result, index) => {
@@ -1026,7 +1026,7 @@ export default function AdminPage() {
     if (!user?.id) {
       throw new Error('Usuario no autenticado')
     }
-    
+
     try {
       const response = await fetch(url, {
         ...options,
@@ -1036,11 +1036,11 @@ export default function AdminPage() {
           ...options.headers
         }
       })
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
-      
+
       return response
     } catch (error) {
       console.error('adminFetch error for', url, ':', error)
@@ -1055,13 +1055,13 @@ export default function AdminPage() {
       if (!currentUser?.id) {
         throw new Error('Usuario no autenticado')
       }
-      
+
       // Create a temporary adminFetch that uses the provided user
       const tempAdminFetch = async (url: string, options: RequestInit = {}) => {
         if (!currentUser?.id) {
           throw new Error('Usuario no autenticado')
         }
-        
+
         try {
           const response = await fetch(url, {
             ...options,
@@ -1071,11 +1071,11 @@ export default function AdminPage() {
               ...options.headers
             }
           })
-          
+
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`)
           }
-          
+
           return response
         } catch (error) {
           console.error('tempAdminFetch error for', url, ':', error)
@@ -1114,13 +1114,13 @@ export default function AdminPage() {
         setUsers(usersData)
         await loadUserActionCounts(usersData)
       }
-      
+
       setStreamingTypes(typesData)
       setAccounts(accountsData)
       setOrders(ordersData)
       setSpecialOffers(offersData)
       setExclusiveAccounts(exclusiveData)
-      
+
       // Set support contacts
       if (supportContactsRes.ok) {
         const supportContactsData = await supportContactsRes.json()
@@ -1134,7 +1134,7 @@ export default function AdminPage() {
       const usersData = usersWithCountsData.success ? usersWithCountsData.data.users : await tempAdminFetch('/api/admin/users').then(res => res.json())
       const advancedStats = calculateAdvancedStats(usersData, ordersData, accountsData, performanceData, onlineUsersData)
       setStats(advancedStats)
-      
+
       // Calculate top users by sales count
       const usersWithOrderCount = usersData.map((user: User) => ({
         ...user,
@@ -1147,7 +1147,7 @@ export default function AdminPage() {
       setTopUsersBySales(topBySales)
     } catch (error) {
       console.error('Error in fetchData:', error)
-      toast.error('Error loading data')
+      toast.error('Error al cargar datos')
     } finally {
       setLoading(false)
     }
@@ -1169,7 +1169,7 @@ export default function AdminPage() {
 
       if (response.ok) {
         const data = await response.json()
-        
+
         // Si estamos editando, actualizar el editingType
         if (editingType) {
           setEditingType(prev => ({
@@ -1183,7 +1183,7 @@ export default function AdminPage() {
             imageUrl: data.url
           }))
         }
-        
+
         toast.success('Imagen subida exitosamente')
       } else {
         const error = await response.json()
@@ -1202,7 +1202,7 @@ export default function AdminPage() {
       toast.error('El nombre es requerido')
       return
     }
-    
+
     if (!newStreamingType.imageUrl) {
       toast.error('Debes subir una imagen para el tipo')
       return
@@ -1496,7 +1496,7 @@ export default function AdminPage() {
 
   const handleDeleteExclusiveAccount = async (accountId: string) => {
     if (!confirm('¿Estás seguro de que quieres eliminar esta cuenta exclusiva? Esta acción no se puede deshacer y eliminará todo el stock asociado.')) return
-    
+
     try {
       const response = await adminFetch(`/api/admin/exclusive-accounts/${accountId}`, {
         method: 'DELETE'
@@ -1559,7 +1559,7 @@ export default function AdminPage() {
   const fetchRechargeHistory = async (userId: string) => {
     setLoadingRechargeHistory(true)
     setSelectedUserForRechargeHistory(userId)
-    
+
     try {
       const response = await adminFetch(`/api/admin/users/${userId}/recharge-history`)
       if (response.ok) {
@@ -1592,12 +1592,12 @@ export default function AdminPage() {
 
   const loadUserActionCounts = async (users: any[]) => {
     const counts: Record<string, number> = {}
-    
+
     for (const user of users) {
       const count = await getUserActionCount(user.id)
       counts[user.id] = count
     }
-    
+
     setUserActionCounts(counts)
   }
 
@@ -1659,7 +1659,7 @@ export default function AdminPage() {
 
   const handleUpdateAccount = async () => {
     if (!editingAccount) return
-    
+
     try {
       const response = await adminFetch(`/api/admin/streaming-accounts/${editingAccount.id}`, {
         method: 'PUT',
@@ -1682,7 +1682,7 @@ export default function AdminPage() {
 
   const handleDeleteAccount = async (accountId: string) => {
     if (!confirm('¿Estás seguro de que quieres eliminar esta cuenta? Esta acción no se puede deshacer.')) return
-    
+
     try {
       const response = await adminFetch(`/api/admin/streaming-accounts/${accountId}`, {
         method: 'DELETE'
@@ -1708,9 +1708,9 @@ export default function AdminPage() {
   const handleToggleAccountStatus = async (accountId: string, currentStatus: boolean) => {
     const action = currentStatus ? 'desactivar' : 'activar'
     const confirmMessage = `¿Estás seguro de que quieres ${action} esta cuenta?${currentStatus ? ' No aparecerá en el catálogo.' : ' Aparecerá en el catálogo nuevamente.'}`
-    
+
     if (!confirm(confirmMessage)) return
-    
+
     try {
       const response = await adminFetch(`/api/admin/streaming-accounts/${accountId}/toggle-status`, {
         method: 'PUT'
@@ -1742,7 +1742,7 @@ export default function AdminPage() {
 
   const handleUpdateOrderCredentials = async () => {
     if (!editingOrder) return
-    
+
     try {
       const response = await adminFetch(`/api/admin/orders/${editingOrder.id}/credentials`, {
         method: 'PUT',
@@ -1766,9 +1766,9 @@ export default function AdminPage() {
   const handleRehabilitateOrder = async (order: Order) => {
     const isExpired = new Date(order.expiresAt) < new Date()
     const confirmMessage = `¿Estás seguro de que quieres rehabilitar este ${order.saleType === 'FULL' ? 'cuenta' : 'perfil'} al stock?${isExpired ? ' El pedido ha expirado.' : ' El pedido aún no ha expirado.'}`
-    
+
     if (!confirm(confirmMessage)) return
-    
+
     try {
       const response = await adminFetch(`/api/admin/orders/${order.id}/rehabilitate`, {
         method: 'PUT',
@@ -1802,7 +1802,7 @@ export default function AdminPage() {
 
   const handleUpdateType = async () => {
     if (!editingType) return
-    
+
     try {
       const response = await adminFetch(`/api/admin/streaming-types/${editingType.id}`, {
         method: 'PUT',
@@ -1825,7 +1825,7 @@ export default function AdminPage() {
 
   const handleDeleteType = async (typeId: string) => {
     if (!confirm('¿Estás seguro de que quieres eliminar este tipo? Esta acción no se puede deshacer.')) return
-    
+
     try {
       const response = await adminFetch(`/api/admin/streaming-types/${typeId}`, {
         method: 'DELETE'
@@ -1880,7 +1880,7 @@ export default function AdminPage() {
       } else {
         const errorData = await response.json()
         console.error('Broadcast message error:', errorData)
-        
+
         if (errorData.debug) {
           toast.error(`${errorData.error}. Debug: ${JSON.stringify(errorData.debug)}`)
         } else {
@@ -1896,7 +1896,7 @@ export default function AdminPage() {
   // Funciones para manejar la información de registro de usuarios
   const toggleUserRegistration = async (userId: string) => {
     const isExpanded = expandedUserRegistration.has(userId)
-    
+
     if (isExpanded) {
       // Colapsar
       setExpandedUserRegistration(prev => {
@@ -1914,7 +1914,7 @@ export default function AdminPage() {
       // Expandir y cargar datos
       setExpandedUserRegistration(prev => new Set(prev).add(userId))
       setLoadingUserRegistration(prev => new Set(prev).add(userId))
-      
+
       try {
         const response = await adminFetch(`/api/admin/users/${userId}/registration-info`)
         if (response.ok) {
@@ -2032,12 +2032,12 @@ export default function AdminPage() {
               {/* Outer rotating ring */}
               <div className="absolute inset-0 border-4 border-emerald-500/20 rounded-full animate-spin-slow"></div>
               <div className="absolute inset-2 border-4 border-transparent border-t-emerald-500 border-r-teal-500 rounded-full animate-spin"></div>
-              
+
               {/* Center content */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg animate-pulse"></div>
               </div>
-              
+
               {/* Orbiting dots */}
               <div className="absolute inset-0 animate-spin-slow">
                 <div className="absolute top-0 left-1/2 w-2 h-2 bg-emerald-400 rounded-full transform -translate-x-1/2 -translate-y-1"></div>
@@ -2071,8 +2071,8 @@ export default function AdminPage() {
 
           {/* Progress bar */}
           <div className="w-64 h-1 bg-slate-800 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full animate-pulse-slow" 
-                 style={{ 
+            <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full animate-pulse-slow"
+                 style={{
                    width: '60%',
                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
                  }}>
@@ -2122,7 +2122,7 @@ export default function AdminPage() {
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Acceso Restringido</h2>
           <p className="text-slate-400 mb-6">No tienes permisos para acceder a esta área</p>
-          <Button 
+          <Button
             onClick={() => window.location.href = '/'}
             className="bg-emerald-600 hover:bg-emerald-700 text-white"
           >
@@ -2135,14 +2135,14 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-900">
-      <Navigation 
+      <Navigation
         user={user}
         cartItemsCount={cartItems.length}
         onCartOpen={() => setIsCartOpen(true)}
         onLogin={handleLogin}
         onLogout={handleLogout}
       />
-      
+
       <div className="p-6">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
@@ -2349,7 +2349,7 @@ export default function AdminPage() {
                 {/* Cuentas Regulares */}
                 {accounts.map((account) => {
                   const totalStock = (account._count.accountStocks || 0) + (account._count.profileStocks || 0)
-                  
+
                   return (
                     <div key={account.id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-2 hover:bg-slate-900/70 transition-colors">
                       {/* Header */}
@@ -2361,17 +2361,17 @@ export default function AdminPage() {
                           <span className="px-1 py-0.5 bg-amber-500/20 text-amber-300 rounded text-[8px]">E</span>
                         )}
                       </div>
-                      
+
                       {/* Nombre */}
                       <div className="text-sm font-medium text-white mb-1 truncate" title={account.name}>
                         {account.name}
                       </div>
-                      
+
                       {/* Tipo */}
                       <div className="text-xs text-slate-400 mb-1">
                         {account.type}
                       </div>
-                      
+
                       {/* Stock */}
                       <div className={`text-lg font-bold text-center mb-1 ${
                         totalStock === 0 ? 'text-red-400' : 
@@ -2381,21 +2381,21 @@ export default function AdminPage() {
                       }`}>
                         {totalStock}
                       </div>
-                      
+
                       <div className="text-xs text-slate-500 text-center mb-1">
                         unidades
                       </div>
-                      
+
                       {/* Precio */}
                       <div className="text-sm text-emerald-400 text-center mb-1">
                         {formatCurrency(account.price)}
                       </div>
-                      
+
                       {/* Cuentas/Perfiles */}
                       <div className="text-xs text-slate-400 text-center mb-1">
                         {account._count.accountStocks || 0}/{account._count.profileStocks || 0}
                       </div>
-                      
+
                       {/* Estado */}
                       <div className={`px-2 py-1 rounded text-xs text-center w-full ${
                         account.isActive 
@@ -2414,12 +2414,12 @@ export default function AdminPage() {
                   const totalStock = account.exclusiveStocks?.length || 0
                   const soldStock = account.exclusiveStocks?.filter(stock => !stock.isAvailable).length || 0
                   const availableStock = totalStock - soldStock
-                  
+
                   return (
                     <div key={account.id} className="bg-gradient-to-br from-amber-900/20 to-yellow-900/20 border border-amber-500/30 rounded-lg p-2 hover:from-amber-900/30 hover:to-yellow-900/30 transition-all relative">
                       {/* Efecto de brillo dorado */}
                       <div className="absolute inset-0 bg-gradient-to-br from-amber-600/10 via-yellow-600/10 to-orange-600/10 rounded-lg"></div>
-                      
+
                       {/* Header */}
                       <div className="flex items-center justify-between mb-1 relative">
                         <div className={`w-2 h-2 rounded-full ${
@@ -2429,17 +2429,17 @@ export default function AdminPage() {
                           EXCL
                         </span>
                       </div>
-                      
+
                       {/* Nombre */}
                       <div className="text-sm font-medium text-white mb-1 truncate relative" title={account.name}>
                         {account.name}
                       </div>
-                      
+
                       {/* Tipo */}
                       <div className="text-xs text-amber-200 mb-1 relative">
                         {account.type}
                       </div>
-                      
+
                       {/* Stock */}
                       <div className={`text-lg font-bold text-center mb-1 relative ${
                         availableStock === 0 ? 'text-red-400' : 
@@ -2449,21 +2449,21 @@ export default function AdminPage() {
                       }`}>
                         {availableStock}
                       </div>
-                      
+
                       <div className="text-xs text-amber-300/70 text-center mb-1 relative">
                         unidades
                       </div>
-                      
+
                       {/* Precio */}
                       <div className="text-sm text-yellow-300 text-center mb-1 relative">
                         {formatCurrency(account.price)}
                       </div>
-                      
+
                       {/* Cuentas/Perfiles */}
                       <div className="text-xs text-amber-200/70 text-center mb-1 relative">
                         {soldStock} vendidas
                       </div>
-                      
+
                       {/* Estado */}
                       <div className={`px-2 py-1 rounded text-xs text-center w-full relative ${
                         account.isActive 
@@ -2475,7 +2475,7 @@ export default function AdminPage() {
                     </div>
                   )
                 })}
-                
+
                 {accounts.length === 0 && exclusiveAccounts.length === 0 && (
                   <div className="col-span-full text-center py-8 text-slate-400 text-sm">
                     No hay cuentas registradas
@@ -2666,7 +2666,7 @@ export default function AdminPage() {
                           const color = colors[index % colors.length]
                           const totalRevenue = stats.salesByType.reduce((sum, t) => sum + t.revenue, 0)
                           const percentage = totalRevenue > 0 ? (type.revenue / totalRevenue) * 100 : 0
-                          
+
                           return (
                             <div key={index} className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
@@ -2676,7 +2676,7 @@ export default function AdminPage() {
                               <div className="flex items-center gap-4">
                                 <div className="flex-1 w-24">
                                   <div className="bg-slate-700 rounded-full h-4 relative overflow-hidden">
-                                    <div 
+                                    <div
                                       className={`${color} h-full rounded-full transition-all duration-500`}
                                       style={{ width: `${Math.max(percentage, 5)}%` }}
                                     ></div>
@@ -2794,9 +2794,9 @@ export default function AdminPage() {
                         {newStreamingType.imageUrl && (
                           <div className="space-y-2">
                             <div className="flex items-center space-x-3 p-3 bg-slate-700 rounded-lg border border-slate-600">
-                              <img 
-                                src={newStreamingType.imageUrl} 
-                                alt="Preview" 
+                              <img
+                                src={newStreamingType.imageUrl}
+                                alt="Preview"
                                 className="w-16 h-16 object-cover rounded-lg border-2 border-slate-500"
                               />
                               <div className="flex-1">
@@ -2821,7 +2821,7 @@ export default function AdminPage() {
                             value={newStreamingType.color}
                             onChange={(e) => setNewStreamingType({...newStreamingType, color: e.target.value})}
                             className="bg-slate-700 border-slate-600 text-white h-12 w-20 rounded cursor-pointer"
-                            style={{ 
+                            style={{
                               backgroundColor: newStreamingType.color,
                               borderColor: newStreamingType.color
                             }}
@@ -2861,13 +2861,13 @@ export default function AdminPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         {type.imageUrl ? (
-                          <img 
-                            src={type.imageUrl} 
+                          <img
+                            src={type.imageUrl}
                             alt={type.name}
                             className="w-12 h-12 rounded-lg object-cover border-2 border-slate-600"
                           />
                         ) : (
-                          <div 
+                          <div
                             className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
                             style={{ backgroundColor: type.color + '20' }}
                           >
@@ -2947,8 +2947,8 @@ export default function AdminPage() {
                           <SelectItem key={type.id} value={type.name} className="text-white">
                             <div className="flex items-center space-x-2">
                               {type.imageUrl ? (
-                                <img 
-                                  src={type.imageUrl} 
+                                <img
+                                  src={type.imageUrl}
                                   alt={type.name}
                                   className="w-5 h-5 rounded object-cover"
                                 />
@@ -3093,8 +3093,8 @@ export default function AdminPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleToggleAccountStatus(account.id, account.isActive)}
-                            className={account.isActive 
-                              ? "border-orange-600 text-orange-400 hover:bg-orange-600 hover:text-white" 
+                            className={account.isActive
+                              ? "border-orange-600 text-orange-400 hover:bg-orange-600 hover:text-white"
                               : "border-green-600 text-green-400 hover:bg-green-600 hover:text-white"
                             }
                             title={account.isActive ? "Desactivar cuenta" : "Activar cuenta"}
@@ -3153,11 +3153,11 @@ export default function AdminPage() {
                   <Label htmlFor="stockAccount" className="text-slate-300">
                     {stockData.accountType === 'exclusive' ? 'Cuenta Exclusiva' : 'Cuenta Regular'}
                   </Label>
-                  <Select 
-                    value={stockData.accountType === 'exclusive' ? stockData.exclusiveAccountId : stockData.streamingAccountId} 
+                  <Select
+                    value={stockData.accountType === 'exclusive' ? stockData.exclusiveAccountId : stockData.streamingAccountId}
                     onValueChange={(value) => setStockData({
-                      ...stockData, 
-                      ...(stockData.accountType === 'exclusive' 
+                      ...stockData,
+                      ...(stockData.accountType === 'exclusive'
                         ? { exclusiveAccountId: value, streamingAccountId: '' }
                         : { streamingAccountId: value, exclusiveAccountId: '' }
                       )
@@ -3167,7 +3167,7 @@ export default function AdminPage() {
                       <SelectValue placeholder={`Selecciona la ${stockData.accountType === 'exclusive' ? 'cuenta exclusiva' : 'cuenta regular'}`} />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-800 border-slate-700">
-                      {stockData.accountType === 'exclusive' 
+                      {stockData.accountType === 'exclusive'
                         ? exclusiveAccounts.map((account) => (
                             <SelectItem key={account.id} value={account.id} className="text-white">
                               👑 {account.name} - {account.type}
@@ -3288,8 +3288,8 @@ export default function AdminPage() {
                   </>
                 )}
 
-                <Button 
-                  onClick={stockData.accountType === 'exclusive' ? handleAddExclusiveStock : handleAddStock} 
+                <Button
+                  onClick={stockData.accountType === 'exclusive' ? handleAddExclusiveStock : handleAddStock}
                   className="w-full bg-emerald-600 hover:bg-emerald-700"
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -3309,7 +3309,7 @@ export default function AdminPage() {
                     <CardTitle className="text-white">Historial de Pedidos</CardTitle>
                     <CardDescription className="text-slate-400">Click en la flecha para ver detalles completos</CardDescription>
                   </div>
-                  
+
                   {/* Filtro de Estado de Expiración */}
                   <div className="flex flex-col space-y-2">
                     <Label className="text-slate-300 text-sm font-medium">Filtro por Estado de Expiración</Label>
@@ -3476,7 +3476,7 @@ export default function AdminPage() {
                       {getFilteredOrders().map((order) => (
                     <div key={order.id} className="p-4 bg-slate-700 rounded-lg">
                       {/* Header con información básica y flecha */}
-                      <div 
+                      <div
                         className="flex items-start justify-between cursor-pointer"
                         onClick={() => toggleOrderExpansionInGeneral(order.id)}
                       >
@@ -3569,8 +3569,8 @@ export default function AdminPage() {
                               <p className="text-slate-400 mb-1">Vence:</p>
                               <div className="flex items-center gap-2">
                                 <p className="text-white">{new Date(order.expiresAt).toLocaleDateString()}</p>
-                                <Badge 
-                                  variant="outline" 
+                                <Badge
+                                  variant="outline"
                                   className={`border-current ${getExpirationStatus(order.expiresAt).bgColor} ${getExpirationStatus(order.expiresAt).color}`}
                                 >
                                   {getExpirationStatus(order.expiresAt).status}
@@ -3669,7 +3669,7 @@ export default function AdminPage() {
                               </div>
                               <div className="mt-2 space-y-1">
                                 <p className="text-xs text-slate-400">
-                                  {isOrderExpired(order.expiresAt) 
+                                  {isOrderExpired(order.expiresAt)
                                     ? 'Este pedido ha expirado y puede ser rehabilitado al stock.'
                                     : `Este pedido expirará en ${getExpirationStatus(order.expiresAt).days} días.`
                                   }
@@ -3900,7 +3900,7 @@ export default function AdminPage() {
                           </p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-2 mt-3">
                         <Button
                           size="sm"
@@ -3911,7 +3911,7 @@ export default function AdminPage() {
                           <Eye className="w-4 h-4 mr-1" />
                           Ver Pedidos
                         </Button>
-                        
+
                         <Button
                           size="sm"
                           variant="outline"
@@ -3930,7 +3930,7 @@ export default function AdminPage() {
                             </>
                           )}
                         </Button>
-                        
+
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button
@@ -3994,8 +3994,8 @@ export default function AdminPage() {
                                   $100.000
                                 </Button>
                               </div>
-                              <Button 
-                                onClick={() => handleCustomRecharge(user.id)} 
+                              <Button
+                                onClick={() => handleCustomRecharge(user.id)}
                                 className="w-full bg-emerald-600 hover:bg-emerald-700"
                               >
                                 Recargar {formatCurrency(parseFloat(rechargeAmount) || 0)}
@@ -4173,8 +4173,8 @@ export default function AdminPage() {
                               <div className="space-y-2">
                                 <Label className="text-slate-300 text-sm">Rol</Label>
                                 {editingUserRegistration === user.id ? (
-                                  <Select 
-                                    value={userRegistrationData[user.id]?.role || 'USER'} 
+                                  <Select
+                                    value={userRegistrationData[user.id]?.role || 'USER'}
                                     onValueChange={(value) => handleRegistrationInputChange(user.id, 'role', value)}
                                   >
                                     <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
@@ -4297,8 +4297,8 @@ export default function AdminPage() {
                       />
                       <p className="text-xs text-slate-500 mt-1">Si no se establece, la oferta no expirará automáticamente</p>
                     </div>
-                    <Button 
-                      onClick={handleCreateSpecialOffer} 
+                    <Button
+                      onClick={handleCreateSpecialOffer}
                       className="w-full bg-emerald-600 hover:bg-emerald-700"
                       disabled={selectedUsersForOffer.length === 0}
                     >
@@ -4320,11 +4320,11 @@ export default function AdminPage() {
                       const offerStatus = getOfferStatus(offer)
                       const expired = isOfferExpired(offer.expiresAt)
                       const isExpanded = expandedSpecialOffers.has(offer.id)
-                      
+
                       return (
                         <div key={offer.id} className="bg-slate-700 rounded-lg overflow-hidden">
                           {/* Header - Clickable */}
-                          <div 
+                          <div
                             className="p-3 cursor-pointer hover:bg-slate-600 transition-colors"
                             onClick={() => {
                               const newExpanded = new Set(expandedSpecialOffers)
@@ -4362,7 +4362,7 @@ export default function AdminPage() {
                                 </Button>
                               </div>
                             </div>
-                            
+
                             {/* Brief info when collapsed */}
                             {!isExpanded && (
                               <div className="flex items-center gap-4 text-xs text-slate-400">
@@ -4385,33 +4385,33 @@ export default function AdminPage() {
                                 {/* Detalles de la Oferta */}
                                 <div className="space-y-3">
                                   <h5 className="text-sm font-semibold text-yellow-400 mb-2">🎯 Detalles de la Oferta</h5>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-400">Usuario:</span>
                                     <span className="text-white font-medium">{offer.user.name || offer.user.email}</span>
                                   </div>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-400">Descuento:</span>
                                     <span className="text-emerald-400 font-medium">{offer.discountPercentage}% OFF</span>
                                   </div>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-400">Precio original:</span>
                                     <span className="text-white font-medium">
                                       ${offer.streamingAccount?.price?.toLocaleString('es-CO', { maximumFractionDigits: 0 }) || 'N/A'}
                                     </span>
                                   </div>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-400">Precio con descuento:</span>
                                     <span className="text-green-400 font-medium">
-                                      ${offer.streamingAccount?.price ? 
-                                        (offer.streamingAccount.price * (1 - offer.discountPercentage / 100)).toLocaleString('es-CO', { maximumFractionDigits: 0 }) : 
+                                      ${offer.streamingAccount?.price ?
+                                        (offer.streamingAccount.price * (1 - offer.discountPercentage / 100)).toLocaleString('es-CO', { maximumFractionDigits: 0 }) :
                                         'N/A'}
                                     </span>
                                   </div>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-400">Expira:</span>
                                     <div className="text-right">
@@ -4423,14 +4423,14 @@ export default function AdminPage() {
                                       )}
                                     </div>
                                   </div>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-400">Estado:</span>
                                     <span className={`font-medium ${expired ? 'text-red-400' : 'text-green-400'}`}>
                                       {expired ? 'Expirada' : 'Activa'}
                                     </span>
                                   </div>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-400">Creada:</span>
                                     <span className="text-white font-medium">
@@ -4442,17 +4442,17 @@ export default function AdminPage() {
                                 {/* Detalles del Producto */}
                                 <div className="space-y-3">
                                   <h5 className="text-sm font-semibold text-yellow-400 mb-2">📋 Detalles del Producto</h5>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-400">Tipo:</span>
                                     <span className="text-white font-medium">{offer.streamingAccount.type}</span>
                                   </div>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-400">Ahorro total:</span>
                                     <span className="text-green-400 font-medium">
-                                      ${offer.streamingAccount?.price ? 
-                                        (offer.streamingAccount.price * offer.discountPercentage / 100).toLocaleString('es-CO', { maximumFractionDigits: 0 }) : 
+                                      ${offer.streamingAccount?.price ?
+                                        (offer.streamingAccount.price * offer.discountPercentage / 100).toLocaleString('es-CO', { maximumFractionDigits: 0 }) :
                                         'N/A'}
                                     </span>
                                   </div>
@@ -4579,8 +4579,8 @@ export default function AdminPage() {
                             <SelectItem key={type.id} value={type.name} className="text-white">
                               <div className="flex items-center space-x-2">
                                 {type.imageUrl ? (
-                                  <img 
-                                    src={type.imageUrl} 
+                                  <img
+                                    src={type.imageUrl}
                                     alt={type.name}
                                     className="w-5 h-5 rounded object-cover"
                                   />
@@ -4698,8 +4698,8 @@ export default function AdminPage() {
                       />
                       <p className="text-xs text-slate-500 mt-1">Si no se establece, la cuenta exclusiva no expirará automáticamente</p>
                     </div>
-                    <Button 
-                      onClick={handleCreateExclusiveAccount} 
+                    <Button
+                      onClick={handleCreateExclusiveAccount}
                       className="w-full bg-yellow-600 hover:bg-yellow-700"
                       disabled={selectedUsersForExclusive.length === 0}
                     >
@@ -4721,13 +4721,13 @@ export default function AdminPage() {
                       const isExpanded = expandedExclusiveAccounts.has(account.id)
                       const expired = isExclusiveAccountExpired(account.expiresAt)
                       const accountStatus = getExclusiveAccountStatus(account)
-                      
+
                       return (
                         <div key={account.id} className="relative bg-gradient-to-br from-amber-900/20 via-amber-800/10 to-yellow-900/20 rounded-xl overflow-hidden border border-amber-700/30 shadow-2xl shadow-amber-900/20">
                           {/* Premium Border Effect */}
                           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-500/10 to-transparent opacity-50"></div>
                           {/* Header - Clickable */}
-                          <div 
+                          <div
                             className="relative p-4 cursor-pointer hover:bg-amber-900/10 transition-all duration-300"
                             onClick={() => {
                               const newExpanded = new Set(expandedExclusiveAccounts)
@@ -4743,7 +4743,7 @@ export default function AdminPage() {
                             <div className="absolute top-2 right-2">
                               <Crown className="w-5 h-5 text-amber-400 drop-shadow-lg" />
                             </div>
-                            
+
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/30">
@@ -4783,7 +4783,7 @@ export default function AdminPage() {
                                 </Button>
                               </div>
                             </div>
-                            
+
                             {/* Premium Info */}
                             <div className="flex justify-between items-center mb-3">
                               <div className="flex items-center gap-2">
@@ -4797,7 +4797,7 @@ export default function AdminPage() {
                                 </div>
                               </div>
                             </div>
-                            
+
                             {/* Expiration Date with Premium Styling */}
                             <div className="p-3 bg-amber-900/20 rounded-lg border border-amber-700/30">
                               <div className="flex items-center justify-between">
@@ -4837,41 +4837,41 @@ export default function AdminPage() {
                                     <Crown className="w-4 h-4" />
                                     Detalles Premium
                                   </h5>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-amber-200/70">Tipo:</span>
                                     <span className="text-amber-100 font-medium">{account.type}</span>
                                   </div>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-amber-200/70">Duración:</span>
                                     <span className="text-amber-100 font-medium">{account.duration} días</span>
                                   </div>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-amber-200/70">Calidad:</span>
                                     <span className="text-amber-100 font-medium">{account.quality || 'N/A'}</span>
                                   </div>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-amber-200/70">Pantallas:</span>
                                     <span className="text-amber-100 font-medium">{account.screens || 'N/A'}</span>
                                   </div>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-amber-200/70">Tipo de venta:</span>
                                     <span className="text-amber-100 font-medium">
                                       {account.saleType === 'FULL' ? 'Cuenta completa' : 'Por perfiles'}
                                     </span>
                                   </div>
-                                  
+
                                   {account.saleType === 'PROFILES' && (
                                     <>
                                       <div className="flex justify-between items-center text-sm">
                                         <span className="text-slate-400">Máx. perfiles:</span>
                                         <span className="text-white font-medium">{account.maxProfiles || 'N/A'}</span>
                                       </div>
-                                      
+
                                       <div className="flex justify-between items-center text-sm">
                                         <span className="text-slate-400">Precio por perfil:</span>
                                         <span className="text-white font-medium">
@@ -4885,24 +4885,24 @@ export default function AdminPage() {
                                 {/* Acceso y Stock */}
                                 <div className="space-y-3">
                                   <h5 className="text-sm font-semibold text-yellow-400 mb-2">🔐 Acceso y Stock</h5>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-400">Visibilidad:</span>
                                     <span className={`font-medium ${account.isPublic ? 'text-green-400' : 'text-orange-400'}`}>
                                       {account.isPublic ? 'Pública' : 'Privada'}
                                     </span>
                                   </div>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-400">Usuarios con acceso:</span>
                                     <span className="text-white font-medium">{account.allowedUsers.length}</span>
                                   </div>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-400">Total de órdenes:</span>
                                     <span className="text-white font-medium">{account._count?.orders || 0}</span>
                                   </div>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-400">Expira:</span>
                                     <div className="text-right">
@@ -4914,14 +4914,14 @@ export default function AdminPage() {
                                       )}
                                     </div>
                                   </div>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-400">Creada:</span>
                                     <span className="text-white font-medium">
                                       {new Date(account.createdAt).toLocaleDateString()}
                                     </span>
                                   </div>
-                                  
+
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-400">Estado:</span>
                                     <span className={`font-medium ${account.isActive ? 'text-green-400' : 'text-red-400'}`}>
@@ -5180,12 +5180,12 @@ export default function AdminPage() {
                               <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
                                   <span className="text-2xl">
-                                    {contact.type === 'whatsapp' ? '💬' : 
-                                     contact.type === 'telegram' ? '✈️' : 
+                                    {contact.type === 'whatsapp' ? '💬' :
+                                     contact.type === 'telegram' ? '✈️' :
                                      contact.type === 'phone' ? '📞' : '💬'}
                                   </span>
                                   <h4 className="text-white font-medium">{contact.name}</h4>
-                                  <Badge variant={contact.isActive ? "default" : "secondary"} 
+                                  <Badge variant={contact.isActive ? "default" : "secondary"}
                                          className={contact.isActive ? "bg-emerald-600" : "bg-slate-600"}>
                                     {contact.isActive ? "Activo" : "Inactivo"}
                                   </Badge>
@@ -5230,8 +5230,8 @@ export default function AdminPage() {
                         {supportContacts.filter(c => c.isActive).sort((a, b) => a.order - b.order).map((contact) => (
                           <div key={contact.id} className="flex items-center gap-3 p-2 bg-slate-700/50 rounded">
                             <span className="text-xl">
-                              {contact.type === 'whatsapp' ? '💬' : 
-                               contact.type === 'telegram' ? '✈️' : 
+                              {contact.type === 'whatsapp' ? '💬' :
+                               contact.type === 'telegram' ? '✈️' :
                                contact.type === 'phone' ? '📞' : '💬'}
                             </span>
                             <div className="flex-1">
@@ -5264,7 +5264,7 @@ export default function AdminPage() {
               {userOrders.map((order) => (
                 <div key={order.id} className="p-4 bg-slate-700 rounded-lg">
                   {/* Header con información básica y flecha */}
-                  <div 
+                  <div
                     className="flex items-start justify-between cursor-pointer"
                     onClick={() => toggleOrderExpansion(order.id)}
                   >
@@ -5399,7 +5399,7 @@ export default function AdminPage() {
                   )}
                 </div>
               ))}
-              
+
               {userOrders.length === 0 && (
                 <div className="text-center py-8">
                   <p className="text-slate-400">Este usuario no tiene pedidos registrados</p>
@@ -5441,8 +5441,8 @@ export default function AdminPage() {
                       <SelectItem key={type.id} value={type.name} className="text-white">
                         <div className="flex items-center space-x-2">
                           {type.imageUrl ? (
-                            <img 
-                              src={type.imageUrl} 
+                            <img
+                              src={type.imageUrl}
                               alt={type.name}
                               className="w-5 h-5 rounded object-cover"
                             />
@@ -5575,8 +5575,8 @@ export default function AdminPage() {
                 <div className="space-y-3">
                   {editingType.imageUrl && (
                     <div className="flex items-center space-x-3 p-3 bg-slate-700 rounded-lg border border-slate-600">
-                      <img 
-                        src={editingType.imageUrl} 
+                      <img
+                        src={editingType.imageUrl}
                         alt={editingType.name}
                         className="w-16 h-16 object-cover rounded-lg border-2 border-slate-500"
                       />
@@ -5689,14 +5689,14 @@ export default function AdminPage() {
                 </>
               )}
               <div className="flex gap-2">
-                <Button 
-                  onClick={handleUpdateOrderCredentials} 
+                <Button
+                  onClick={handleUpdateOrderCredentials}
                   className="flex-1 bg-emerald-600 hover:bg-emerald-700"
                 >
                   Actualizar Credenciales
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setShowEditOrderDialog(false)}
                   className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
                 >
@@ -5720,7 +5720,7 @@ export default function AdminPage() {
               Envía un mensaje a todos los usuarios registrados (excluyendo administradores)
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <div>
               <Label htmlFor="messageTitle" className="text-slate-300">Título del Mensaje</Label>
@@ -5768,16 +5768,16 @@ export default function AdminPage() {
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button 
-              onClick={handleBroadcastMessage} 
+            <Button
+              onClick={handleBroadcastMessage}
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
               disabled={!broadcastMessage.title.trim() || !broadcastMessage.content.trim()}
             >
               <Mail className="w-4 h-4 mr-2" />
               Enviar Mensaje
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setShowBroadcastModal(false)
                 setBroadcastMessage({ title: '', content: '', type: 'GENERAL' })
@@ -5836,7 +5836,7 @@ export default function AdminPage() {
                     <span className="text-sm">Promedio</span>
                   </div>
                   <div className="text-2xl font-bold text-white">
-                    {rechargeHistory.length > 0 
+                    {rechargeHistory.length > 0
                       ? formatCurrency(rechargeHistory.reduce((sum, r) => sum + r.amount, 0) / rechargeHistory.length)
                       : formatCurrency(0)
                     }
@@ -5886,13 +5886,13 @@ export default function AdminPage() {
                             </TableCell>
                             <TableCell>
                               <Badge className={
-                                recharge.status === 'COMPLETED' 
-                                  ? 'bg-green-600' 
+                                recharge.status === 'COMPLETED'
+                                  ? 'bg-green-600'
                                   : recharge.status === 'PENDING'
                                   ? 'bg-yellow-600'
                                   : 'bg-red-600'
                               }>
-                                {recharge.status === 'COMPLETED' ? 'Completada' : 
+                                {recharge.status === 'COMPLETED' ? 'Completada' :
                                  recharge.status === 'PENDING' ? 'Pendiente' : 'Cancelada'}
                               </Badge>
                             </TableCell>
@@ -5913,8 +5913,8 @@ export default function AdminPage() {
           )}
 
           <div className="flex justify-end mt-6">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setShowRechargeHistory(false)
                 setRechargeHistory([])
@@ -6003,15 +6003,15 @@ export default function AdminPage() {
               {/* Preview */}
               <div className="space-y-2">
                 <Label className="text-slate-300">Vista Previa</Label>
-                <div 
+                <div
                   className="w-full overflow-hidden rounded-lg border border-slate-600"
-                  style={{ 
+                  style={{
                     backgroundColor: '#10b981',
                     color: '#ffffff'
                   }}
                 >
                   <div className="relative">
-                    <div 
+                    <div
                       className="whitespace-nowrap py-2 px-4 inline-block"
                       style={{
                         animation: `scroll ${bannerData.speed}s linear infinite`

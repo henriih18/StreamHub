@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
             }
 
             // Get available profile stocks
-            const profileStocks = await tx.profileStock.findMany({
+            const profileStocks = await tx.accountProfile.findMany({
               where: {
                 streamingAccountId: streamingAccount.id,
                 isAvailable: true
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
               })
 
               // Mark stock as unavailable
-              await tx.profileStock.update({
+              await tx.accountProfile.update({
                 where: { id: stock.id },
                 data: { isAvailable: false }
               })
