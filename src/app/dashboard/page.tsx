@@ -74,6 +74,8 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
   const itemsPerPage = 9
+  const [isError, setIsError] = useState(false)
+const [isRetrying, setIsRetrying] = useState(false)
 
   // Track online users - always call this hook
   useOnlineTracking({
@@ -116,13 +118,13 @@ export default function Dashboard() {
     const fetchAccounts = async () => {
       try {
         const userId = user?.id || null
-        console.log('Fetching accounts for userId:', userId) // Debug log
+        //console.log('Fetching accounts for userId:', userId) // Debug log
         const url = userId ? `/api/streaming-accounts?userId=${userId}` : '/api/streaming-accounts'
-        console.log('API URL:', url) // Debug log
+        //console.log('API URL:', url) // Debug log
         const response = await fetch(url)
         if (response.ok) {
           const data = await response.json()
-          console.log('API Response:', data) // Debug log
+          //console.log('API Response:', data) // Debug log
           
           // Start with all regular and exclusive accounts
           let allAccounts = [
@@ -130,7 +132,7 @@ export default function Dashboard() {
             ...(data.regularAccounts || [])
           ]
           
-          console.log('Special offers for user:', data.specialOffers) // Debug log
+          //console.log('Special offers for user:', data.specialOffers) // Debug log
           
           // Apply special offers to existing accounts instead of creating duplicates
           if (data.specialOffers) {
@@ -181,200 +183,12 @@ export default function Dashboard() {
           setFilteredAccounts(allAccounts)
         }
       } catch (error) {
+        //console.error('Error fetching accounts:', error)
         console.error('Error fetching accounts:', error)
-        // Fallback to mock data if API fails
-        const mockAccounts: StreamingAccount[] = [
-          {
-            id: '1',
-            name: 'Netflix Premium',
-            description: 'Acceso completo a todo el catálogo de Netflix con calidad 4K',
-            price: 50000,
-            type: 'Netflix',
-            duration: '1 mes',
-            quality: '4K HDR',
-            screens: 4,
-            saleType: 'FULL',
-            streamingType: {
-              icon: '🎬',
-              color: 'bg-red-500'
-            }
-          },
-          {
-            id: '2',
-            name: 'Disney+ Premium',
-            description: 'Todo el contenido de Disney, Pixar, Marvel y Star Wars',
-            price: 40000,
-            type: 'Disney+',
-            duration: '1 mes',
-            quality: '4K',
-            screens: 4,
-            saleType: 'FULL',
-            streamingType: {
-              icon: '🏰',
-              color: 'bg-blue-500'
-            }
-          },
-          {
-            id: '3',
-            name: 'HBO Max',
-            description: 'Acceso a HBO, Warner Bros y contenido exclusivo',
-            price: 45000,
-            type: 'HBO Max',
-            duration: '1 mes',
-            quality: '4K',
-            screens: 3,
-            saleType: 'FULL',
-            streamingType: {
-              icon: '🎭',
-              color: 'bg-purple-500'
-            }
-          },
-          {
-            id: '4',
-            name: 'Amazon Prime Video',
-            description: 'Miles de películas y series con Prime Originals',
-            price: 35000,
-            type: 'Amazon Prime',
-            duration: '1 mes',
-            quality: '4K',
-            screens: 3,
-            saleType: 'FULL',
-            streamingType: {
-              icon: '📦',
-              color: 'bg-orange-500'
-            }
-          },
-          {
-            id: '5',
-            name: 'Netflix Perfiles',
-            description: 'Vende perfiles individuales de Netflix',
-            price: 15000,
-            type: 'Netflix',
-            duration: '1 mes',
-            quality: 'HD',
-            screens: 1,
-            saleType: 'PROFILES',
-            maxProfiles: 4,
-            pricePerProfile: 15000,
-            streamingType: {
-              icon: '🎬',
-              color: 'bg-red-500'
-            }
-          },
-          {
-            id: '6',
-            name: 'Disney+ Perfiles',
-            description: 'Vende perfiles individuales de Disney+',
-            price: 12000,
-            type: 'Disney+',
-            duration: '1 mes',
-            quality: 'HD',
-            screens: 1,
-            saleType: 'PROFILES',
-            maxProfiles: 4,
-            pricePerProfile: 12000,
-            streamingType: {
-              icon: '🏰',
-              color: 'bg-blue-500'
-            }
-          },
-          {
-            id: '7',
-            name: 'HBO Max Perfiles',
-            description: 'Vende perfiles individuales de HBO Max',
-            price: 13000,
-            type: 'HBO Max',
-            duration: '1 mes',
-            quality: 'HD',
-            screens: 1,
-            saleType: 'PROFILES',
-            maxProfiles: 3,
-            pricePerProfile: 13000,
-            streamingType: {
-              icon: '🎭',
-              color: 'bg-purple-500'
-            }
-          },
-          {
-            id: '8',
-            name: 'Amazon Prime Perfiles',
-            description: 'Vende perfiles individuales de Amazon Prime',
-            price: 10000,
-            type: 'Amazon Prime',
-            duration: '1 mes',
-            quality: 'HD',
-            screens: 1,
-            saleType: 'PROFILES',
-            maxProfiles: 3,
-            pricePerProfile: 10000,
-            streamingType: {
-              icon: '📦',
-              color: 'bg-orange-500'
-            }
-          },
-          {
-            id: '9',
-            name: 'Hulu Premium',
-            description: 'Acceso completo a todo el catálogo de Hulu',
-            price: 38000,
-            type: 'Hulu',
-            duration: '1 mes',
-            quality: '4K',
-            screens: 2,
-            saleType: 'FULL',
-            streamingType: {
-              icon: '📺',
-              color: 'bg-green-500'
-            }
-          },
-          {
-            id: '10',
-            name: 'Apple TV+',
-            description: 'Contenido original de Apple en 4K HDR',
-            price: 42000,
-            type: 'Apple TV+',
-            duration: '1 mes',
-            quality: '4K HDR',
-            screens: 6,
-            saleType: 'FULL',
-            streamingType: {
-              icon: '🍎',
-              color: 'bg-gray-700'
-            }
-          },
-          {
-            id: '11',
-            name: 'Paramount+',
-            description: 'Acceso a Paramount, CBS y contenido exclusivo',
-            price: 36000,
-            type: 'Paramount+',
-            duration: '1 mes',
-            quality: '4K',
-            screens: 3,
-            saleType: 'FULL',
-            streamingType: {
-              icon: '⭐',
-              color: 'bg-blue-700'
-            }
-          },
-          {
-            id: '12',
-            name: 'Peacock Premium',
-            description: 'Todo el contenido de NBC Universal en 4K',
-            price: 34000,
-            type: 'Peacock',
-            duration: '1 mes',
-            quality: '4K',
-            screens: 3,
-            saleType: 'FULL',
-            streamingType: {
-              icon: '🦚',
-              color: 'bg-yellow-600'
-            }
-          }
-        ]
-        setStreamingAccounts(mockAccounts)
-        setFilteredAccounts(mockAccounts)
+  toast.error("Error al recuperar las cuentas. Por favor, intenta de nuevo.")
+        setStreamingAccounts([])
+        setFilteredAccounts([])
+        setIsError(true)
       }
     }
 
@@ -404,6 +218,12 @@ export default function Dashboard() {
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
   const currentAccounts = (filteredAccounts || []).slice(startIndex, endIndex)
+
+  const handleRetry = async () => {
+  setIsRetrying(true)
+  setIsError(false)
+  
+}
 
   const getAvailableStock = (account: StreamingAccount): number => {
     // For exclusive accounts, check if they have any exclusiveStocks
@@ -713,7 +533,7 @@ export default function Dashboard() {
   }
 
   // Mock login functions for demo
-  const handleAdminLogin = () => {
+  /* const handleAdminLogin = () => {
     handleLogin({
       id: 'admin-1',
       email: 'admin@streamhub.com',
@@ -740,7 +560,7 @@ export default function Dashboard() {
       role: 'USER',
       credits: 50000
     })
-  }
+  } */
 
   // Check for existing user session on mount
   useEffect(() => {
@@ -805,14 +625,24 @@ export default function Dashboard() {
 
   // Check if user is admin (check role field first, then fallback to email)
   const isAdmin = user && (
-    user.role === 'ADMIN' || 
+    user.role === 'ADMIN' /* || 
     user.email === 'admin@streamhub.com' || 
-    user.email === 'admin@example.com'
+    user.email === 'admin@example.com' */
   )
+
+  const userProps = {
+  id: user?.id,
+  email: user?.email,
+  name: user?.name,
+  // ... otras propiedades que necesites
+}
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950">
-      <Navigation />
+        <Navigation />  
+      
+
+      
       
       <main>
         {/* Hero Section - Panel Style */}
@@ -881,14 +711,15 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {currentAccounts.map((account) => (
+               {currentAccounts.map((account) => (
                 <StreamingCard
                   key={account.id}
                   account={account}
                   onAddToCart={addToCart}
                   isMostPopular={['1', '2', '3'].includes(account.id)}
                 />
-              ))}
+              ))} 
+              
             </div>
 
             {/* Pagination */}

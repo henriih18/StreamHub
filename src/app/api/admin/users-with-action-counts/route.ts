@@ -71,9 +71,9 @@ export async function GET() {
       }
     })
   } catch (error) {
-    console.error('Error fetching users with action counts:', error)
+    //console.error('Error fetching users with action counts:', error)
     return NextResponse.json(
-      { error: 'Error fetching users with action counts' },
+      { error: 'Error al obtener los usuarios con recuentos de acciones.' },
       { status: 500 }
     )
   }

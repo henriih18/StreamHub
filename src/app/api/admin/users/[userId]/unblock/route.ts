@@ -11,7 +11,7 @@ export async function POST(
 
     if (!userId || !reason) {
       return NextResponse.json(
-        { error: 'Faltan campos requeridos' },
+        { error: 'Faltan campos requeridos.' },
         { status: 400 }
       )
     }
@@ -68,9 +68,9 @@ export async function POST(
 
     return NextResponse.json(updatedUser)
   } catch (error) {
-    console.error('Error unblocking user:', error)
+    //console.error('Error unblocking user:', error)
     return NextResponse.json(
-      { error: 'Error al desbloquear usuario' },
+      { error: 'Error al desbloquear usuario.' },
       { status: 500 }
     )
   }

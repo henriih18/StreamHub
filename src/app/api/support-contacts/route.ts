@@ -1,28 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
-import { z } from 'zod'
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { z } from "zod";
 
 // Schema para validación
 const supportContactSchema = z.object({
-  name: z.string().min(1, 'El nombre es requerido'),
-  number: z.string().min(1, 'El número es requerido'),
-  type: z.enum(['whatsapp', 'phone', 'telegram', 'sms']),
+  name: z.string().min(1, "El nombre es requerido"),
+  number: z.string().min(1, "El número es requerido"),
+  type: z.enum(["whatsapp", "phone", "telegram", "sms"]),
   description: z.string().optional(),
   isActive: z.boolean().default(true),
-  order: z.number().default(0)
-})
+  order: z.number().default(0),
+});
 
 // GET - Obtener todos los contactos de soporte
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const activeOnly = searchParams.get('activeOnly') === 'true'
+    const { searchParams } = new URL(request.url);
+    const activeOnly = searchParams.get("activeOnly") === "true";
 
     const contacts = await db.supportContact.findMany({
-      orderBy: [
-        { order: 'asc' },
-        { createdAt: 'desc' }
-      ],
+      orderBy: [{ order: "asc" }, { createdAt: "desc" }],
       select: {
         id: true,
         name: true,
@@ -32,38 +29,37 @@ export async function GET(request: NextRequest) {
         isActive: true,
         order: true,
         createdAt: true,
-        updatedAt: true
-      }
-    })
+        updatedAt: true,
+      },
+    });
 
-    const filteredContacts = activeOnly 
-      ? contacts.filter(contact => contact.isActive)
-      : contacts
+    const filteredContacts = activeOnly
+      ? contacts.filter((contact) => contact.isActive)
+      : contacts;
 
     return NextResponse.json({
       success: true,
       contacts: filteredContacts,
       total: contacts.length,
-      active: contacts.filter(c => c.isActive).length
-    })
-
+      active: contacts.filter((c) => c.isActive).length,
+    });
   } catch (error) {
-    console.error('Error fetching support contacts:', error)
+    //console.error('Error fetching support contacts:', error)
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: "Error interno del servidor" },
       { status: 500 }
-    )
+    );
   }
 }
 
 // POST - Crear nuevo contacto de soporte
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const body = await request.json();
 
     // Validar datos
-    const validation = supportContactSchema.safeParse(body)
-    if (!validation.success) {
+    const validation = supportContactSchema.safeParse(body);
+    /* if (!validation.success) {
       const fieldErrors = validation.error.errors[0]
       return NextResponse.json(
         { 
@@ -72,9 +68,25 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       )
+    } */
+
+    if (!validation.success) {
+      const allErrors = validation.error.issues.map((issue) => ({
+        field: issue.path[0],
+        message: issue.message,
+      }));
+
+      return NextResponse.json(
+        {
+          error: "Datos inválidos",
+          details: allErrors,
+        },
+        { status: 400 }
+      );
     }
 
-    const { name, number, type, description, isActive, order } = validation.data
+    const { name, number, type, description, isActive, order } =
+      validation.data;
 
     // Crear contacto
     const newContact = await db.supportContact.create({
@@ -84,7 +96,7 @@ export async function POST(request: NextRequest) {
         type,
         description,
         isActive,
-        order
+        order,
       },
       select: {
         id: true,
@@ -95,41 +107,43 @@ export async function POST(request: NextRequest) {
         isActive: true,
         order: true,
         createdAt: true,
-        updatedAt: true
-      }
-    })
+        updatedAt: true,
+      },
+    });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Contacto de soporte creado exitosamente',
-      contact: newContact
-    }, { status: 201 })
-
-  } catch (error) {
-    console.error('Error creating support contact:', error)
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      {
+        success: true,
+        message: "Contacto de soporte creado exitosamente",
+        contact: newContact,
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Error creating support contact:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
       { status: 500 }
-    )
+    );
   }
 }
 
 // PUT - Actualizar contacto de soporte existente
 export async function PUT(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { id, ...updateData } = body
+    const body = await request.json();
+    const { id, ...updateData } = body;
 
     if (!id) {
       return NextResponse.json(
-        { error: 'ID del contacto es requerido' },
+        { error: "ID del contacto es requerido" },
         { status: 400 }
-      )
+      );
     }
 
     // Validar datos (parcial)
-    const validation = supportContactSchema.partial().safeParse(updateData)
-    if (!validation.success) {
+    const validation = supportContactSchema.partial().safeParse(updateData);
+    /* if (!validation.success) {
       const fieldErrors = validation.error.errors[0]
       return NextResponse.json(
         { 
@@ -138,18 +152,33 @@ export async function PUT(request: NextRequest) {
         },
         { status: 400 }
       )
+    } */
+
+    if (!validation.success) {
+      const allErrors = validation.error.issues.map((issue) => ({
+        field: issue.path[0],
+        message: issue.message,
+      }));
+
+      return NextResponse.json(
+        {
+          error: "Datos inválidos",
+          details: allErrors,
+        },
+        { status: 400 }
+      );
     }
 
     // Verificar si el contacto existe
     const existingContact = await db.supportContact.findUnique({
-      where: { id }
-    })
+      where: { id },
+    });
 
     if (!existingContact) {
       return NextResponse.json(
-        { error: 'Contacto de soporte no encontrado' },
+        { error: "Contacto de soporte no encontrado" },
         { status: 404 }
-      )
+      );
     }
 
     // Actualizar contacto
@@ -165,65 +194,63 @@ export async function PUT(request: NextRequest) {
         isActive: true,
         order: true,
         createdAt: true,
-        updatedAt: true
-      }
-    })
+        updatedAt: true,
+      },
+    });
 
     return NextResponse.json({
       success: true,
-      message: 'Contacto de soporte actualizado exitosamente',
-      contact: updatedContact
-    })
-
+      message: "Contacto de soporte actualizado exitosamente",
+      contact: updatedContact,
+    });
   } catch (error) {
-    console.error('Error updating support contact:', error)
+    //console.error("Error updating support contact:", error);
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: "Error interno del servidor" },
       { status: 500 }
-    )
+    );
   }
 }
 
 // DELETE - Eliminar contacto de soporte
 export async function DELETE(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
 
     if (!id) {
       return NextResponse.json(
-        { error: 'ID del contacto es requerido' },
+        { error: "ID del contacto es requerido" },
         { status: 400 }
-      )
+      );
     }
 
     // Verificar si el contacto existe
     const existingContact = await db.supportContact.findUnique({
-      where: { id }
-    })
+      where: { id },
+    });
 
     if (!existingContact) {
       return NextResponse.json(
-        { error: 'Contacto de soporte no encontrado' },
+        { error: "Contacto de soporte no encontrado" },
         { status: 404 }
-      )
+      );
     }
 
     // Eliminar contacto
     await db.supportContact.delete({
-      where: { id }
-    })
+      where: { id },
+    });
 
     return NextResponse.json({
       success: true,
-      message: 'Contacto de soporte eliminado exitosamente'
-    })
-
+      message: "Contacto de soporte eliminado exitosamente",
+    });
   } catch (error) {
-    console.error('Error deleting support contact:', error)
+    //console.error("Error deleting support contact:", error);
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: "Error interno del servidor" },
       { status: 500 }
-    )
+    );
   }
 }

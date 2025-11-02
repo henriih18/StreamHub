@@ -54,7 +54,9 @@ interface StreamingAccount {
 }
 
 interface StreamingCardProps {
-  account: StreamingAccount
+  account: StreamingAccount 
+
+
   onAddToCart: (account: StreamingAccount, quantity: number) => void
   isMostPopular?: boolean
 }

@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 
 export async function POST() {
   try {
-    console.log('Starting totalSpent recalculation for all users...')
+    //console.log('Starting totalSpent recalculation for all users...')
 
     // Get all users with their orders
     const users = await db.user.findMany({
@@ -16,7 +16,7 @@ export async function POST() {
       }
     })
 
-    console.log(`Found ${users.length} users to update`)
+    //console.log(`Found ${users.length} users to update`)
 
     // Update each user's totalSpent
     const updatePromises = users.map(async (user) => {
@@ -24,7 +24,7 @@ export async function POST() {
       
       // Only update if there's a difference
       if (user.totalSpent !== calculatedTotal) {
-        console.log(`Updating user ${user.email}: ${user.totalSpent} -> ${calculatedTotal}`)
+        //console.log(`Updating user ${user.email}: ${user.totalSpent} -> ${calculatedTotal}`)
         
         return db.user.update({
           where: { id: user.id },
@@ -38,19 +38,19 @@ export async function POST() {
     const results = await Promise.all(updatePromises)
     const updatedCount = results.filter(result => result !== null).length
 
-    console.log(`Successfully updated ${updatedCount} users`)
+    //console.log(`Successfully updated ${updatedCount} users`)
 
     return NextResponse.json({
       success: true,
-      message: `Successfully updated totalSpent for ${updatedCount} users`,
+      message: `Se actualizó correctamente el total gastado para ${updatedCount} usuarios.`,
       totalUsers: users.length,
       updatedUsers: updatedCount
     })
 
   } catch (error) {
-    console.error('Error updating totalSpent:', error)
+    //console.error('Error updating totalSpent:', error)
     return NextResponse.json(
-      { error: 'Error updating totalSpent' },
+      { error: 'Error al actualizar el total gastado' },
       { status: 500 }
     )
   }

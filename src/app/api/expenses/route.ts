@@ -57,8 +57,8 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error fetching expenses:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    //console.error('Error fetching expenses:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
 
@@ -67,8 +67,9 @@ export async function POST(request: NextRequest) {
     const { name, description, amount, category, frequency, dueDate } = await request.json()
 
     if (!name || !amount || !category) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+      return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 })
     }
+
 
     const expense = await db.expense.create({
       data: {
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(expense)
   } catch (error) {
-    console.error('Error creating expense:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    //console.error('Error creating expense:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }

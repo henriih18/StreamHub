@@ -15,7 +15,7 @@ export async function DELETE(
 
     if (!existingOffer) {
       return NextResponse.json(
-        { error: 'Special offer not found' },
+        { error: 'Oferta especial no encontrada' },
         { status: 404 }
       )
     }
@@ -25,11 +25,11 @@ export async function DELETE(
       where: { id }
     })
 
-    return NextResponse.json({ message: 'Special offer deleted successfully' })
+    return NextResponse.json({ message: 'Oferta especial eliminada con éxito' })
   } catch (error) {
-    console.error('Error deleting special offer:', error)
+    //console.error('Error deleting special offer:', error)
     return NextResponse.json(
-      { error: 'Error deleting special offer' },
+      { error: 'Error al eliminar la oferta especial' },
       { status: 500 }
     )
   }

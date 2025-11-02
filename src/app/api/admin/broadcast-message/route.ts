@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { toast } from 'sonner'
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,7 +26,9 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    console.log(`Found ${users.length} users with role USER`)
+    //console.log(`Found ${users.length} users with role USER`)
+    
+
 
     if (users.length === 0) {
       // Get all users to debug
@@ -37,7 +40,7 @@ export async function POST(request: NextRequest) {
           role: true
         }
       })
-      console.log('All users in database:', allUsers)
+      //console.log('All users in database:', allUsers)
       
       return NextResponse.json(
         { 
@@ -57,7 +60,7 @@ export async function POST(request: NextRequest) {
       select: { id: true, name: true, email: true }
     })
 
-    console.log('Found admin user:', adminUser)
+    //console.log('Found admin user:', adminUser)
 
     if (!adminUser) {
       return NextResponse.json(
@@ -82,7 +85,7 @@ export async function POST(request: NextRequest) {
       )
     )
 
-    console.log(`Successfully created ${messages.length} messages`)
+    //console.log(`Successfully created ${messages.length} messages`)
 
     return NextResponse.json({
       message: 'Mensajes enviados exitosamente',
@@ -94,11 +97,13 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error sending broadcast message:', error)
+    //console.error('Error al enviar el mensaje de difusión.', error)
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
+  const errorDetails = error instanceof Error ? error.stack : 'No hay detalles disponibles'
     return NextResponse.json(
       { 
-        error: 'Error al enviar mensajes masivos: ' + error.message,
-        details: error.stack
+        error: 'Error al enviar mensajes masivos: ' + errorMessage,
+        details: errorDetails
       },
       { status: 500 }
     )
@@ -128,7 +133,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error getting broadcast stats:', error)
+    //console.error('Error al obtener las estadísticas de la transmisión: ', error)
     return NextResponse.json(
       { error: 'Error al obtener estadísticas' },
       { status: 500 }

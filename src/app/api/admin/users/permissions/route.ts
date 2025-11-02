@@ -18,7 +18,7 @@ export async function PUT(request: NextRequest) {
 
     if (!userId || !action) {
       return NextResponse.json(
-        { error: 'Faltan campos requeridos' },
+        { error: 'Faltan campos requeridos.' },
         { status: 400 }
       )
     }
@@ -91,9 +91,9 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(updatedUser)
   } catch (error) {
-    console.error('Error updating user permissions:', error)
+    //console.error('Error updating user permissions:', error)
     return NextResponse.json(
-      { error: 'Error al actualizar permisos del usuario' },
+      { error: 'Error al actualizar permisos del usuario.' },
       { status: 500 }
     )
   }

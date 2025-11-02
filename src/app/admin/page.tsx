@@ -136,6 +136,7 @@ interface Order {
     name: string | null
   }
   streamingAccount: {
+    id: true
     name: string
     type: string
     price: number
@@ -169,10 +170,13 @@ interface SpecialOffer {
   streamingAccount: {
     name: string
     type: string
+    price: number
   }
   discountPercentage: number
   isActive: boolean
   expiresAt: string | null
+
+  createdAt: string
 }
 
 interface ExclusiveAccount {
@@ -754,7 +758,8 @@ export default function AdminPage() {
     }))
 
     // Revenue by month (last 6 months)
-    const revenueByMonth = []
+    /* const revenueByMonth = [] */
+    const revenueByMonth: Array<{month: string; revenue: number; orders: number}> = [];
     const now = new Date()
     for (let i = 5; i >= 0; i--) {
       const month = new Date(now.getFullYear(), now.getMonth() - i, 1)
@@ -787,7 +792,7 @@ export default function AdminPage() {
       .slice(0, 5)
 
     // User growth
-    const userGrowth = []
+    const userGrowth: Array<{month: string; users:number; newUsers: number}> = []
     for (let i = 5; i >= 0; i--) {
       const month = new Date(now.getFullYear(), now.getMonth() - i, 1)
       const monthName = month.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })
@@ -807,7 +812,7 @@ export default function AdminPage() {
     }
 
     // Recent activity
-    const recentActivity = []
+    const recentActivity: Array<{type: string; description: string; time: string; icon: string}> = []
     const recentOrders = ordersData.slice(-5).reverse()
     recentOrders.forEach(order => {
       recentActivity.push({
@@ -1172,10 +1177,17 @@ export default function AdminPage() {
 
         // Si estamos editando, actualizar el editingType
         if (editingType) {
-          setEditingType(prev => ({
+          /* setEditingType(prev => ({
             ...prev,
             imageUrl: data.url
-          }))
+          })) */
+         setEditingType(prev => {
+  if (!prev) return prev;
+  return {
+    ...prev,
+    imageUrl: data.url
+  };
+});
         } else {
           // Si estamos creando, actualizar el newStreamingType
           setNewStreamingType(prev => ({

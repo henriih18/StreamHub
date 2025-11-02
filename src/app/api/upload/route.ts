@@ -10,14 +10,14 @@ export async function POST(request: NextRequest) {
     const file: File | null = data.get('file') as unknown as File
 
     if (!file) {
-      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
+      return NextResponse.json({ error: 'No se ha subido ningún archivo' }, { status: 400 })
     }
 
     // Validar tipo de archivo
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Invalid file type. Only JPEG, PNG, SVG, and WebP are allowed' },
+        { error: 'Tipo de archivo no válido. Solo se permiten JPEG, PNG, SVG y WebP.' },
         { status: 400 }
       )
     }
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const maxSize = 5 * 1024 * 1024 // 5MB
     if (file.size > maxSize) {
       return NextResponse.json(
-        { error: 'File too large. Maximum size is 5MB' },
+        { error: 'Archivo demasiado grande. El tamaño máximo es de 5 MB.' },
         { status: 400 }
         
       )
@@ -84,9 +84,9 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error uploading file:', error)
+    //console.error('Error uploading file:', error)
     return NextResponse.json(
-      { error: 'Error uploading file' },
+      { error: 'Error al cargar el archivo' },
       { status: 500 }
     )
   }

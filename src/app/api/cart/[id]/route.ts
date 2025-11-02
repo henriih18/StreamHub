@@ -12,7 +12,7 @@ export async function PUT(
 
     if (quantity < 0) {
       return NextResponse.json(
-        { error: 'Quantity cannot be negative' },
+        { error: 'La cantidad no puede ser negativa.' },
         { status: 400 }
       )
     }
@@ -32,7 +32,7 @@ export async function PUT(
 
     if (!cartItem) {
       return NextResponse.json(
-        { error: 'Cart item not found' },
+        { error: 'Artículo del carrito no encontrado' },
         { status: 404 }
       )
     }
@@ -70,9 +70,9 @@ export async function PUT(
 
     return NextResponse.json(updatedCartItem)
   } catch (error) {
-    console.error('Error updating cart item:', error)
+    //console.error('Error updating cart item:', error)
     return NextResponse.json(
-      { error: 'Error updating cart item' },
+      { error: 'Error al actualizar el artículo del carrito' },
       { status: 500 }
     )
   }
@@ -90,7 +90,7 @@ export async function DELETE(
 
     if (!cartItem) {
       return NextResponse.json(
-        { error: 'Cart item not found' },
+        { error: 'Artículo del carrito no encontrado' },
         { status: 404 }
       )
     }
@@ -102,11 +102,11 @@ export async function DELETE(
     // Update cart total
     await updateCartTotal(cartItem.cartId)
 
-    return NextResponse.json({ message: 'Item removed from cart' })
+    return NextResponse.json({ message: 'Artículo eliminado del carrito' })
   } catch (error) {
-    console.error('Error removing cart item:', error)
+    //console.error('Error removing cart item:', error)
     return NextResponse.json(
-      { error: 'Error removing cart item' },
+      { error: 'Error al eliminar el artículo del carrito' },
       { status: 500 }
     )
   }

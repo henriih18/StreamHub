@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { toast } from 'sonner'
 
 // Simulación de almacenamiento de usuarios en línea
 // En un entorno real, esto usaría Redis o una base de datos en memoria
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(onlineUsersStats)
     
   } catch (error) {
-    console.error('Error fetching online users:', error)
+    toast.error('Error al obtener los usuarios en línea: ${error}')
     return NextResponse.json(
       { error: 'Error fetching online users' },
       { status: 500 }

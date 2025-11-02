@@ -139,9 +139,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response)
   } catch (error) {
-    console.error('Error fetching stock by account:', error)
+    //console.error('Error fetching stock by account:', error)
     return NextResponse.json(
-      { success: false, error: 'Error fetching stock data' },
+      { success: false, error: 'Error al obtener los datos de stock' },
       { status: 500 }
     )
   }

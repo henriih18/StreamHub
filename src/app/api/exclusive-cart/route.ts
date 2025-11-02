@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
 
     if (!userId) {
       return NextResponse.json(
-        { error: 'User ID is required' },
+        { error: 'Se requiere el ID de usuario' },
         { status: 400 }
       )
     }
@@ -44,9 +44,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(exclusiveAccounts)
   } catch (error) {
-    console.error('Error fetching exclusive accounts:', error)
+    //console.error('Error fetching exclusive accounts:', error)
     return NextResponse.json(
-      { error: 'Error fetching exclusive accounts' },
+      { error: 'Error al recuperar cuentas exclusivas' },
       { status: 500 }
     )
   }
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     if (!userId || !exclusiveAccountId) {
       return NextResponse.json(
-        { error: 'User ID and Exclusive Account ID are required' },
+        { error: 'Se requieren el ID de usuario y el ID de cuenta exclusivo.' },
         { status: 400 }
       )
     }
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
 
     if (!exclusiveAccount) {
       return NextResponse.json(
-        { error: 'Exclusive account not found' },
+        { error: 'Cuenta exclusiva no encontrada' },
         { status: 404 }
       )
     }
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
 
     if (!hasAccess) {
       return NextResponse.json(
-        { error: 'Access denied to this exclusive account' },
+        { error: 'Acceso denegado a esta cuenta exclusiva' },
         { status: 403 }
       )
     }
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     const availableStock = exclusiveAccount.exclusiveStocks.length
     if (availableStock < quantity) {
       return NextResponse.json(
-        { error: `Insufficient stock. Only ${availableStock} units available` },
+        { error: `Stock insuficiente. Solo hay ${availableStock} unidades disponibles` },
         { status: 400 }
       )
     }
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
       // Check stock again
       if (availableStock < newQuantity) {
         return NextResponse.json(
-          { error: `Insufficient stock. Only ${availableStock} units available` },
+          { error: `Stock insuficiente. Solo hay ${availableStock} unidades disponibles` },
           { status: 400 }
         )
       }
@@ -167,9 +167,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(cartItem, { status: 201 })
     }
   } catch (error) {
-    console.error('Error adding exclusive account to cart:', error)
+    //console.error('Error adding exclusive account to cart:', error)
     return NextResponse.json(
-      { error: 'Error adding to cart' },
+      { error: 'Error al agregar al carrito' },
       { status: 500 }
     )
   }

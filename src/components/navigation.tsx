@@ -12,7 +12,7 @@ import { toast } from '@/components/ui/toast-custom'
 interface NavigationProps {
   user: any
   cartItemsCount: number
-  onCartOpen: () => void
+  onCartOpen: () => void 
   onLogin: () => void
   onLogout: () => void
 }

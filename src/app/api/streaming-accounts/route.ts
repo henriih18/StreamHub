@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Get exclusive accounts
-    let exclusiveAccounts = []
+    let exclusiveAccounts: any[] = []
     // console.log('API: Fetching exclusive accounts for user:', userId) // Debug log
     
     // Build the where condition based on whether user is logged in
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Get special offers for user
-    let specialOffers = []
+    let specialOffers: any[] = []
     if (userId) {
       // console.log('API: Fetching special offers for user:', userId) // Debug log
       specialOffers = await db.specialOffer.findMany({
@@ -129,9 +129,9 @@ export async function GET(request: NextRequest) {
       specialOffers
     })
   } catch (error) {
-    console.error('Error fetching streaming accounts:', error)
+    //console.error('Error fetching streaming accounts:', error)
     return NextResponse.json(
-      { error: 'Error fetching streaming accounts' },
+      { error: 'Error al obtener las cuentas de streaming' },
       { status: 500 }
     )
   }
@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!name || !description || !price || !type || !duration || !quality || !screens) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Faltan campos obligatorios' },
         { status: 400 }
       )
     }
@@ -203,9 +203,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(account, { status: 201 })
   } catch (error) {
-    console.error('Error creating streaming account:', error)
+    //console.error('Error creating streaming account:', error)
     return NextResponse.json(
-      { error: 'Error creating streaming account' },
+      { error: 'Error al crear una cuenta de streaming' },
       { status: 500 }
     )
   }

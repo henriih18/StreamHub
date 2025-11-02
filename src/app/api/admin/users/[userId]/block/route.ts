@@ -12,7 +12,7 @@ export async function POST(
 
     if (!userId || !blockType || !reason) {
       return NextResponse.json(
-        { error: 'Faltan campos requeridos' },
+        { error: 'Faltan campos requeridos.' },
         { status: 400 }
       )
     }
@@ -84,20 +84,20 @@ export async function POST(
     }
 
     // Log the action
-    console.log(`Block created for user ${userId}:`, {
+    /* console.log(`Block created for user ${userId}:`, {
       blockId: block.id,
       blockType,
       duration,
       reason,
       expiresAt,
       timestamp: new Date()
-    })
+    }) */
 
     return NextResponse.json({ user: updatedUser, block })
   } catch (error) {
-    console.error('Error creating block:', error)
+    //console.error('Error creating block:', error)
     return NextResponse.json(
-      { error: 'Error al bloquear usuario' },
+      { error: 'Error al bloquear usuario.' },
       { status: 500 }
     )
   }

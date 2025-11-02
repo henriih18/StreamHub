@@ -34,7 +34,7 @@ export async function PUT(
 
     return NextResponse.json(updatedOrder)
   } catch (error) {
-    console.error('Error updating order credentials:', error)
+    //console.error('Error updating order credentials:', error)
     return NextResponse.json(
       { error: 'Error al actualizar credenciales del pedido' },
       { status: 500 }

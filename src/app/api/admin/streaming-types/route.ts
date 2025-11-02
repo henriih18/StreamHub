@@ -20,9 +20,9 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
     
     return createStaticJsonResponse(types)
   } catch (error) {
-    console.error('Error fetching streaming types:', error)
+    //console.error('Error fetching streaming types:', error)
     return NextResponse.json(
-      { error: 'Error fetching streaming types' },
+      { error: 'Error al recuperar tipos de Streaming.' },
       { status: 500 }
     )
   }
@@ -34,7 +34,7 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
 
     if (!name) {
       return NextResponse.json(
-        { error: 'Name is required' },
+        { error: 'El nombre es obligatorio.' },
         { status: 400 }
       )
     }
@@ -45,7 +45,7 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
 
     if (existingType) {
       return NextResponse.json(
-        { error: 'Streaming type already exists' },
+        { error: 'El tipo de Streaming ya existe.' },
         { status: 400 }
       )
     }
@@ -64,9 +64,9 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
 
     return NextResponse.json(newType)
   } catch (error) {
-    console.error('Error creating streaming type:', error)
+    //console.error('Error creating streaming type:', error)
     return NextResponse.json(
-      { error: 'Error creating streaming type' },
+      { error: 'Error al crear el tipo de streaming.' },
       { status: 500 }
     )
   }

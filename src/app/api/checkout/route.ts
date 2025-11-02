@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { SaleType } from '@prisma/client'
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,7 +9,7 @@ export async function POST(request: NextRequest) {
 
     if (!userId) {
       return NextResponse.json(
-        { error: 'User ID is required' },
+        { error: 'Se requiere el ID de usuario' },
         { status: 400 }
       )
     }
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     if (!cart || cart.items.length === 0) {
       return NextResponse.json(
-        { error: 'Cart is empty' },
+        { error: 'El carrito está vacío' },
         { status: 400 }
       )
     }
@@ -56,14 +57,14 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { error: 'User not found' },
+        { error: 'Usuario no encontrado' },
         { status: 404 }
       )
     }
 
     if (user.isBlocked) {
       return NextResponse.json(
-        { error: 'User is blocked' },
+        { error: 'El usuario está bloqueado' },
         { status: 403 }
       )
     }
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
     // Check if user has enough credits
     if (user.credits < totalAmount) {
       return NextResponse.json(
-        { error: 'Insufficient credits' },
+        { error: 'Créditos insuficientes' },
         { status: 400 }
       )
     }
@@ -90,8 +91,8 @@ export async function POST(request: NextRequest) {
         }
       })
 
-      // Create orders for each cart item
-      const orders = []
+     // Create orders for each cart item
+const orders: any[] = []
       for (const cartItem of cart.items) {
         const { streamingAccount, exclusiveAccount, quantity, saleType, priceAtTime } = cartItem
 
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
             // Handle profile stock
             availableStock = streamingAccount.profileStocks?.filter(stock => stock.isAvailable).length || 0
             if (availableStock < quantity) {
-              throw new Error(`Insufficient stock for ${streamingAccount.name}. Only ${availableStock} profiles available.`)
+              throw new Error(`Stock insuficiente para ${streamingAccount.name}. Solo hay ${availableStock} perfiles disponibles.`)
             }
 
             // Get available profile stocks
@@ -148,7 +149,7 @@ export async function POST(request: NextRequest) {
             // Handle full account stock
             availableStock = streamingAccount.accountStocks?.filter(stock => stock.isAvailable).length || 0
             if (availableStock < quantity) {
-              throw new Error(`Insufficient stock for ${streamingAccount.name}. Only ${availableStock} accounts available.`)
+              throw new Error(`Stock insuficiente para ${streamingAccount.name}. Solo hay ${availableStock} cuentas disponibles.`)
             }
 
             // Get available account stocks
@@ -190,7 +191,7 @@ export async function POST(request: NextRequest) {
           // Process exclusive account
           const availableStock = exclusiveAccount.exclusiveStocks?.length || 0
           if (availableStock < quantity) {
-            throw new Error(`Insufficient stock for ${exclusiveAccount.name}. Only ${availableStock} accounts available.`)
+            throw new Error(`Stock insuficiente para ${exclusiveAccount.name}. Solo hay ${availableStock} cuentas disponibles.`)
           }
 
           // Get available exclusive stocks
@@ -212,7 +213,8 @@ export async function POST(request: NextRequest) {
                 accountEmail: stock.email,
                 accountPassword: stock.password,
                 quantity: 1,
-                saleType: exclusiveAccount.saleType || 'FULL',
+                /* saleType: exclusiveAccount.saleType || 'FULL', */
+                saleType: exclusiveAccount.saleType === 'PROFILES' ? SaleType.PROFILES : SaleType.FULL,
                 totalPrice: priceAtTime,
                 status: 'COMPLETED',
                 expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
@@ -251,13 +253,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Payment processed successfully',
+      message: 'Pago procesado exitosamente',
       orders: result,
       newCredits: updatedUser?.credits || 0
     })
 
   } catch (error) {
-    console.error('Error processing checkout:', error)
+    //console.error('Error processing checkout:', error)
     
     if (error instanceof Error) {
       return NextResponse.json(
@@ -267,7 +269,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Error processing payment' },
+      { error: 'Error al procesar el pago' },
       { status: 500 }
     )
   }

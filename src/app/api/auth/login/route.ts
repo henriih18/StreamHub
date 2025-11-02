@@ -1,24 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
-import { z } from 'zod'
-import { db } from '@/lib/db'
-import jwt from 'jsonwebtoken'
+import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import { z } from "zod";
+import { db } from "@/lib/db";
+import jwt from "jsonwebtoken";
 
 // Schema de validación para el login
 const loginSchema = z.object({
-  email: z.string().email('Email no válido'),
-  password: z.string().min(1, 'La contraseña es requerida')
-})
+  email: z.string().email("Email no válido"),
+  password: z.string().min(1, "La contraseña es requerida"),
+});
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
+/* const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production' */
+
+const JWT_SECRET = process.env.JWT_SECRET as string;
+
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET environment variable is required");
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const body = await request.json();
 
     // Validar los datos de entrada
-    const validation = loginSchema.safeParse(body)
-    if (!validation.success) {
+    const validation = loginSchema.safeParse(body);
+    /* if (!validation.success) {
       const fieldErrors = validation.error.errors[0]
       return NextResponse.json(
         { 
@@ -27,9 +33,24 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       )
+    } */
+
+    if (!validation.success) {
+      const allErrors = validation.error.issues.map((issue) => ({
+        field: issue.path[0],
+        message: issue.message,
+      }));
+
+      return NextResponse.json(
+        {
+          error: "Datos inválidos",
+          details: allErrors,
+        },
+        { status: 400 }
+      );
     }
 
-    const { email, password } = validation.data
+    const { email, password } = validation.data;
 
     // Buscar usuario por email
     const user = await db.user.findUnique({
@@ -52,160 +73,166 @@ export async function POST(request: NextRequest) {
         credits: true,
         avatar: true,
         phone: true,
-        createdAt: true
-      }
-    })
+        createdAt: true,
+      },
+    });
 
     if (!user) {
       return NextResponse.json(
-        { error: 'Email o contraseña incorrectos', field: 'email' },
+        { error: "Email o contraseña incorrectos", field: "email" },
         { status: 401 }
-      )
+      );
     }
 
     // Verificar bloqueos en UserBlock (sistema nuevo)
     const userBlocks = await db.userBlock.findMany({
       where: {
         userId: user.id,
-        isActive: true
+        isActive: true,
       },
       orderBy: {
-        createdAt: 'desc'
-      }
-    })
+        createdAt: "desc",
+      },
+    });
 
-    let isBlocked = false
-    let blockType = ''
-    let blockReason = ''
-    let blockExpiresAt: Date | null = null
+    let isBlocked = false;
+    let blockType = "";
+    let blockReason = "";
+    let blockExpiresAt: Date | null = null;
 
     // Verificar si hay bloqueos activos
     for (const block of userBlocks) {
-      if (block.blockType === 'permanent') {
-        isBlocked = true
-        blockType = 'permanente'
-        blockReason = block.reason
-        break
-      } else if (block.blockType === 'temporary') {
+      if (block.blockType === "permanent") {
+        isBlocked = true;
+        blockType = "permanente";
+        blockReason = block.reason;
+        break;
+      } else if (block.blockType === "temporary") {
         if (block.expiresAt && new Date() < block.expiresAt) {
-          isBlocked = true
-          blockType = 'temporal'
-          blockReason = block.reason
-          blockExpiresAt = block.expiresAt
-          break
+          isBlocked = true;
+          blockType = "temporal";
+          blockReason = block.reason;
+          blockExpiresAt = block.expiresAt;
+          break;
         }
       }
     }
 
     // También verificar el campo isBlocked del usuario (sistema antiguo - compatibilidad)
     if (user.isBlocked) {
-      isBlocked = true
+      isBlocked = true;
       if (!blockReason) {
-        blockReason = user.blockReason || 'Restricción de cuenta'
-        blockExpiresAt = user.blockExpiresAt
-        blockType = blockExpiresAt ? 'temporal' : 'permanente'
+        blockReason = user.blockReason || "Restricción de cuenta";
+        blockExpiresAt = user.blockExpiresAt;
+        blockType = blockExpiresAt ? "temporal" : "permanente";
       }
     }
 
     // Verificar si el usuario está bloqueado
     if (isBlocked) {
-      let message = `Cuenta bloqueada (${blockType}). Motivo: ${blockReason}`
-      
-      if (blockType === 'temporal' && blockExpiresAt) {
-        const expiryDate = new Date(blockExpiresAt)
-        const now = new Date()
-        const diffHours = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60))
-        const diffDays = Math.ceil(diffHours / 24)
-        
+      let message = `Cuenta bloqueada (${blockType}). Motivo: ${blockReason}`;
+
+      if (blockType === "temporal" && blockExpiresAt) {
+        const expiryDate = new Date(blockExpiresAt);
+        const now = new Date();
+        const diffHours = Math.ceil(
+          (expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60)
+        );
+        const diffDays = Math.ceil(diffHours / 24);
+
         if (diffDays > 0) {
-          message += `. Tiempo restante: ${diffDays} día${diffDays > 1 ? 's' : ''}`
+          message += `. Tiempo restante: ${diffDays} día${
+            diffDays > 1 ? "s" : ""
+          }`;
         } else if (diffHours > 0) {
-          message += `. Tiempo restante: ${diffHours} hora${diffHours > 1 ? 's' : ''}`
+          message += `. Tiempo restante: ${diffHours} hora${
+            diffHours > 1 ? "s" : ""
+          }`;
         } else {
-          message += `. Expira en menos de 1 hora`
+          message += `. Expira en menos de 1 hora`;
         }
-        
-        message += ` (${expiryDate.toLocaleDateString('es-ES', { 
-          day: '2-digit', 
-          month: '2-digit', 
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        })})`
-      } else if (blockType === 'permanent') {
-        message += '. Este bloqueo es permanente.'
+
+        message += ` (${expiryDate.toLocaleDateString("es-ES", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })})`;
+      } else if (blockType === "permanent") {
+        message += ". Este bloqueo es permanente.";
       }
 
       return NextResponse.json(
-        { 
+        {
           error: message,
-          field: 'email',
+          field: "email",
           blockDetails: {
             type: blockType,
             reason: blockReason,
-            expiresAt: blockExpiresAt
-          }
+            expiresAt: blockExpiresAt,
+          },
         },
         { status: 403 }
-      )
+      );
     }
 
     // Verificar si el usuario está activo
     if (!user.isActive) {
       return NextResponse.json(
-        { error: 'Cuenta desactivada. Contacta con soporte.', field: 'email' },
+        { error: "Cuenta desactivada. Contacta con soporte.", field: "email" },
         { status: 403 }
-      )
+      );
     }
 
     // Verificar contraseña
     if (!user.password) {
       return NextResponse.json(
-        { error: 'Email o contraseña incorrectos', field: 'email' },
+        { error: "Email o contraseña incorrectos", field: "email" },
         { status: 401 }
-      )
+      );
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password)
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return NextResponse.json(
-        { error: 'Email o contraseña incorrectos', field: 'email' },
+        { error: "Email o contraseña incorrectos", field: "email" },
         { status: 401 }
-      )
+      );
     }
 
     // Generar token JWT
     const token = jwt.sign(
-      { 
+      {
         userId: user.id,
         email: user.email,
-        role: user.role
+        role: user.role,
       },
       JWT_SECRET,
-      { expiresIn: '7d' }
-    )
+      { expiresIn: "7d" }
+    );
 
     // Actualizar último login
     await db.user.update({
       where: { id: user.id },
-      data: { 
+      data: {
         lastLogin: new Date(),
-        updatedAt: new Date()
-      }
-    })
+        updatedAt: new Date(),
+      },
+    });
 
     // Crear registro de actividad
     await db.userActivity.create({
       data: {
         userId: user.id,
-        action: 'LOGIN',
+        action: "LOGIN",
         details: JSON.stringify({
-          ip: request.headers.get('x-forwarded-for') || 'unknown',
-          userAgent: request.headers.get('user-agent') || 'unknown'
+          ip: request.headers.get("x-forwarded-for") || "unknown",
+          userAgent: request.headers.get("user-agent") || "unknown",
         }),
-        timestamp: new Date()
-      }
-    })
+        timestamp: new Date(),
+      },
+    });
 
     // Preparar datos del usuario para la respuesta (sin contraseña)
     const userResponse = {
@@ -223,41 +250,40 @@ export async function POST(request: NextRequest) {
       avatar: user.avatar,
       phone: user.phone,
       lastLogin: user.lastLogin,
-      createdAt: user.createdAt
-    }
+      createdAt: user.createdAt,
+    };
 
     return NextResponse.json({
-      message: 'Inicio de sesión exitoso',
+      message: "Inicio de sesión exitoso",
       user: userResponse,
-      token
-    })
-
+      token,
+    });
   } catch (error) {
-    console.error('Error en login:', error)
+    console.error("Error en login:", error);
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: "Error interno del servidor" },
       { status: 500 }
-    )
+    );
   }
 }
 
 // Endpoint para verificar token
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const authHeader = request.headers.get("authorization");
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json(
-        { error: 'Token no proporcionado' },
+        { error: "Token no proporcionado" },
         { status: 401 }
-      )
+      );
     }
 
-    const token = authHeader.substring(7)
-    
+    const token = authHeader.substring(7);
+
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as any
-      
+      const decoded = jwt.verify(token, JWT_SECRET) as any;
+
       // Buscar usuario actualizado
       const user = await db.user.findUnique({
         where: { id: decoded.userId },
@@ -276,41 +302,39 @@ export async function GET(request: NextRequest) {
           avatar: true,
           phone: true,
           lastLogin: true,
-          createdAt: true
-        }
-      })
+          createdAt: true,
+        },
+      });
 
       if (!user) {
         return NextResponse.json(
-          { error: 'Usuario no encontrado' },
+          { error: "Usuario no encontrado" },
           { status: 404 }
-        )
+        );
       }
 
       if (!user.isActive) {
         return NextResponse.json(
-          { error: 'Cuenta desactivada' },
+          { error: "Cuenta desactivada" },
           { status: 403 }
-        )
+        );
       }
 
       return NextResponse.json({
         valid: true,
-        user
-      })
-
+        user,
+      });
     } catch (jwtError) {
       return NextResponse.json(
-        { error: 'Token inválido o expirado' },
+        { error: "Token inválido o expirado" },
         { status: 401 }
-      )
+      );
     }
-
   } catch (error) {
-    console.error('Error en verificación de token:', error)
+    //console.error("Error en verificación de token:", error);
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: "Error interno del servidor" },
       { status: 500 }
-    )
+    );
   }
 }

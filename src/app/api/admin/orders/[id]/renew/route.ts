@@ -86,7 +86,7 @@ export async function PUT(
         ¡Tu cuenta ha sido renovada exitosamente!
         
         Detalles de la renovación:
-        - Servicio: ${order.streamingAccount?.name || order.exclusiveAccount?.title || 'Cuenta Exclusive'}
+        - Servicio: ${order.streamingAccount?.name || order.exclusiveAccount?.name || 'Cuenta Exclusive'}
         - Nueva fecha de vencimiento: ${newExpiresAt.toLocaleDateString('es-CO')}
         - Costo de renovación: $${renewalPrice.toLocaleString('es-CO')}
         - Número de renovaciones: ${result.renewalCount}
@@ -94,7 +94,7 @@ export async function PUT(
         Gracias por continuar con nuestro servicio!
       `
 
-      await zai.chat.completions.create({
+      /* await zai.chat.completions.create({
         messages: [
           {
             role: 'system',
@@ -106,9 +106,9 @@ export async function PUT(
           }
         ],
         max_tokens: 200
-      })
+      }) */
     } catch (notificationError) {
-      console.error('Error sending notification:', notificationError)
+      //console.error('Error sending notification:', notificationError)
       // Continue even if notification fails
     }
 
@@ -125,7 +125,7 @@ export async function PUT(
     })
 
   } catch (error) {
-    console.error('Error renewing order:', error)
+    //console.error('Error renewing order:', error)
     return NextResponse.json(
       { error: 'Error al renovar la cuenta' },
       { status: 500 }

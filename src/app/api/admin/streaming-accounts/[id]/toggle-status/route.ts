@@ -33,7 +33,7 @@ export async function PUT(
       message: `Cuenta ${updatedAccount.isActive ? 'activada' : 'desactivada'} exitosamente`
     })
   } catch (error) {
-    console.error('Error toggling account status:', error)
+    //console.error('Error toggling account status:', error)
     return NextResponse.json(
       { error: 'Error al cambiar estado de la cuenta' },
       { status: 500 }

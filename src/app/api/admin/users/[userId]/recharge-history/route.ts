@@ -51,9 +51,9 @@ export async function GET(
       }
     })
   } catch (error) {
-    console.error('Error fetching recharge history:', error)
+    //console.error('Error fetching recharge history:', error)
     return NextResponse.json(
-      { error: 'Error fetching recharge history' },
+      { error: 'Error al recuperar el historial de recargas.' },
       { status: 500 }
     )
   }

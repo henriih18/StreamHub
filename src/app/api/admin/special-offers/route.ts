@@ -58,8 +58,8 @@ export async function GET() {
 
     return NextResponse.json(cachedOffers)
   } catch (error) {
-    console.error('Error fetching special offers:', error)
-    return NextResponse.json({ error: 'Error fetching special offers' }, { status: 500 })
+    //console.error('Error fetching special offers:', error)
+    return NextResponse.json({ error: 'Error al cargar las ofertas especiales' }, { status: 500 })
   }
 }
 
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!userIds || !Array.isArray(userIds) || userIds.length === 0 || !streamingAccountId || !discountPercentage) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+      return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 })
     }
 
     // Create special offers for each selected user
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(transformedOffers)
   } catch (error) {
-    console.error('Error creating special offers:', error)
-    return NextResponse.json({ error: 'Error creating special offers' }, { status: 500 })
+    //console.error('Error creating special offers:', error)
+    return NextResponse.json({ error: 'Error al crear ofertas especiales' }, { status: 500 })
   }
 }

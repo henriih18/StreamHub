@@ -32,7 +32,7 @@ export default function CartPage() {
       const cartData = cart ? JSON.parse(cart) : []
       setCartItems(cartData)
     } catch (error) {
-      console.error('Error loading cart:', error)
+      //console.error('Error loading cart:', error)
       setCartItems([])
     } finally {
       setIsLoading(false)

@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error checking block status:', error)
+    //console.error('Error checking block status:', error)
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

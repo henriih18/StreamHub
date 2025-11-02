@@ -10,7 +10,7 @@ export async function GET(
 
     if (!userId) {
       return NextResponse.json(
-        { error: 'ID de usuario requerido' },
+        { error: 'ID de usuario requerido.' },
         { status: 400 }
       )
     }
@@ -22,9 +22,9 @@ export async function GET(
 
     return NextResponse.json(blocks)
   } catch (error) {
-    console.error('Error fetching blocks:', error)
+    //console.error('Error fetching blocks:', error)
     return NextResponse.json(
-      { error: 'Error al obtener bloqueos' },
+      { error: 'Error al obtener bloqueos.' },
       { status: 500 }
     )
   }

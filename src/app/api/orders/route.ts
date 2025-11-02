@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
 
       if (!userId || !items || items.length === 0) {
         return NextResponse.json(
-          { error: 'User ID and items are required' },
+          { error: 'Se requiere ID de usuario y artículos.' },
           { status: 400 }
         )
       }
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
       if (!user) {
         return NextResponse.json(
-          { error: 'User not found' },
+          { error: 'Usuario no encontrado' },
           { status: 404 }
         )
       }
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       // Check and deduct credits atomically
       if (user.credits < totalPrice) {
         return NextResponse.json(
-          { error: 'Insufficient credits' },
+          { error: 'Créditos insuficientes' },
           { status: 400 }
         )
       }
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
         }
       })
 
-      const orders = []
+      const orders = [] as any[]
       
       // Process each item with atomic inventory control
       for (const item of items) {
@@ -161,15 +161,15 @@ export async function POST(request: NextRequest) {
       }
 
       return NextResponse.json({ 
-        message: 'Orders created successfully',
+        message: 'Pedidos creados exitosamente',
         orders 
       }, { status: 201 })
 
     } catch (error) {
-      console.error('Error creating orders:', error)
+      //console.error('Error creating orders:', error)
       
       // Return specific error messages
-      const errorMessage = error instanceof Error ? error.message : 'Error creating orders'
+      const errorMessage = error instanceof Error ? error.message : 'Error al crear pedidos'
       
       return NextResponse.json(
         { error: errorMessage },
@@ -186,7 +186,7 @@ export async function GET(request: NextRequest) {
 
     if (!userId) {
       return NextResponse.json(
-        { error: 'User ID is required' },
+        { error: 'Se requiere el ID de usuario' },
         { status: 400 }
       )
     }
@@ -209,9 +209,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(orders)
   } catch (error) {
-    console.error('Error fetching orders:', error)
+    //console.error('Error fetching orders:', error)
     return NextResponse.json(
-      { error: 'Error fetching orders' },
+      { error: 'Error al recuperar pedidos' },
       { status: 500 }
     )
   }

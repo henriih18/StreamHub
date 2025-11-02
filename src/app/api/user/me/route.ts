@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(user)
   } catch (error) {
-    console.error('Error fetching user:', error)
+    //console.error('Error fetching user:', error)
     return NextResponse.json(
       { error: 'Error al obtener usuario' },
       { status: 500 }

@@ -771,7 +771,7 @@ export default function AccountPage() {
                               size="sm"
                               className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25 transition-all hover:shadow-emerald-600/40"
                               onClick={() => {
-                                const credentials = []
+                                const credentials:string[] = []
                                 if (order.accountEmail) credentials.push(`Email: ${order.accountEmail}`)
                                 if (order.accountPassword) credentials.push(`Contraseña: ${order.accountPassword}`)
                                 if (order.profileName) credentials.push(`Perfil: ${order.profileName}`)

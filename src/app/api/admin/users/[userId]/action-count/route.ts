@@ -32,9 +32,9 @@ export async function GET(
     })
 
   } catch (error) {
-    console.error('Error fetching user action count:', error)
+    //console.error('Error fetching user action count:', error)
     return NextResponse.json(
-      { error: 'Error fetching user action count' },
+      { error: 'Error al obtener el recuento de acciones del usuario.' },
       { status: 500 }
     )
   }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { OrderStatus } from '@prisma/client' 
 
 export async function PUT(
   request: NextRequest,
@@ -13,8 +14,13 @@ export async function PUT(
       profileName, 
       profilePin, 
       saleType, 
-      streamingAccountId 
+      streamingAccountId,
+     
+      
     } = await request.json()
+
+    
+    
 
     // Verificar si el pedido existe
     const order = await db.order.findUnique({
@@ -50,7 +56,7 @@ export async function PUT(
             email: accountEmail,
             password: accountPassword,
             profileName: profileName,
-            pin: profilePin || null,
+            profilePin: profilePin || null,
             isAvailable: true
           }
         })
@@ -71,7 +77,8 @@ export async function PUT(
       order: updatedOrder
     })
   } catch (error) {
-    console.error('Error rehabilitating order:', error)
+    //console.error('Error rehabilitating order:', error)
+   
     return NextResponse.json(
       { error: 'Error al rehabilitar pedido' },
       { status: 500 }

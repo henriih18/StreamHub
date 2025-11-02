@@ -10,7 +10,7 @@ export async function GET(
 
     if (!userId) {
       return NextResponse.json(
-        { error: 'ID de usuario requerido' },
+        { error: 'ID de usuario requerido.' },
         { status: 400 }
       )
     }
@@ -22,9 +22,9 @@ export async function GET(
 
     return NextResponse.json(warnings)
   } catch (error) {
-    console.error('Error fetching warnings:', error)
+    //console.error('Error fetching warnings:', error)
     return NextResponse.json(
-      { error: 'Error al obtener advertencias' },
+      { error: 'Error al obtener advertencias.' },
       { status: 500 }
     )
   }

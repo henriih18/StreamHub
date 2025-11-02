@@ -45,9 +45,9 @@ export async function GET(request: NextRequest) {
     return createDynamicJsonResponse(performanceMetrics)
     
   } catch (error) {
-    console.error('Error fetching performance metrics:', error)
+    //console.error('Error fetching performance metrics:', error)
     return NextResponse.json(
-      { error: 'Error fetching performance metrics' },
+      { error: 'Error al obtener las métricas de rendimiento' },
       { status: 500 }
     )
   }

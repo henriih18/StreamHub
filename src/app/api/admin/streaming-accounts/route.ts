@@ -30,8 +30,8 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
 
     return NextResponse.json(accounts)
   } catch (error) {
-    console.error('Error fetching streaming accounts:', error)
-    return NextResponse.json({ error: 'Error fetching streaming accounts' }, { status: 500 })
+    //console.error('Error fetching streaming accounts:', error)
+    return NextResponse.json({ error: 'Error al obtener las cuentas de streaming' }, { status: 500 })
   }
 })
 
@@ -52,7 +52,7 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
 
     // Validate required fields
     if (!name || !description || !type || !price || !duration || !quality || !screens) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+      return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 })
     }
 
     const streamingAccount = await db.streamingAccount.create({
@@ -75,7 +75,7 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
 
     return NextResponse.json(streamingAccount)
   } catch (error) {
-    console.error('Error creating streaming account:', error)
-    return NextResponse.json({ error: 'Error creating streaming account' }, { status: 500 })
+    //console.error('Error creating streaming account:', error)
+    return NextResponse.json({ error: 'Error al crear una cuenta de streaming' }, { status: 500 })
   }
 })

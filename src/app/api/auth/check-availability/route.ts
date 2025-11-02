@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     const { type: fieldType, value: fieldValue } = validation.data
 
     // Verificar disponibilidad según el tipo
-    let existingUser = null
+    let existingUser: { id: string; email: string; username: string | null; name: string | null } | null = null
     let fieldName = ''
 
     if (fieldType === 'email') {
@@ -60,9 +60,9 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Error verificando disponibilidad:', error)
+    //console.error('Error verificando disponibilidad:', error)
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Error interno del servidor.' },
       { status: 500 }
     )
   }

@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     const { year, month, force = false } = await request.json()
     
     if (!year || !month) {
-      return NextResponse.json({ error: 'Year and month are required' }, { status: 400 })
+      return NextResponse.json({ error: 'Se requiere el año y el mes' }, { status: 400 })
     }
 
     // Check if record already exists
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     if (existingRecord && !force) {
       return NextResponse.json({ 
-        error: 'Monthly record already exists', 
+        error: 'Ya existe un registro mensual', 
         existingRecord 
       }, { status: 409 })
     }
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     // Calculate profits for the specified month
     const profitsResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/expenses/profits?year=${year}&month=${month}`)
     if (!profitsResponse.ok) {
-      throw new Error('Failed to calculate profits')
+      throw new Error('No se logró calcular las ganancias')
     }
 
     const profitData = await profitsResponse.json()
@@ -71,13 +71,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Monthly record for ${year}-${month.toString().padStart(2, '0')} saved successfully`,
+      message: `Registro mensual de ${year}-${month.toString().padStart(2, '0')} guardado correctamente`,
       record: monthlyRecord
     })
 
   } catch (error) {
-    console.error('Error saving monthly record:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    //console.error('Error saving monthly record:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
 
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
       })
 
       if (!record) {
-        return NextResponse.json({ error: 'Monthly record not found' }, { status: 404 })
+        return NextResponse.json({ error: 'No se encontró el registro mensual' }, { status: 404 })
       }
 
       return NextResponse.json(record)
@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Error fetching monthly records:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    //console.error('Error fetching monthly records:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }

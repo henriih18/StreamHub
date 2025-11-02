@@ -11,7 +11,7 @@ export async function POST(
 
     if (!userId || !message || !reason) {
       return NextResponse.json(
-        { error: 'Faltan campos requeridos' },
+        { error: 'Faltan campos requeridos.' },
         { status: 400 }
       )
     }
@@ -51,18 +51,18 @@ export async function POST(
     }
 
     // Log the action
-    console.log(`Warning created for user ${userId}:`, {
+    /* console.log(`Warning created for user ${userId}:`, {
       warningId: warning.id,
       reason,
       severity,
       timestamp: new Date()
-    })
+    }) */
 
     return NextResponse.json(warning)
   } catch (error) {
     console.error('Error creating warning:', error)
     return NextResponse.json(
-      { error: 'Error al crear advertencia' },
+      { error: 'Error al crear advertencia.' },
       { status: 500 }
     )
   }

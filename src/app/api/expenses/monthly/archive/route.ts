@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     const archiveYear = targetMonth === 0 ? targetYear - 1 : targetYear
     const archiveMonth = targetMonth === 0 ? 12 : targetMonth
 
-    console.log(`Attempting to archive month: ${archiveYear}-${archiveMonth.toString().padStart(2, '0')}`)
+    //console.log(`Attempting to archive month: ${archiveYear}-${archiveMonth.toString().padStart(2, '0')}`)
 
     // Check if month is already archived
     const existingRecord = await db.monthlyProfit.findUnique({
@@ -48,14 +48,14 @@ export async function POST(request: NextRequest) {
 
     if (!saveResponse.ok) {
       const errorData = await saveResponse.json()
-      throw new Error(errorData.error || 'Failed to archive month')
+      throw new Error(errorData.error || 'No se pudo archivar el mes')
     }
 
     const saveResult = await saveResponse.json()
 
     return NextResponse.json({
       success: true,
-      message: `Month ${archiveYear}-${archiveMonth.toString().padStart(2, '0')} archived successfully`,
+      message: `Mes ${archiveYear}-${archiveMonth.toString().padStart(2, '0')} archivado exitosamente`,
       archivedMonth: {
         year: archiveYear,
         month: archiveMonth,
@@ -65,10 +65,10 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error archiving month:', error)
+    //console.error('Error archiving month:', error)
     return NextResponse.json({ 
       success: false, 
-      error: error instanceof Error ? error.message : 'Internal server error' 
+      error: error instanceof Error ? error.message : 'Error interno del servidor' 
     }, { status: 500 })
   }
 }
@@ -125,8 +125,8 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error checking archiving status:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    //console.error('Error checking archiving status:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
 

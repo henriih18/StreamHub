@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { toast } from 'sonner'
 
 // Temporarily disable authentication for development
 // TODO: Implement proper authentication with NextAuth
@@ -67,7 +68,8 @@ export async function PUT(
 
     return NextResponse.json(transformedAccount)
   } catch (error) {
-    console.error('Error updating exclusive account:', error)
+    //console.error('Error updating exclusive account:', error)
+    
     return NextResponse.json(
       { error: 'Error al actualizar cuenta exclusiva' },
       { status: 500 }
@@ -122,7 +124,8 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Cuenta eliminada exitosamente' })
   } catch (error) {
-    console.error('Error deleting exclusive account:', error)
+    //console.error('Error deleting exclusive account:', error)
+    
     return NextResponse.json(
       { error: 'Error al eliminar cuenta exclusiva' },
       { status: 500 }

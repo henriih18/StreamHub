@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { toast } from 'sonner'
 
 export async function POST(request: NextRequest) {
   try {
@@ -7,7 +8,7 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!userId || !amount) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+      return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 })
     }
 
     // Update user credits
@@ -34,7 +35,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ user, creditRecharge })
   } catch (error) {
-    console.error('Error recharging credits:', error)
-    return NextResponse.json({ error: 'Error recharging credits' }, { status: 500 })
+    //console.error('Error recharging credits:', error)
+    
+    return NextResponse.json({ error: 'Error al recargar creditos' }, { status: 500 })
   }
 }

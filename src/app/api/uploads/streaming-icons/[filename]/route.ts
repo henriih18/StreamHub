@@ -11,7 +11,7 @@ export async function GET(
     
     // Security check - only allow webp files in streaming-icons directory
     if (!filename.endsWith('.webp') || filename.includes('..') || filename.includes('/')) {
-      return NextResponse.json({ error: 'Invalid file' }, { status: 400 })
+      return NextResponse.json({ error: 'Archivo no válido' }, { status: 400 })
     }
 
     const filePath = path.join(process.cwd(), 'public', 'uploads', 'streaming-icons', filename)
@@ -19,17 +19,17 @@ export async function GET(
     try {
       const fileBuffer = await readFile(filePath)
       
-      return new NextResponse(fileBuffer, {
+      return new NextResponse(fileBuffer as any, { //revisar
         headers: {
           'Content-Type': 'image/webp',
           'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
         },
       })
     } catch (fileError) {
-      return NextResponse.json({ error: 'File not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Archivo no encontrado' }, { status: 404 })
     }
   } catch (error) {
-    console.error('Error serving image:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    //console.error('Error serving image:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }

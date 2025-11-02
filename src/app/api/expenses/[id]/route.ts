@@ -24,8 +24,8 @@ export async function PUT(
 
     return NextResponse.json(expense)
   } catch (error) {
-    console.error('Error updating expense:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    //console.error('Error updating expense:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
 
@@ -44,7 +44,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting expense:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    //console.error('Error deleting expense:', error)
+    return NextResponse.json({ error: 'Error Interno del Servidor' }, { status: 500 })
   }
 }

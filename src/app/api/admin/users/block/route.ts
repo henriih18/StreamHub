@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
 
     if (!userId || !reason || !duration) {
       return NextResponse.json(
-        { error: 'Faltan campos requeridos' },
+        { error: 'Faltan campos requeridos.' },
         { status: 400 }
       )
     }
@@ -29,9 +29,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(updatedUser)
   } catch (error) {
-    console.error('Error blocking user:', error)
+    //console.error('Error blocking user:', error)
     return NextResponse.json(
-      { error: 'Error al bloquear usuario' },
+      { error: 'Error al bloquear usuario.' },
       { status: 500 }
     )
   }

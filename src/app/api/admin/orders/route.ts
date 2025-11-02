@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withAdminAuth } from '@/lib/admin-auth'
 
+
 export const GET = withAdminAuth(async (request: NextRequest) => {
   try {
     const orders = await db.order.findMany({
@@ -14,6 +15,7 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
         },
         streamingAccount: {
           select: {
+            id: true,
             name: true,
             type: true,
             duration: true,
@@ -41,7 +43,8 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
 
     return NextResponse.json(transformedOrders)
   } catch (error) {
-    console.error('Error fetching orders:', error)
-    return NextResponse.json({ error: 'Error fetching orders' }, { status: 500 })
+    //console.error('Error al recuperar los pedidos: {error}')
+    
+    return NextResponse.json({ error: 'Error al recuperar los pedidos' }, { status: 500 })
   }
 })

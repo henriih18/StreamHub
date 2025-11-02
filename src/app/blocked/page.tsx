@@ -25,7 +25,7 @@ export default function BlockedPage() {
       document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
       router.push('/login')
     } catch (error) {
-      console.error('Error al cerrar sesión:', error)
+      //console.error('Error al cerrar sesión:', error)
       router.push('/login')
     }
   }

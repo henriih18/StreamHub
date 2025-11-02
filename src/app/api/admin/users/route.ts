@@ -6,7 +6,7 @@ import { withAdminAuth } from '@/lib/admin-auth'
 export const GET = withAdminAuth(async (request: NextRequest) => {
   try {
     const cacheKey = 'admin:users:list'
-    let users = userCache.get(cacheKey)
+    let users = userCache.get(cacheKey) as any[] | null
     
     if (!users) {
       users = await db.user.findMany({
@@ -46,7 +46,7 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
 
     return NextResponse.json(users)
   } catch (error) {
-    console.error('Error fetching users:', error)
-    return NextResponse.json({ error: 'Error fetching users' }, { status: 500 })
+    //console.error('Error fetching users:', error)
+    return NextResponse.json({ error: 'Error al recuperar usuarios.' }, { status: 500 })
   }
 })

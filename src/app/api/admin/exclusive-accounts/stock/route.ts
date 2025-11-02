@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { toast } from 'sonner'
 
 // Temporarily disable authentication for development
 // TODO: Implement proper authentication with NextAuth
@@ -17,8 +18,9 @@ export async function POST(request: NextRequest) {
     */
 
     const data = await request.json()
-    console.log('Received data for exclusive stock:', data)
-    
+    //console.log('Received data for exclusive stock:', data)
+    toast.success('Datos recibidos para stock exclusivo')
+
     const {
       exclusiveAccountId,
       email,
@@ -71,7 +73,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(stock)
   } catch (error) {
-    console.error('Error creating exclusive stock:', error)
+    //console.error('Error creating exclusive stock:', error)
+    toast.error('Error al crear stock exclusivo')
     return NextResponse.json(
       { error: 'Error al agregar stock' },
       { status: 500 }
@@ -130,7 +133,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(transformedStocks)
   } catch (error) {
-    console.error('Error fetching exclusive stocks:', error)
+    //console.error('Error fetching exclusive stocks:', error)
+    toast.error('Error al obtener acciones exclusivas')
     return NextResponse.json(
       { error: 'Error al cargar stock' },
       { status: 500 }

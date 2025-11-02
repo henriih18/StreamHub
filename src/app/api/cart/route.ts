@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
 
     if (!userId) {
       return NextResponse.json(
-        { error: 'User ID is required' },
+        { error: 'Se requiere el ID de usuario' },
         { status: 400 }
       )
     }
@@ -46,9 +46,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(cart)
   } catch (error) {
-    console.error('Error fetching cart:', error)
+    //console.error('Error fetching cart:', error)
     return NextResponse.json(
-      { error: 'Error fetching cart' },
+      { error: 'Error al recuperar el carrito' },
       { status: 500 }
     )
   }
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     if (!userId || !streamingAccountId) {
       return NextResponse.json(
-        { error: 'User ID and Streaming Account ID are required' },
+        { error: 'Se requieren el ID de usuario y el ID de la cuenta de Streaming.' },
         { status: 400 }
       )
     }
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
 
     if (!streamingAccount) {
       return NextResponse.json(
-        { error: 'Streaming account not found' },
+        { error: 'No se encontró la cuenta de Streaming' },
         { status: 404 }
       )
     }
@@ -136,9 +136,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(cartItem, { status: 201 })
     }
   } catch (error) {
-    console.error('Error adding to cart:', error)
+    //console.error('Error adding to cart:', error)
     return NextResponse.json(
-      { error: 'Error adding to cart' },
+      { error: 'Error al agregar al carrito' },
       { status: 500 }
     )
   }

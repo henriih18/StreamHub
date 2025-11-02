@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
 
     if (!userId) {
       return NextResponse.json(
-        { error: 'User ID is required' },
+        { error: 'Se requiere el ID de usuario' },
         { status: 400 }
       )
     }
@@ -30,16 +30,16 @@ export async function GET(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { error: 'User not found' },
+        { error: 'Usuario no encontrado' },
         { status: 404 }
       )
     }
 
     return NextResponse.json(user)
   } catch (error) {
-    console.error('Error fetching user credits:', error)
+    //console.error('Error fetching user credits:', error)
     return NextResponse.json(
-      { error: 'Error fetching user credits' },
+      { error: 'Error al obtener los créditos del usuario' },
       { status: 500 }
     )
   }

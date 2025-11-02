@@ -31,9 +31,9 @@ export async function PUT(
 
     return NextResponse.json(supportContact)
   } catch (error) {
-    console.error('Error updating support contact:', error)
+    //console.error('Error updating support contact:', error)
     return NextResponse.json(
-      { error: 'Error updating support contact' },
+      { error: 'Error al actualizar el contacto de soporte.' },
       { status: 500 }
     )
   }
@@ -52,9 +52,9 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting support contact:', error)
+    //console.error('Error deleting support contact:', error)
     return NextResponse.json(
-      { error: 'Error deleting support contact' },
+      { error: 'Error al eliminar el contacto de soporte.' },
       { status: 500 }
     )
   }

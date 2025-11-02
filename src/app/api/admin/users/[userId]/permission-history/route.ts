@@ -27,9 +27,9 @@ export async function GET(
 
     return NextResponse.json(mockHistory)
   } catch (error) {
-    console.error('Error fetching permission history:', error)
+    //console.error('Error fetching permission history:', error)
     return NextResponse.json(
-      { error: 'Error fetching permission history' },
+      { error: 'Error al recuperar el historial de permisos.' },
       { status: 500 }
     )
   }

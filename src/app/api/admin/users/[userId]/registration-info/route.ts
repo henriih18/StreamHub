@@ -26,7 +26,7 @@ export async function GET(
 
     if (!user) {
       return NextResponse.json(
-        { error: 'Usuario no encontrado' },
+        { error: 'Usuario no encontrado.' },
         { status: 404 }
       )
     }
@@ -58,9 +58,9 @@ export async function GET(
     })
 
   } catch (error) {
-    console.error('Error fetching user registration info:', error)
+    //console.error('Error fetching user registration info:', error)
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Error interno del servidor.' },
       { status: 500 }
     )
   }
@@ -202,7 +202,7 @@ export async function PUT(
 
     if (!existingUser) {
       return NextResponse.json(
-        { error: 'Usuario no encontrado' },
+        { error: 'Usuario no encontrado.' },
         { status: 404 }
       )
     }
@@ -286,7 +286,7 @@ export async function PUT(
     })
 
     return NextResponse.json({
-      message: 'Información de registro actualizada exitosamente',
+      message: 'Información de registro actualizada exitosamente.',
       user: updatedUser
     })
 
@@ -297,14 +297,14 @@ export async function PUT(
     if (error instanceof Error) {
       if (error.message.includes('Unique constraint')) {
         return NextResponse.json(
-          { error: 'El email o nombre de usuario ya está en uso' },
+          { error: 'El email o nombre de usuario ya está en uso.' },
           { status: 400 }
         )
       }
     }
 
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Error interno del servidor.' },
       { status: 500 }
     )
   }

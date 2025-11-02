@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { AccountProfile, AccountStock } from '@prisma/client'
+import { toast } from 'sonner'
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,7 +10,7 @@ export async function POST(request: NextRequest) {
 
     if (!streamingAccountId) {
       return NextResponse.json(
-        { error: 'Streaming account ID is required' },
+        { error: 'Se requiere el ID de la cuenta de streaming' },
         { status: 400 }
       )
     }
@@ -20,12 +22,12 @@ export async function POST(request: NextRequest) {
 
     if (!streamingAccount) {
       return NextResponse.json(
-        { error: 'Streaming account not found' },
+        { error: 'No se encontró la cuenta de streaming' },
         { status: 404 }
       )
     }
 
-    const results = []
+    const results: (AccountStock | AccountProfile)[] = []
     const actualSaleType = saleType || streamingAccount.saleType
 
     // Add full accounts to stock
@@ -74,13 +76,14 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Added ${results.length} items to stock`,
+      message: `Se agregaron ${results.length} artículos al inventario`,
       results
     })
   } catch (error) {
-    console.error('Error adding stock:', error)
+    //console.error('Error adding stock:', error)
+    
     return NextResponse.json(
-      { error: 'Error adding stock' },
+      { error: 'Error al agregar stock' },
       { status: 500 }
     )
   }

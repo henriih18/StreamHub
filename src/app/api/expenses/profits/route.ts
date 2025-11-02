@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
     const monthStart = new Date(year, month - 1, 1) // month-1 because JS months are 0-11
     const monthEnd = new Date(year, month, 0, 23, 59, 59, 999) // Last day of the month
     
-    console.log(`Calculating profits for ${year}-${month.toString().padStart(2, '0')}`)
-    console.log(`Date range: ${monthStart.toISOString()} to ${monthEnd.toISOString()}`)
+    //console.log(`Calculating profits for ${year}-${month.toString().padStart(2, '0')}`)
+    //console.log(`Date range: ${monthStart.toISOString()} to ${monthEnd.toISOString()}`)
 
     // Get credit recharges for the specified month
     const creditRecharges = await db.creditRecharge.findMany({
@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
       details: details
     })
   } catch (error) {
-    console.error('Error calculating profits:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    //console.error('Error calculating profits:', error)
+    return NextResponse.json({ error: 'Error interno sel servidor' }, { status: 500 })
   }
 }

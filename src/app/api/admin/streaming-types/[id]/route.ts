@@ -22,9 +22,9 @@ export async function PUT(
     
     return NextResponse.json(updatedType)
   } catch (error) {
-    console.error('Error updating streaming type:', error)
+    //console.error('Error updating streaming type:', error)
     return NextResponse.json(
-      { error: 'Error updating streaming type' },
+      { error: 'Error al actualizar el tipo Streaming.' },
       { status: 500 }
     )
   }
@@ -44,7 +44,7 @@ export async function DELETE(
     
     if (!streamingType) {
       return NextResponse.json(
-        { error: 'Streaming type not found' },
+        { error: 'No se encontró el tipo de Streaming.' },
         { status: 404 }
       )
     }
@@ -57,7 +57,7 @@ export async function DELETE(
     if (associatedAccounts.length > 0) {
       return NextResponse.json(
         { 
-          error: 'No se puede eliminar este tipo porque tiene cuentas asociadas',
+          error: 'No se puede eliminar este tipo porque tiene cuentas asociadas.',
           count: associatedAccounts.length,
           accounts: associatedAccounts.map(acc => acc.name)
         },
@@ -69,11 +69,11 @@ export async function DELETE(
       where: { id }
     })
     
-    return NextResponse.json({ message: 'Streaming type deleted successfully' })
+    return NextResponse.json({ message: 'Tipo de Streaming eliminado correctamente.' })
   } catch (error) {
-    console.error('Error deleting streaming type:', error)
+    //console.error('Error deleting streaming type:', error)
     return NextResponse.json(
-      { error: 'Error deleting streaming type' },
+      { error: 'Error al eliminar el tipo de Streaming.' },
       { status: 500 }
     )
   }

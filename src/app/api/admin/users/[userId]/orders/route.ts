@@ -40,7 +40,7 @@ export async function GET(
 
     return NextResponse.json(orders)
   } catch (error) {
-    console.error('Error fetching user orders:', error)
-    return NextResponse.json({ error: 'Error fetching user orders' }, { status: 500 })
+    //console.error('Error fetching user orders:', error)
+    return NextResponse.json({ error: 'Error al recuperar los pedidos de usuario.' }, { status: 500 })
   }
 }

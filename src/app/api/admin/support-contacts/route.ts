@@ -11,9 +11,9 @@ export async function GET() {
 
     return NextResponse.json(supportContacts)
   } catch (error) {
-    console.error('Error fetching support contacts:', error)
+    //console.error('Error fetching support contacts:', error)
     return NextResponse.json(
-      { error: 'Error fetching support contacts' },
+      { error: 'Error al obtener los contactos de soporte.' },
       { status: 500 }
     )
   }
@@ -44,9 +44,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(supportContact)
   } catch (error) {
-    console.error('Error creating support contact:', error)
+    //console.error('Error creating support contact:', error)
     return NextResponse.json(
-      { error: 'Error creating support contact' },
+      { error: 'Error al crear el contacto de soporte.' },
       { status: 500 }
     )
   }

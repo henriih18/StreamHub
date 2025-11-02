@@ -400,6 +400,7 @@ enum OrderStatus {
   COMPLETED
   CANCELLED
   EXPIRED
+  REHABILITATED
 }
 
 enum RechargeStatus {

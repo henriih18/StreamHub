@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth()
     if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
     const user = await db.user.findUnique({
@@ -15,13 +15,13 @@ export async function POST(request: NextRequest) {
     })
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
 
     const { receiverId, title, content, type = 'GENERAL' } = await request.json()
 
     if (!receiverId || !title || !content) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+      return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 })
     }
 
     // Get receiver user
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!receiver) {
-      return NextResponse.json({ error: 'Receiver not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Receptor no encontrado' }, { status: 404 })
     }
 
     // Create message
@@ -77,13 +77,14 @@ export async function POST(request: NextRequest) {
         broadcastMessageUpdate(io, receiverId, newUnreadCount)
       }
     } catch (error) {
-      console.error('Error broadcasting message update:', error)
+      //console.error('Error broadcasting message update:', error)
+      return NextResponse.json({error: 'Error al enviar la actualización del mensaje'}) //verificar
     }
 
     return NextResponse.json(message)
   } catch (error) {
-    console.error('Error sending message:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    //console.error('Error sending message:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
 
@@ -91,7 +92,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth()
     if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
     const user = await db.user.findUnique({
@@ -99,7 +100,7 @@ export async function GET(request: NextRequest) {
     })
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
 
     // Get received messages
@@ -135,7 +136,7 @@ export async function GET(request: NextRequest) {
       unreadCount
     })
   } catch (error) {
-    console.error('Error fetching messages:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    //console.error('Error fetching messages:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }

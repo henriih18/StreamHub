@@ -7,7 +7,7 @@ export async function POST(request: Request) {
 
     if (!userId || !amount || !method) {
       return NextResponse.json(
-        { error: 'User ID, amount, and method are required' },
+        { error: 'Se requiere ID de usuario, cantidad y método de pago.' },
         { status: 400 }
       )
     }
@@ -49,9 +49,9 @@ export async function POST(request: Request) {
       recharge: { ...recharge, status: 'COMPLETED' }
     })
   } catch (error) {
-    console.error('Error processing credit recharge:', error)
+    //console.error('Error processing credit recharge:', error)
     return NextResponse.json(
-      { error: 'Failed to process credit recharge' },
+      { error: 'No se pudo procesar la recarga de crédito.' },
       { status: 500 }
     )
   }
@@ -64,7 +64,7 @@ export async function GET(request: Request) {
 
     if (!userId) {
       return NextResponse.json(
-        { error: 'User ID is required' },
+        { error: 'Se requiere el ID de usuario' },
         { status: 400 }
       )
     }
@@ -78,9 +78,9 @@ export async function GET(request: Request) {
 
     return NextResponse.json(recharges)
   } catch (error) {
-    console.error('Error fetching credit recharges:', error)
+    //console.error('Error fetching credit recharges:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch credit recharges' },
+      { error: 'No se pudieron realizar las recargas de crédito.' },
       { status: 500 }
     )
   }
