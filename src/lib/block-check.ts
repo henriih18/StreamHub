@@ -1,24 +1,24 @@
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
-import { db } from '@/lib/db'
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { db } from "@/lib/db";
 
 export interface BlockCheckResult {
-  isBlocked: boolean
+  isBlocked: boolean;
   blockInfo?: {
-    id: string
-    reason: string
-    blockType: 'temporary' | 'permanent'
-    duration?: number
-    expiresAt?: Date
-  }
+    id: string;
+    reason: string;
+    blockType: "temporary" | "permanent";
+    duration?: number;
+    expiresAt?: Date;
+  };
 }
 
 export async function checkUserBlockStatus(): Promise<BlockCheckResult> {
   try {
-    const session = await getServerSession(authOptions)
-    
+    const session = await getServerSession(authOptions);
+
     if (!session?.user?.id) {
-      return { isBlocked: false }
+      return { isBlocked: false };
     }
 
     // Check session data first
@@ -30,20 +30,20 @@ export async function checkUserBlockStatus(): Promise<BlockCheckResult> {
           isActive: true,
           OR: [
             { expiresAt: null }, // Permanent blocks
-            { expiresAt: { gt: new Date() } } // Temporary blocks not expired
-          ]
-        }
-      })
+            { expiresAt: { gt: new Date() } }, // Temporary blocks not expired
+          ],
+        },
+      });
 
       if (currentBlock) {
         return {
           isBlocked: true,
-          blockInfo: session.user.blockInfo
-        }
+          blockInfo: session.user.blockInfo,
+        };
       } else {
         // Block is no longer active, update session data would require re-login
         // For now, just return not blocked
-        return { isBlocked: false }
+        return { isBlocked: false };
       }
     }
 
@@ -54,13 +54,13 @@ export async function checkUserBlockStatus(): Promise<BlockCheckResult> {
         isActive: true,
         OR: [
           { expiresAt: null }, // Permanent blocks
-          { expiresAt: { gt: new Date() } } // Temporary blocks not expired
-        ]
+          { expiresAt: { gt: new Date() } }, // Temporary blocks not expired
+        ],
       },
       orderBy: {
-        createdAt: 'desc'
-      }
-    })
+        createdAt: "desc",
+      },
+    });
 
     if (activeBlock) {
       return {
@@ -68,41 +68,48 @@ export async function checkUserBlockStatus(): Promise<BlockCheckResult> {
         blockInfo: {
           id: activeBlock.id,
           reason: activeBlock.reason,
-          blockType: activeBlock.blockType as 'temporary' | 'permanent',
-          duration: activeBlock.duration ? Number(activeBlock.duration) : undefined,
-          expiresAt: activeBlock.expiresAt || undefined
-        }
-      }
+          blockType: activeBlock.blockType as "temporary" | "permanent",
+          duration: activeBlock.duration
+            ? Number(activeBlock.duration)
+            : undefined,
+          expiresAt: activeBlock.expiresAt || undefined,
+        },
+      };
     }
 
-    return { isBlocked: false }
+    return { isBlocked: false };
   } catch (error) {
-    console.error('Error checking block status:', error)
-    return { isBlocked: false }
+    //console.error('Error checking block status:', error)
+    return { isBlocked: false };
   }
 }
 
-export function formatBlockMessage(blockInfo: BlockCheckResult['blockInfo']): string {
-  if (!blockInfo) return ''
+export function formatBlockMessage(
+  blockInfo: BlockCheckResult["blockInfo"]
+): string {
+  if (!blockInfo) return "";
 
-  const { blockType, duration, expiresAt, reason } = blockInfo
-  
-  let message = `Tu cuenta está bloqueada. Motivo: ${reason}`
-  
-  if (blockType === 'permanent') {
-    message += ' Este bloqueo es permanente.'
+  const { blockType, duration, expiresAt, reason } = blockInfo;
+
+  let message = `Tu cuenta está bloqueada. Motivo: ${reason}`;
+
+  if (blockType === "permanent") {
+    message += " Este bloqueo es permanente.";
   } else if (duration && expiresAt) {
-    const expiryDate = new Date(expiresAt)
-    message += ` Este bloqueo expirará el ${expiryDate.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })}.`
+    const expiryDate = new Date(expiresAt);
+    message += ` Este bloqueo expirará el ${expiryDate.toLocaleDateString(
+      "es-ES",
+      {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }
+    )}.`;
   }
-  
-  message += ' No podrás realizar compras hasta que el bloqueo sea levantado.'
-  
-  return message
+
+  message += " No podrás realizar compras hasta que el bloqueo sea levantado.";
+
+  return message;
 }

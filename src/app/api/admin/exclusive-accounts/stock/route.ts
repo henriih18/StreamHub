@@ -1,6 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
-import { toast } from 'sonner'
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
 // Temporarily disable authentication for development
 // TODO: Implement proper authentication with NextAuth
@@ -17,37 +16,30 @@ export async function POST(request: NextRequest) {
     }
     */
 
-    const data = await request.json()
+    const data = await request.json();
     //console.log('Received data for exclusive stock:', data)
-    toast.success('Datos recibidos para stock exclusivo')
 
-    const {
-      exclusiveAccountId,
-      email,
-      password,
-      pin,
-      profileName,
-      notes
-    } = data
+    const { exclusiveAccountId, email, password, pin, profileName, notes } =
+      data;
 
     // Validate required fields
     if (!exclusiveAccountId || !email || !password) {
       return NextResponse.json(
-        { error: 'El email y la contraseña son requeridos' },
+        { error: "El email y la contraseña son requeridos" },
         { status: 400 }
-      )
+      );
     }
 
     // Check if the exclusive account exists
     const exclusiveAccount = await db.exclusiveAccount.findUnique({
-      where: { id: exclusiveAccountId }
-    })
+      where: { id: exclusiveAccountId },
+    });
 
     if (!exclusiveAccount) {
       return NextResponse.json(
-        { error: 'Cuenta exclusiva no encontrada' },
+        { error: "Cuenta exclusiva no encontrada" },
         { status: 404 }
-      )
+      );
     }
 
     // Create exclusive stock
@@ -58,27 +50,27 @@ export async function POST(request: NextRequest) {
         password,
         pin: pin || null,
         profileName: profileName || null,
-        notes: notes || null
+        notes: notes || null,
       },
       include: {
         exclusiveAccount: {
           select: {
             id: true,
             name: true,
-            type: true
-          }
-        }
-      }
-    })
+            type: true,
+          },
+        },
+      },
+    });
 
-    return NextResponse.json(stock)
+    return NextResponse.json(stock);
   } catch (error) {
     //console.error('Error creating exclusive stock:', error)
-    toast.error('Error al crear stock exclusivo')
+
     return NextResponse.json(
-      { error: 'Error al agregar stock' },
+      { error: "Error al agregar stock" },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -94,50 +86,52 @@ export async function GET(request: NextRequest) {
     }
     */
 
-    const { searchParams } = new URL(request.url)
-    const exclusiveAccountId = searchParams.get('exclusiveAccountId')
+    const { searchParams } = new URL(request.url);
+    const exclusiveAccountId = searchParams.get("exclusiveAccountId");
 
     if (!exclusiveAccountId) {
       return NextResponse.json(
-        { error: 'Se requiere el ID de la cuenta exclusiva' },
+        { error: "Se requiere el ID de la cuenta exclusiva" },
         { status: 400 }
-      )
+      );
     }
 
     const stocks = await db.exclusiveStock.findMany({
       where: {
-        exclusiveAccountId
+        exclusiveAccountId,
       },
       include: {
         soldToUser: {
           select: {
             id: true,
             fullName: true,
-            email: true
-          }
-        }
+            email: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
-    })
+        createdAt: "desc",
+      },
+    });
 
     // Transform the data to match expected interface
-    const transformedStocks = stocks.map(stock => ({
+    const transformedStocks = stocks.map((stock) => ({
       ...stock,
-      soldToUser: stock.soldToUser ? {
-        ...stock.soldToUser,
-        name: stock.soldToUser.fullName
-      } : undefined
-    }))
+      soldToUser: stock.soldToUser
+        ? {
+            ...stock.soldToUser,
+            name: stock.soldToUser.fullName,
+          }
+        : undefined,
+    }));
 
-    return NextResponse.json(transformedStocks)
+    return NextResponse.json(transformedStocks);
   } catch (error) {
     //console.error('Error fetching exclusive stocks:', error)
-    toast.error('Error al obtener acciones exclusivas')
+
     return NextResponse.json(
-      { error: 'Error al cargar stock' },
+      { error: "Error al cargar stock" },
       { status: 500 }
-    )
+    );
   }
 }

@@ -1,8 +1,8 @@
-import { lazy } from 'react'
+import { lazy } from "react";
 
 // Lazy load heavy admin components - placeholders moved to _unused
 // These components are now implemented directly in admin page
-export const LazyPermissionManager = lazy(() => import('./PermissionManager'))
+export const LazyPermissionManager = lazy(() => import("./PermissionManager"));
 
 // Fallback components for loading states
 export const UserManagementSkeleton = () => (
@@ -14,7 +14,7 @@ export const UserManagementSkeleton = () => (
       ))}
     </div>
   </div>
-)
+);
 
 export const OrderManagementSkeleton = () => (
   <div className="animate-pulse">
@@ -25,7 +25,7 @@ export const OrderManagementSkeleton = () => (
       ))}
     </div>
   </div>
-)
+);
 
 export const InventorySkeleton = () => (
   <div className="animate-pulse">
@@ -36,7 +36,7 @@ export const InventorySkeleton = () => (
       ))}
     </div>
   </div>
-)
+);
 
 export const AnalyticsSkeleton = () => (
   <div className="animate-pulse">
@@ -48,4 +48,4 @@ export const AnalyticsSkeleton = () => (
     </div>
     <div className="h-64 bg-gray-200 rounded"></div>
   </div>
-)
+);

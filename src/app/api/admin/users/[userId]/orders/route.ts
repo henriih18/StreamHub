@@ -1,24 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const resolvedParams = await params
-    const userId = resolvedParams.userId
+    const resolvedParams = await params;
+    const userId = resolvedParams.userId;
 
     const orders = await db.order.findMany({
       where: {
-        userId: userId
+        userId: userId,
       },
       include: {
         user: {
           select: {
             email: true,
-            name: true
-          }
+            name: true,
+          },
         },
         streamingAccount: {
           select: {
@@ -27,20 +27,23 @@ export async function GET(
             duration: true,
             quality: true,
             screens: true,
-            price: true
-          }
+            price: true,
+          },
         },
         accountProfile: true,
-        accountStock: true
+        accountStock: true,
       },
       orderBy: {
-        createdAt: 'desc'
-      }
-    })
+        createdAt: "desc",
+      },
+    });
 
-    return NextResponse.json(orders)
+    return NextResponse.json(orders);
   } catch (error) {
     //console.error('Error fetching user orders:', error)
-    return NextResponse.json({ error: 'Error al recuperar los pedidos de usuario.' }, { status: 500 })
+    return NextResponse.json(
+      { error: "Error al recuperar los pedidos de usuario" },
+      { status: 500 }
+    );
   }
 }

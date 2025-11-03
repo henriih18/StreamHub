@@ -1,15 +1,15 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { 
-  User, 
-  Mail, 
-  Phone, 
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  User,
+  Mail,
+  Phone,
   Calendar,
   MapPin,
   Edit,
@@ -18,46 +18,46 @@ import {
   Shield,
   CreditCard,
   Settings,
-  LogOut
-} from 'lucide-react'
+  LogOut,
+} from "lucide-react";
 
 interface UserProfileProps {
   user: {
-    id: string
-    name: string
-    email: string
-    phone?: string
-    role: string
-    memberSince: string
-    credits: number
-    avatar?: string
-    address?: string
-    bio?: string
-  }
-  onUpdate?: (userData: Partial<UserProfileProps['user']>) => void
-  onLogout?: () => void
+    id: string;
+    name: string;
+    email: string;
+    phone?: string;
+    role: string;
+    memberSince: string;
+    credits: number;
+    avatar?: string;
+    address?: string;
+    bio?: string;
+  };
+  onUpdate?: (userData: Partial<UserProfileProps["user"]>) => void;
+  onLogout?: () => void;
 }
 
 export function UserProfile({ user, onUpdate, onLogout }: UserProfileProps) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [editedUser, setEditedUser] = useState(user)
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedUser, setEditedUser] = useState(user);
 
   const handleSave = () => {
-    onUpdate?.(editedUser)
-    setIsEditing(false)
-  }
+    onUpdate?.(editedUser);
+    setIsEditing(false);
+  };
 
   const handleCancel = () => {
-    setEditedUser(user)
-    setIsEditing(false)
-  }
+    setEditedUser(user);
+    setIsEditing(false);
+  };
 
   const handleInputChange = (field: string, value: string) => {
-    setEditedUser(prev => ({
+    setEditedUser((prev) => ({
       ...prev,
-      [field]: value
-    }))
-  }
+      [field]: value,
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-6">
@@ -86,7 +86,7 @@ export function UserProfile({ user, onUpdate, onLogout }: UserProfileProps) {
                     {user.name}
                   </h2>
                   <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
-                    {user.role === 'ADMIN' ? 'Administrador' : 'Usuario'}
+                    {user.role === "ADMIN" ? "Administrador" : "Usuario"}
                   </Badge>
                 </div>
 
@@ -95,12 +95,16 @@ export function UserProfile({ user, onUpdate, onLogout }: UserProfileProps) {
                   <div className="flex items-center justify-between">
                     <span className="text-slate-400 text-sm">Créditos</span>
                     <span className="text-emerald-400 font-semibold">
-                      ${user.credits.toLocaleString('es-CO')}
+                      ${user.credits.toLocaleString("es-CO")}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-400 text-sm">Miembro desde</span>
-                    <span className="text-white text-sm">{user.memberSince}</span>
+                    <span className="text-slate-400 text-sm">
+                      Miembro desde
+                    </span>
+                    <span className="text-white text-sm">
+                      {user.memberSince}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-400 text-sm">Estado</span>
@@ -113,16 +117,22 @@ export function UserProfile({ user, onUpdate, onLogout }: UserProfileProps) {
 
                 {/* Action Buttons */}
                 <div className="mt-6 space-y-2">
-                  <Button variant="outline" className="w-full border-slate-600 text-slate-300 hover:bg-slate-700">
+                  <Button
+                    variant="outline"
+                    className="w-full border-slate-600 text-slate-300 hover:bg-slate-700"
+                  >
                     <CreditCard className="w-4 h-4 mr-2" />
                     Recargar Créditos
                   </Button>
-                  <Button variant="outline" className="w-full border-slate-600 text-slate-300 hover:bg-slate-700">
+                  <Button
+                    variant="outline"
+                    className="w-full border-slate-600 text-slate-300 hover:bg-slate-700"
+                  >
                     <Settings className="w-4 h-4 mr-2" />
                     Configuración
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full border-red-500/50 text-red-300 hover:bg-red-500/10"
                     onClick={onLogout}
                   >
@@ -187,7 +197,9 @@ export function UserProfile({ user, onUpdate, onLogout }: UserProfileProps) {
                     {isEditing ? (
                       <Input
                         value={editedUser.name}
-                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("name", e.target.value)
+                        }
                         className="bg-slate-700 border-slate-600 text-white"
                       />
                     ) : (
@@ -205,7 +217,9 @@ export function UserProfile({ user, onUpdate, onLogout }: UserProfileProps) {
                       <Input
                         type="email"
                         value={editedUser.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("email", e.target.value)
+                        }
                         className="bg-slate-700 border-slate-600 text-white"
                       />
                     ) : (
@@ -221,13 +235,17 @@ export function UserProfile({ user, onUpdate, onLogout }: UserProfileProps) {
                     </label>
                     {isEditing ? (
                       <Input
-                        value={editedUser.phone || ''}
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        value={editedUser.phone || ""}
+                        onChange={(e) =>
+                          handleInputChange("phone", e.target.value)
+                        }
                         className="bg-slate-700 border-slate-600 text-white"
                         placeholder="Añadir teléfono"
                       />
                     ) : (
-                      <p className="text-white">{user.phone || 'No especificado'}</p>
+                      <p className="text-white">
+                        {user.phone || "No especificado"}
+                      </p>
                     )}
                   </div>
 
@@ -239,13 +257,17 @@ export function UserProfile({ user, onUpdate, onLogout }: UserProfileProps) {
                     </label>
                     {isEditing ? (
                       <Input
-                        value={editedUser.address || ''}
-                        onChange={(e) => handleInputChange('address', e.target.value)}
+                        value={editedUser.address || ""}
+                        onChange={(e) =>
+                          handleInputChange("address", e.target.value)
+                        }
                         className="bg-slate-700 border-slate-600 text-white"
                         placeholder="Añadir dirección"
                       />
                     ) : (
-                      <p className="text-white">{user.address || 'No especificada'}</p>
+                      <p className="text-white">
+                        {user.address || "No especificada"}
+                      </p>
                     )}
                   </div>
 
@@ -257,14 +279,18 @@ export function UserProfile({ user, onUpdate, onLogout }: UserProfileProps) {
                     </label>
                     {isEditing ? (
                       <Textarea
-                        value={editedUser.bio || ''}
-                        onChange={(e) => handleInputChange('bio', e.target.value)}
+                        value={editedUser.bio || ""}
+                        onChange={(e) =>
+                          handleInputChange("bio", e.target.value)
+                        }
                         className="bg-slate-700 border-slate-600 text-white"
                         placeholder="Cuéntanos sobre ti..."
                         rows={4}
                       />
                     ) : (
-                      <p className="text-white">{user.bio || 'No hay biografía disponible'}</p>
+                      <p className="text-white">
+                        {user.bio || "No hay biografía disponible"}
+                      </p>
                     )}
                   </div>
 
@@ -291,18 +317,30 @@ export function UserProfile({ user, onUpdate, onLogout }: UserProfileProps) {
                 Seguridad
               </h3>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700 justify-start">
+              <Button
+                variant="outline"
+                className="border-slate-600 text-slate-300 hover:bg-slate-700 justify-start"
+              >
                 Cambiar Contraseña
               </Button>
-              <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700 justify-start">
+              <Button
+                variant="outline"
+                className="border-slate-600 text-slate-300 hover:bg-slate-700 justify-start"
+              >
                 Autenticación de Dos Factores
               </Button>
-              <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700 justify-start">
+              <Button
+                variant="outline"
+                className="border-slate-600 text-slate-300 hover:bg-slate-700 justify-start"
+              >
                 Historial de Inicio de Sesión
               </Button>
-              <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700 justify-start">
+              <Button
+                variant="outline"
+                className="border-slate-600 text-slate-300 hover:bg-slate-700 justify-start"
+              >
                 Dispositivos Conectados
               </Button>
             </div>
@@ -310,5 +348,5 @@ export function UserProfile({ user, onUpdate, onLogout }: UserProfileProps) {
         </Card>
       </div>
     </div>
-  )
+  );
 }

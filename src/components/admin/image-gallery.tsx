@@ -1,154 +1,241 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Badge } from '@/components/ui/badge'
-import { Image as ImageIcon, Trash2, Download, Eye } from 'lucide-react'
-import { toast } from 'sonner'
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Image as ImageIcon, Trash2, Download, Eye } from "lucide-react";
+import { toast } from "sonner";
 
-interface SavedImage {
+/* interface SavedImage {
   id: string
   name: string
   data: string // base64 data
   createdAt: string
   size: number
+} */
+
+interface SavedImage {
+  id: string;
+  name: string;
+  data: string; // base64 data
+  createdAt: string;
+  size: number;
+  source: "localStorage" | "server"; // Add source tracking
+  url?: string; // For server images
 }
 
 interface ImageGalleryProps {
-  onSelectImage: (base64: string) => void
-  currentImage?: string
+  onSelectImage: (base64: string) => void;
+  currentImage?: string;
 }
 
-export default function ImageGallery({ onSelectImage, currentImage }: ImageGalleryProps) {
-  const [savedImages, setSavedImages] = useState<SavedImage[]>([])
-  const [loading, setLoading] = useState(true)
-  const [previewImage, setPreviewImage] = useState<SavedImage | null>(null)
+export default function ImageGallery({
+  onSelectImage,
+  currentImage,
+}: ImageGalleryProps) {
+  const [savedImages, setSavedImages] = useState<SavedImage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [previewImage, setPreviewImage] = useState<SavedImage | null>(null);
 
   useEffect(() => {
-    loadSavedImages()
-  }, [])
+    loadSavedImages();
+  }, []);
 
-  const loadSavedImages = () => {
+  const loadSavedImages = async () => {
+    setLoading(true);
     try {
-      const stored = localStorage.getItem('streaming-type-images')
-      if (stored) {
-        const images = JSON.parse(stored)
-        setSavedImages(images)
+      // Load localStorage images
+      let localStorageImages: SavedImage[] = [];
+      try {
+        const stored = localStorage.getItem("streaming-type-images");
+        if (stored) {
+          const images = JSON.parse(stored);
+          localStorageImages = images.map((img: SavedImage) => ({
+            ...img,
+            source: "localStorage" as const,
+          }));
+        }
+      } catch (error) {
+        //console.error('Error loading localStorage images:', error)
       }
+
+      // Load server images
+      let serverImages: SavedImage[] = [];
+      try {
+        const response = await fetch("/api/uploads");
+        if (response.ok) {
+          const data = await response.json();
+          serverImages = data.images.map((img: any) => ({
+            id: `server_${img.filename}`,
+            name: img.filename,
+            data: img.url, // Use URL as data for server images
+            createdAt: img.createdAt,
+            size: Math.round(img.size / 1024), // Convert to KB
+            source: "server" as const,
+            url: img.url,
+          }));
+        }
+      } catch (error) {
+        //console.error('Error loading server images:', error)
+      }
+
+      // Combine both sources, server images first (newest), then localStorage
+      const allImages = [...serverImages, ...localStorageImages];
+      setSavedImages(allImages);
     } catch (error) {
-      console.error('Error loading images:', error)
+      //console.error('Error loading images:', error)
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const saveImage = (base64: string, name: string) => {
     try {
       // Optimize the image before saving
-      optimizeImageForGallery(base64).then(optimizedBase64 => {
-        const newImage: SavedImage = {
-          id: Date.now().toString(),
-          name,
-          data: optimizedBase64,
-          createdAt: new Date().toISOString(),
-          size: Math.round(optimizedBase64.length * 0.75 / 1024) // Approximate size in KB
-        }
+      optimizeImageForGallery(base64)
+        .then((optimizedBase64) => {
+          const newImage: SavedImage = {
+            id: Date.now().toString(),
+            name,
+            data: optimizedBase64,
+            createdAt: new Date().toISOString(),
+            size: Math.round((optimizedBase64.length * 0.75) / 1024), // Approximate size in KB
+            source: "localStorage",
+          };
 
-        const updatedImages = [...savedImages, newImage]
-        setSavedImages(updatedImages)
-        localStorage.setItem('streaming-type-images', JSON.stringify(updatedImages))
-        toast.success('Imagen guardada en la galería')
-      }).catch(error => {
-        toast.error('Error al optimizar la imagen')
-        console.error('Optimization error:', error)
-      })
+          const updatedImages = [...savedImages, newImage];
+          setSavedImages(updatedImages);
+          localStorage.setItem(
+            "streaming-type-images",
+            JSON.stringify(
+              updatedImages.filter((img) => img.source === "localStorage")
+            )
+          );
+          toast.success("Imagen guardada en la galería");
+        })
+        .catch((error) => {
+          toast.error("Error al optimizar la imagen");
+          //console.error('Optimization error:', error)
+        });
     } catch (error) {
-      toast.error('Error al guardar la imagen')
-      console.error('Save error:', error)
+      toast.error("Error al guardar la imagen");
+      //console.error('Save error:', error)
     }
-  }
+  };
 
   const optimizeImageForGallery = (base64: string): Promise<string> => {
     return new Promise((resolve, reject) => {
-      const img = new Image()
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')
+      const img = new Image();
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
 
       img.onload = () => {
         // Calculate new dimensions (max 300x300 for gallery)
-        const maxSize = 300
-        let { width, height } = img
+        const maxSize = 300;
+        let { width, height } = img;
 
         if (width > height) {
           if (width > maxSize) {
-            height = (height * maxSize) / width
-            width = maxSize
+            height = (height * maxSize) / width;
+            width = maxSize;
           }
         } else {
           if (height > maxSize) {
-            width = (width * maxSize) / height
-            height = maxSize
+            width = (width * maxSize) / height;
+            height = maxSize;
           }
         }
 
-        canvas.width = width
-        canvas.height = height
+        canvas.width = width;
+        canvas.height = height;
 
         // Draw and compress image
-        ctx?.drawImage(img, 0, 0, width, height)
-        
-        // Convert to base64 with reduced quality
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.7)
-        resolve(dataUrl)
-      }
+        ctx?.drawImage(img, 0, 0, width, height);
 
-      img.onerror = reject
-      img.src = base64
-    })
-  }
+        // Convert to base64 with reduced quality
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+        resolve(dataUrl);
+      };
+
+      img.onerror = reject;
+      img.src = base64;
+    });
+  };
 
   const deleteImage = (id: string) => {
     try {
-      const updatedImages = savedImages.filter(img => img.id !== id)
-      setSavedImages(updatedImages)
-      localStorage.setItem('streaming-type-images', JSON.stringify(updatedImages))
-      toast.success('Imagen eliminada')
+      const imageToDelete = savedImages.find((img) => img.id === id);
+      if (!imageToDelete) return;
+
+      if (imageToDelete.source === "localStorage") {
+        // Remove from localStorage
+        const updatedImages = savedImages.filter((img) => img.id !== id);
+        setSavedImages(updatedImages);
+        localStorage.setItem(
+          "streaming-type-images",
+          JSON.stringify(
+            updatedImages.filter((img) => img.source === "localStorage")
+          )
+        );
+        toast.success("Imagen eliminada");
+      } else {
+        // Server images cannot be deleted from the gallery (only from server)
+        toast.error(
+          "Las imágenes subidas al servidor no se pueden eliminar desde aquí"
+        );
+      }
     } catch (error) {
-      toast.error('Error al eliminar la imagen')
-      console.error('Delete error:', error)
+      toast.error("Error al eliminar la imagen");
+      //console.error('Delete error:', error)
     }
-  }
+  };
 
   const downloadImage = (image: SavedImage) => {
     try {
-      const link = document.createElement('a')
-      link.href = image.data
-      link.download = `${image.name}.png`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      toast.success('Imagen descargada')
+      const link = document.createElement("a");
+
+      if (image.source === "server" && image.url) {
+        // For server images, download directly from URL
+        link.href = image.url;
+        link.download = image.name;
+        link.target = "_blank";
+      } else {
+        // For localStorage images, use base64
+        link.href = image.data;
+        link.download = `${image.name}.png`;
+      }
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Imagen descargada");
     } catch (error) {
-      toast.error('Error al descargar la imagen')
-      console.error('Download error:', error)
+      toast.error("Error al descargar la imagen");
+      //console.error('Download error:', error)
     }
-  }
+  };
 
   const formatFileSize = (kb: number) => {
-    if (kb < 1024) return `${kb} KB`
-    return `${(kb / 1024).toFixed(1)} MB`
-  }
+    if (kb < 1024) return `${kb} KB`;
+    return `${(kb / 1024).toFixed(1)} MB`;
+  };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    })
-  }
+    return new Date(dateString).toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
 
   return (
     <Dialog>
@@ -162,12 +249,14 @@ export default function ImageGallery({ onSelectImage, currentImage }: ImageGalle
         <DialogHeader>
           <DialogTitle className="text-white">Galería de Imágenes</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {currentImage && (
             <Card className="bg-slate-700 border-slate-600">
               <CardHeader>
-                <CardTitle className="text-sm text-slate-300">Imagen Actual</CardTitle>
+                <CardTitle className="text-sm text-slate-300">
+                  Imagen Actual
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center space-x-4">
@@ -177,7 +266,9 @@ export default function ImageGallery({ onSelectImage, currentImage }: ImageGalle
                     className="w-16 h-16 object-cover rounded"
                   />
                   <div className="flex-1">
-                    <p className="text-sm text-slate-400">Imagen seleccionada actualmente</p>
+                    <p className="text-sm text-slate-400">
+                      Imagen seleccionada actualmente
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -188,7 +279,9 @@ export default function ImageGallery({ onSelectImage, currentImage }: ImageGalle
             {loading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto"></div>
-                <p className="text-sm text-slate-400 mt-2">Cargando imágenes...</p>
+                <p className="text-sm text-slate-400 mt-2">
+                  Cargando imágenes...
+                </p>
               </div>
             ) : savedImages.length === 0 ? (
               <div className="text-center py-8">
@@ -201,10 +294,13 @@ export default function ImageGallery({ onSelectImage, currentImage }: ImageGalle
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {savedImages.map((image) => (
-                  <Card key={image.id} className="bg-slate-700 border-slate-600 group hover:bg-slate-600 transition-colors">
+                  <Card
+                    key={image.id}
+                    className="bg-slate-700 border-slate-600 group hover:bg-slate-600 transition-colors"
+                  >
                     <CardContent className="p-4">
                       <div className="space-y-3">
-                        <div className="relative">
+                        {/* <div className="relative">
                           <img
                             src={image.data}
                             alt={image.name}
@@ -227,23 +323,75 @@ export default function ImageGallery({ onSelectImage, currentImage }: ImageGalle
                               Seleccionar
                             </Button>
                           </div>
+                        </div> */}
+                        <div className="relative">
+                          <img
+                            src={
+                              image.source === "server"
+                                ? image.url || image.data
+                                : image.data
+                            }
+                            alt={image.name}
+                            className="w-full h-32 object-cover rounded cursor-pointer"
+                            onClick={() => setPreviewImage(image)}
+                          />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center space-x-2">
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => setPreviewImage(image)}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => {
+                                if (image.source === "server" && image.url) {
+                                  onSelectImage(image.url);
+                                } else {
+                                  onSelectImage(image.data);
+                                }
+                              }}
+                            >
+                              Seleccionar
+                            </Button>
+                          </div>
                         </div>
-                        
+
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between">
+                          {/* <div className="flex items-center justify-between">
                             <h3 className="text-sm font-medium text-white truncate">
                               {image.name}
                             </h3>
                             <Badge variant="secondary" className="text-xs">
                               {formatFileSize(image.size)}
                             </Badge>
+                          </div> */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <h3 className="text-sm font-medium text-white truncate">
+                                {image.name}
+                              </h3>
+                              {image.source === "server" && (
+                                <Badge
+                                  variant="secondary"
+                                  className="text-xs bg-blue-600 text-white"
+                                >
+                                  Servidor
+                                </Badge>
+                              )}
+                            </div>
+                            <Badge variant="secondary" className="text-xs">
+                              {formatFileSize(image.size)}
+                            </Badge>
                           </div>
-                          
+
                           <p className="text-xs text-slate-400">
                             {formatDate(image.createdAt)}
                           </p>
-                          
-                          <div className="flex items-center space-x-2">
+
+                          {/* <div className="flex items-center space-x-2">
                             <Button
                               size="sm"
                               variant="outline"
@@ -268,6 +416,40 @@ export default function ImageGallery({ onSelectImage, currentImage }: ImageGalle
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
+                          </div> */}
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                if (image.source === "server" && image.url) {
+                                  onSelectImage(image.url);
+                                } else {
+                                  onSelectImage(image.data);
+                                }
+                              }}
+                              className="flex-1 border-emerald-600 text-emerald-400 hover:bg-emerald-600 hover:text-white"
+                            >
+                              Usar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => downloadImage(image)}
+                              className="border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white"
+                            >
+                              <Download className="w-4 h-4" />
+                            </Button>
+                            {image.source === "localStorage" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => deleteImage(image.id)}
+                                className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -281,12 +463,17 @@ export default function ImageGallery({ onSelectImage, currentImage }: ImageGalle
 
         {/* Preview Dialog */}
         {previewImage && (
-          <Dialog open={!!previewImage} onOpenChange={() => setPreviewImage(null)}>
+          <Dialog
+            open={!!previewImage}
+            onOpenChange={() => setPreviewImage(null)}
+          >
             <DialogContent className="bg-slate-800 border-slate-700">
               <DialogHeader>
-                <DialogTitle className="text-white">{previewImage.name}</DialogTitle>
+                <DialogTitle className="text-white">
+                  {previewImage.name}
+                </DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
+              {/* <div className="space-y-4">
                 <img
                   src={previewImage.data}
                   alt={previewImage.name}
@@ -313,11 +500,60 @@ export default function ImageGallery({ onSelectImage, currentImage }: ImageGalle
                     Cerrar
                   </Button>
                 </div>
+              </div> */}
+              <div className="space-y-4">
+                <img
+                  src={
+                    previewImage.source === "server"
+                      ? previewImage.url || previewImage.data
+                      : previewImage.data
+                  }
+                  alt={previewImage.name}
+                  className="w-full max-h-96 object-contain rounded"
+                />
+                <div className="flex items-center justify-between text-sm text-slate-400">
+                  <div className="flex items-center space-x-2">
+                    <span>Tamaño: {formatFileSize(previewImage.size)}</span>
+                    {previewImage.source === "server" && (
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-blue-600 text-white"
+                      >
+                        Servidor
+                      </Badge>
+                    )}
+                  </div>
+                  <span>Creada: {formatDate(previewImage.createdAt)}</span>
+                </div>
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={() => {
+                      if (
+                        previewImage.source === "server" &&
+                        previewImage.url
+                      ) {
+                        onSelectImage(previewImage.url);
+                      } else {
+                        onSelectImage(previewImage.data);
+                      }
+                      setPreviewImage(null);
+                    }}
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    Seleccionar esta imagen
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setPreviewImage(null)}
+                  >
+                    Cerrar
+                  </Button>
+                </div>
               </div>
             </DialogContent>
           </Dialog>
         )}
       </DialogContent>
     </Dialog>
-  )
+  );
 }

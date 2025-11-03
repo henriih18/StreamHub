@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
   try {
     // For now, we'll get the user from localStorage simulation
     // In a real app, you would use sessions/JWT tokens
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId')
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
 
     if (!userId) {
       return NextResponse.json(
-        { error: 'ID de usuario es requerido' },
+        { error: "ID de usuario es requerido" },
         { status: 400 }
-      )
+      );
     }
 
     // Fetch user from database with all fields
@@ -30,14 +30,14 @@ export async function GET(request: NextRequest) {
         createdAt: true,
         updatedAt: true,
         // Don't include password
-      }
-    })
+      },
+    });
 
     if (!user) {
       return NextResponse.json(
-        { error: 'Usuario no encontrado' },
+        { error: "Usuario no encontrado" },
         { status: 404 }
-      )
+      );
     }
 
     return NextResponse.json({
@@ -51,15 +51,14 @@ export async function GET(request: NextRequest) {
         role: user.role,
         country: user.country,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      }
-    })
-
+        updatedAt: user.updatedAt,
+      },
+    });
   } catch (error) {
-    console.error('Error fetching user data:', error)
+    console.error("Error fetching user data:", error);
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: "Error interno del servidor" },
       { status: 500 }
-    )
+    );
   }
 }

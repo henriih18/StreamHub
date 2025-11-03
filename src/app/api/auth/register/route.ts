@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Error en registro:", error);
+    //console.error("Error en registro:", error);
 
     // Manejar errores específicos de la base de datos
     if (error instanceof Error) {

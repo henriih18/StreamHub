@@ -65,17 +65,20 @@ export async function DELETE(request: NextRequest) {
   }
 } */
 
-  import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
-import { toast } from 'sonner'
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { toast } from "sonner";
 
 export async function POST(request: NextRequest) {
   try {
-    const { exclusiveAccountId, userId } = await request.json()
+    const { exclusiveAccountId, userId } = await request.json();
 
     // Validate required fields
     if (!exclusiveAccountId || !userId) {
-      return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 })
+      return NextResponse.json(
+        { error: "Faltan campos obligatorios" },
+        { status: 400 }
+      );
     }
 
     // Check if user already has access
@@ -83,17 +86,23 @@ export async function POST(request: NextRequest) {
       where: { id: exclusiveAccountId },
       include: {
         allowedUsers: {
-          where: { id: userId }
-        }
-      }
-    })
+          where: { id: userId },
+        },
+      },
+    });
 
     if (!exclusiveAccount) {
-      return NextResponse.json({ error: 'Cuenta exclusiva no encontrada' }, { status: 404 })
+      return NextResponse.json(
+        { error: "Cuenta exclusiva no encontrada" },
+        { status: 404 }
+      );
     }
 
     if (exclusiveAccount.allowedUsers.length > 0) {
-      return NextResponse.json({ error: 'El usuario ya tiene acceso a esta cuenta exclusiva.' }, { status: 400 })
+      return NextResponse.json(
+        { error: "El usuario ya tiene acceso a esta cuenta exclusiva." },
+        { status: 400 }
+      );
     }
 
     // Grant access to exclusive account
@@ -101,32 +110,38 @@ export async function POST(request: NextRequest) {
       where: { id: exclusiveAccountId },
       data: {
         allowedUsers: {
-          connect: { id: userId }
-        }
+          connect: { id: userId },
+        },
       },
       include: {
-        allowedUsers: true
-      }
-    })
+        allowedUsers: true,
+      },
+    });
 
     return NextResponse.json({
-      message: 'Access granted successfully',
-      exclusiveAccount: updatedAccount
-    })
+      message: "Acceso concedido con éxito",
+      exclusiveAccount: updatedAccount,
+    });
   } catch (error) {
     //console.error('Error granting exclusive access:', error)
-    
-    return NextResponse.json({ error: 'Error al conceder acceso exclusivo' }, { status: 500 })
+
+    return NextResponse.json(
+      { error: "Error al conceder acceso exclusivo" },
+      { status: 500 }
+    );
   }
 }
 
 export async function DELETE(request: NextRequest) {
   try {
-    const { exclusiveAccountId, userId } = await request.json()
+    const { exclusiveAccountId, userId } = await request.json();
 
     // Validate required fields
     if (!exclusiveAccountId || !userId) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+      return NextResponse.json(
+        { error: "Faltan campos obligatorios" },
+        { status: 400 }
+      );
     }
 
     // Remove access to exclusive account
@@ -134,21 +149,24 @@ export async function DELETE(request: NextRequest) {
       where: { id: exclusiveAccountId },
       data: {
         allowedUsers: {
-          disconnect: { id: userId }
-        }
+          disconnect: { id: userId },
+        },
       },
       include: {
-        allowedUsers: true
-      }
-    })
+        allowedUsers: true,
+      },
+    });
 
-    return NextResponse.json({ 
-      message: 'Access removed successfully',
-      exclusiveAccount: updatedAccount
-    })
+    return NextResponse.json({
+      message: "Acceso eliminado exitosamente",
+      exclusiveAccount: updatedAccount,
+    });
   } catch (error) {
     //console.error('Error removing exclusive access:', error)
-    
-    return NextResponse.json({ error: 'Error al eliminar el acceso exclusivo' }, { status: 500 })
+
+    return NextResponse.json(
+      { error: "Error al eliminar el acceso exclusivo" },
+      { status: 500 }
+    );
   }
 }

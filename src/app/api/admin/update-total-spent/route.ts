@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
 export async function POST() {
   try {
@@ -10,48 +10,50 @@ export async function POST() {
       include: {
         orders: {
           select: {
-            totalPrice: true
-          }
-        }
-      }
-    })
+            totalPrice: true,
+          },
+        },
+      },
+    });
 
     //console.log(`Found ${users.length} users to update`)
 
     // Update each user's totalSpent
     const updatePromises = users.map(async (user) => {
-      const calculatedTotal = user.orders.reduce((sum, order) => sum + order.totalPrice, 0)
-      
+      const calculatedTotal = user.orders.reduce(
+        (sum, order) => sum + order.totalPrice,
+        0
+      );
+
       // Only update if there's a difference
       if (user.totalSpent !== calculatedTotal) {
         //console.log(`Updating user ${user.email}: ${user.totalSpent} -> ${calculatedTotal}`)
-        
+
         return db.user.update({
           where: { id: user.id },
-          data: { totalSpent: calculatedTotal }
-        })
+          data: { totalSpent: calculatedTotal },
+        });
       }
-      
-      return null
-    })
 
-    const results = await Promise.all(updatePromises)
-    const updatedCount = results.filter(result => result !== null).length
+      return null;
+    });
+
+    const results = await Promise.all(updatePromises);
+    const updatedCount = results.filter((result) => result !== null).length;
 
     //console.log(`Successfully updated ${updatedCount} users`)
 
     return NextResponse.json({
       success: true,
-      message: `Se actualizó correctamente el total gastado para ${updatedCount} usuarios.`,
+      message: `Se actualizó correctamente el total gastado para ${updatedCount} usuarios`,
       totalUsers: users.length,
-      updatedUsers: updatedCount
-    })
-
+      updatedUsers: updatedCount,
+    });
   } catch (error) {
     //console.error('Error updating totalSpent:', error)
     return NextResponse.json(
-      { error: 'Error al actualizar el total gastado' },
+      { error: "Error al actualizar el total gastado" },
       { status: 500 }
-    )
+    );
   }
 }

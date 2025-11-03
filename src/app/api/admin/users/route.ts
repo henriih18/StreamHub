@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
-import { userCache } from '@/lib/cache'
-import { withAdminAuth } from '@/lib/admin-auth'
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { userCache } from "@/lib/cache";
+import { withAdminAuth } from "@/lib/admin-auth";
 
 export const GET = withAdminAuth(async (request: NextRequest) => {
   try {
-    const cacheKey = 'admin:users:list'
-    let users = userCache.get(cacheKey) as any[] | null
-    
+    const cacheKey = "admin:users:list";
+    let users = userCache.get(cacheKey) as any[] | null;
+
     if (!users) {
       users = await db.user.findMany({
         select: {
@@ -24,29 +24,32 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
           isActive: true,
           _count: {
             select: {
-              orders: true
-            }
-          }
+              orders: true,
+            },
+          },
         },
         orderBy: {
-          totalSpent: 'desc'
-        }
-      })
+          totalSpent: "desc",
+        },
+      });
 
       // Transform the data to match the expected interface
-      users = users.map(user => ({
+      users = users.map((user) => ({
         ...user,
         name: user.fullName,
-        isActive: !user.isBlocked
-      }))
-      
+        isActive: !user.isBlocked,
+      }));
+
       // Cache for 3 minutes
-      userCache.set(cacheKey, users, 3 * 60 * 1000)
+      userCache.set(cacheKey, users, 3 * 60 * 1000);
     }
 
-    return NextResponse.json(users)
+    return NextResponse.json(users);
   } catch (error) {
     //console.error('Error fetching users:', error)
-    return NextResponse.json({ error: 'Error al recuperar usuarios.' }, { status: 500 })
+    return NextResponse.json(
+      { error: "Error al recuperar usuarios" },
+      { status: 500 }
+    );
   }
-})
+});

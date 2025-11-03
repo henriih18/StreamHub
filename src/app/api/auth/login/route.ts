@@ -259,7 +259,7 @@ export async function POST(request: NextRequest) {
       token,
     });
   } catch (error) {
-    console.error("Error en login:", error);
+    //console.error("Error en login:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }

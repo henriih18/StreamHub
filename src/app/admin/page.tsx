@@ -609,7 +609,7 @@ export default function AdminPage() {
         toast.error(error.error || "Error al configurar el banner");
       }
     } catch (error) {
-      console.error("Error saving banner:", error);
+      //console.error("Error saving banner:", error);
       toast.error("Error al configurar el banner");
     } finally {
       setLoadingBanner(false);
@@ -632,7 +632,7 @@ export default function AdminPage() {
         }
       }
     } catch (error) {
-      console.error("Error loading banner data:", error);
+      //console.error("Error loading banner data:", error);
     }
   };
 
@@ -657,7 +657,7 @@ export default function AdminPage() {
         // Pass user data directly to avoid timing issues
         fetchData(parsedUser);
       } catch (error) {
-        console.error("Error parsing user from localStorage:", error);
+        //console.error("Error parsing user from localStorage:", error);
         localStorage.removeItem("user");
         // Redirect if user data is corrupted
         window.location.href = "/login";
@@ -998,7 +998,7 @@ export default function AdminPage() {
         setSupportContacts(data.contacts || []);
       }
     } catch (error) {
-      console.error("Error fetching support contacts:", error);
+      //console.error("Error fetching support contacts:", error);
     }
   };
 
@@ -1030,7 +1030,7 @@ export default function AdminPage() {
         toast.error(errorData.error || "Error al agregar contacto");
       }
     } catch (error) {
-      console.error("Error adding support contact:", error);
+      //console.error("Error adding support contact:", error);
       toast.error("Error de conexión");
     }
   };
@@ -1051,7 +1051,7 @@ export default function AdminPage() {
         toast.error(errorData.error || "Error al eliminar contacto");
       }
     } catch (error) {
-      console.error("Error deleting support contact:", error);
+      //console.error("Error deleting support contact:", error);
       toast.error("Error de conexión");
     }
   };
@@ -1104,7 +1104,7 @@ export default function AdminPage() {
 
           return response;
         } catch (error) {
-          console.error("tempAdminFetch error for", url, ":", error);
+          //console.error("tempAdminFetch error for", url, ":", error);
           throw error;
         }
       };
@@ -1142,12 +1142,12 @@ export default function AdminPage() {
       Promise.allSettled(prefetchPromises).then((results) => {
         results.forEach((result, index) => {
           if (result.status === "rejected") {
-            console.warn(`Prefetch ${index} failed:`, result.reason);
+            //console.warn(`Prefetch ${index} failed:`, result.reason);
           }
         });
       });
     } catch (error) {
-      console.warn("Prefetch failed:", error);
+      //console.warn("Prefetch failed:", error);
     }
   };
 
@@ -1173,7 +1173,7 @@ export default function AdminPage() {
 
       return response;
     } catch (error) {
-      console.error("adminFetch error for", url, ":", error);
+      //console.error("adminFetch error for", url, ":", error);
       throw error;
     }
   };
@@ -1208,7 +1208,7 @@ export default function AdminPage() {
 
           return response;
         } catch (error) {
-          console.error("tempAdminFetch error for", url, ":", error);
+          //console.error("tempAdminFetch error for", url, ":", error);
           throw error;
         }
       };
@@ -1298,7 +1298,7 @@ export default function AdminPage() {
 
       setTopUsersBySales(topBySales);
     } catch (error) {
-      console.error("Error in fetchData:", error);
+      //console.error("Error in fetchData:", error);
       toast.error("Error al cargar datos");
     } finally {
       setLoading(false);
@@ -1715,7 +1715,7 @@ export default function AdminPage() {
       // Reset expanded orders when opening new user orders
       setExpandedOrders(new Set());
     } catch (error) {
-      toast.error("Error loading user orders");
+      toast.error("Error al cargar pedidos de usuarios");
     }
   };
 
@@ -1763,7 +1763,7 @@ export default function AdminPage() {
         toast.error("Error al cargar el historial de recargas");
       }
     } catch (error) {
-      console.error("Error fetching recharge history:", error);
+      //console.error("Error fetching recharge history:", error);
       toast.error("Error de conexión al cargar el historial");
     } finally {
       setLoadingRechargeHistory(false);
@@ -1780,7 +1780,7 @@ export default function AdminPage() {
         return data.count || 0;
       }
     } catch (error) {
-      console.error("Error fetching user action count:", error);
+      //console.error("Error fetching user action count:", error);
     }
     return 0;
   };
@@ -1921,7 +1921,7 @@ export default function AdminPage() {
         }
       }
     } catch (error) {
-      console.error("Error deleting account:", error);
+      //console.error("Error deleting account:", error);
       toast.error("Error de conexión al eliminar cuenta");
     }
   };
@@ -2104,7 +2104,7 @@ export default function AdminPage() {
         }
       }
     } catch (error) {
-      console.error("Error deleting type:", error);
+      //console.error("Error deleting type:", error);
       toast.error("Error de conexión al eliminar tipo");
     }
   };
@@ -2153,7 +2153,7 @@ export default function AdminPage() {
         }
       }
     } catch (error) {
-      console.error("Broadcast message catch error:", error);
+      //console.error("Broadcast message catch error:", error);
       toast.error("Error de conexión al enviar mensaje");
     }
   };
@@ -2203,7 +2203,7 @@ export default function AdminPage() {
           toast.error("Error al cargar información de registro");
         }
       } catch (error) {
-        console.error("Error fetching user registration info:", error);
+        //console.error("Error fetching user registration info:", error);
         toast.error("Error de conexión");
       } finally {
         setLoadingUserRegistration((prev) => {
@@ -2266,7 +2266,7 @@ export default function AdminPage() {
         toast.error(errorData.error || "Error al actualizar información");
       }
     } catch (error) {
-      console.error("Error updating registration info:", error);
+      //console.error("Error updating registration info:", error);
       toast.error("Error de conexión");
     } finally {
       setLoadingUserRegistration((prev) => {
@@ -7743,39 +7743,6 @@ export default function AdminPage() {
                     className="bg-slate-700 border-slate-600 text-white"
                   />
                 </div>
-                {/* <div>
-                <Label htmlFor="editTypeImage" className="text-slate-300">Imagen del Tipo</Label>
-                <div className="space-y-3">
-                  {editingType.imageUrl && (
-                    <div className="flex items-center space-x-3 p-3 bg-slate-700 rounded-lg border border-slate-600">
-                      <img
-                        src={editingType.imageUrl}
-                        alt={editingType.name}
-                        className="w-16 h-16 object-cover rounded-lg border-2 border-slate-500"
-                      />
-                      <div className="flex-1">
-                        <p className="text-sm text-green-400 font-medium">✓ Imagen actual</p>
-                        <p className="text-xs text-slate-400">{editingType.imageUrl}</p>
-                      </div>
-                    </div>
-                  )}
-                  <Input
-                    id="editTypeImage"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/svg+xml"
-                    onChange={handleImageUpload}
-                    disabled={uploadingImage}
-                    className="bg-slate-700 border-slate-600 text-white file:bg-slate-600 file:text-white file:border-0"
-                  />
-                  {uploadingImage && (
-                    <div className="flex items-center space-x-2 text-sm text-slate-400">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>Subiendo imagen...</span>
-                    </div>
-                  )}
-                  <p className="text-xs text-slate-400">Sube una nueva imagen para reemplazar la actual (JPEG, PNG, SVG, WebP)</p>
-                </div>
-              </div> */}
                 <div>
                   <Label htmlFor="editTypeImage" className="text-slate-300">
                     Imagen del Tipo
@@ -7798,22 +7765,52 @@ export default function AdminPage() {
                         </div>
                       </div>
                     )}
-                    <Input
-                      id="editTypeImage"
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/svg+xml"
-                      onChange={handleImageUpload}
-                      disabled={uploadingImage}
-                      className="bg-slate-700 border-slate-600 text-white file:bg-slate-600 file:text-white file:border-0"
-                    />
-                    {uploadingImage && (
-                      <div className="flex items-center space-x-2 text-sm text-slate-400">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        <span>Subiendo imagen...</span>
+
+                    <div className="grid grid-cols-1 gap-3">
+                      {/* Opción 1: Subir nueva imagen */}
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-400">
+                          Opción 1: Subir nueva imagen
+                        </Label>
+                        <Input
+                          id="editTypeImage"
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                          onChange={handleImageUpload}
+                          disabled={uploadingImage}
+                          className="bg-slate-700 border-slate-600 text-white file:bg-slate-600 file:text-white file:border-0"
+                        />
+                        {uploadingImage && (
+                          <div className="flex items-center space-x-2 text-sm text-slate-400">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            <span>Subiendo imagen...</span>
+                          </div>
+                        )}
                       </div>
-                    )}
+
+                      {/* Opción 2: Usar galería */}
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-400">
+                          Opción 2: Seleccionar de la galería
+                        </Label>
+                        <ImageGallery
+                          onSelectImage={(base64) => {
+                            setEditingType((prev) => {
+                              if (!prev) return prev;
+                              return {
+                                ...prev,
+                                imageUrl: base64,
+                              };
+                            });
+                            toast.success("Imagen seleccionada de la galería");
+                          }}
+                          currentImage={editingType.imageUrl}
+                        />
+                      </div>
+                    </div>
+
                     <p className="text-xs text-slate-400">
-                      Sube una nueva imagen para reemplazar la actual (JPEG,
+                      Sube una nueva imagen o selecciona desde la galería (JPEG,
                       PNG, SVG, WebP)
                     </p>
                   </div>

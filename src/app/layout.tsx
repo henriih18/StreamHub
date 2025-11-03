@@ -19,8 +19,18 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "StreamHub - Premium Streaming Accounts",
-  description: "Tu plataforma de confianza para cuentas de streaming premium. Accede a Netflix, Disney+, HBO Max y más.",
-  keywords: ["StreamHub", "Streaming", "Netflix", "Disney+", "HBO Max", "Cuentas Premium", "Next.js", "TypeScript"],
+  description:
+    "Tu plataforma de confianza para cuentas de streaming premium. Accede a Netflix, Disney+, HBO Max y más.",
+  keywords: [
+    "StreamHub",
+    "Streaming",
+    "Netflix",
+    "Disney+",
+    "HBO Max",
+    "Cuentas Premium",
+    "Next.js",
+    "TypeScript",
+  ],
   authors: [{ name: "StreamHub Team" }],
   icons: {
     icon: "/favicon.ico",
@@ -46,17 +56,17 @@ export default async function RootLayout({
 }>) {
   // Check if user is authenticated and cache user data
   const session = await getServerSession(authOptions);
-  
+
   if (session?.user?.email) {
     const cacheKey = cacheKeys.userByEmail(session.user.email);
     let user = userCache.get(cacheKey);
-    
+
     if (!user) {
       // Fetch from database if not in cache
       user = await db.user.findUnique({
-        where: { email: session.user.email }
+        where: { email: session.user.email },
       });
-      
+
       if (user) {
         // Cache the user data for 5 minutes
         userCache.set(cacheKey, user);
@@ -70,7 +80,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
         {children}
-        <Toaster 
+        <Toaster
           position="top-center"
           expand={false}
           richColors
@@ -78,20 +88,22 @@ export default async function RootLayout({
           theme="dark"
           toastOptions={{
             style: {
-              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.85) 0%, rgba(236, 72, 153, 0.85) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              borderRadius: '12px',
-              padding: '16px 20px',
-              margin: '8px',
-              backdropFilter: 'blur(12px)',
-              color: '#ffffff',
-              fontSize: '15px',
-              fontWeight: '600',
-              boxShadow: '0 6px 24px rgba(139, 92, 246, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)',
-              minWidth: '320px',
-              maxWidth: '520px',
+              background:
+                "linear-gradient(135deg, rgba(139, 92, 246, 0.85) 0%, rgba(236, 72, 153, 0.85) 100%)",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              borderRadius: "12px",
+              padding: "16px 20px",
+              margin: "8px",
+              backdropFilter: "blur(12px)",
+              color: "#ffffff",
+              fontSize: "15px",
+              fontWeight: "600",
+              boxShadow:
+                "0 6px 24px rgba(139, 92, 246, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)",
+              minWidth: "320px",
+              maxWidth: "520px",
             },
-            className: 'vibrant-toast'
+            className: "vibrant-toast",
           }}
         />
       </body>

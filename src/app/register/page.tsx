@@ -1,161 +1,191 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Loader2, Eye, EyeOff, User, Mail, Phone, Lock, Check, X, AlertCircle } from 'lucide-react'
-import { toast } from '@/components/ui/toast-custom'
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Loader2,
+  Eye,
+  EyeOff,
+  User,
+  Mail,
+  Phone,
+  Lock,
+  Check,
+  X,
+  AlertCircle,
+} from "lucide-react";
+import { toast } from "@/components/ui/toast-custom";
 
 export default function RegisterPage() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [availability, setAvailability] = useState<Record<string, { available: boolean; message: string; checking: boolean }>>({})
-  const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({})
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [availability, setAvailability] = useState<
+    Record<string, { available: boolean; message: string; checking: boolean }>
+  >({});
+  const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
 
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    username: '',
-    password: '',
-    confirmPassword: ''
-  })
+    fullName: "",
+    email: "",
+    phone: "",
+    username: "",
+    password: "",
+    confirmPassword: "",
+  });
 
   const checkAvailability = async (field: string, value: string) => {
     if (!value || value.length < 3) {
-      setAvailability(prev => ({ ...prev, [field]: { available: false, message: '', checking: false } }))
-      return
+      setAvailability((prev) => ({
+        ...prev,
+        [field]: { available: false, message: "", checking: false },
+      }));
+      return;
     }
 
     // Limpiar timer anterior
     if (debounceTimers.current[field]) {
-      clearTimeout(debounceTimers.current[field])
+      clearTimeout(debounceTimers.current[field]);
     }
 
     // Mostrar estado de verificación
-    setAvailability(prev => ({ ...prev, [field]: { available: false, message: '', checking: true } }))
+    setAvailability((prev) => ({
+      ...prev,
+      [field]: { available: false, message: "", checking: true },
+    }));
 
     // Debounce de 500ms
     debounceTimers.current[field] = setTimeout(async () => {
       try {
-        const response = await fetch(`/api/auth/check-availability?type=${field}&value=${encodeURIComponent(value)}`)
-        const data = await response.json()
-        
+        const response = await fetch(
+          `/api/auth/check-availability?type=${field}&value=${encodeURIComponent(
+            value
+          )}`
+        );
+        const data = await response.json();
+
         if (response.ok) {
-          setAvailability(prev => ({ 
-            ...prev, 
-            [field]: { 
-              available: data.available, 
-              message: data.message, 
-              checking: false 
-            } 
-          }))
+          setAvailability((prev) => ({
+            ...prev,
+            [field]: {
+              available: data.available,
+              message: data.message,
+              checking: false,
+            },
+          }));
         } else {
-          setAvailability(prev => ({ 
-            ...prev, 
-            [field]: { 
-              available: false, 
-              message: '', 
-              checking: false 
-            } 
-          }))
+          setAvailability((prev) => ({
+            ...prev,
+            [field]: {
+              available: false,
+              message: "",
+              checking: false,
+            },
+          }));
         }
       } catch (error) {
-        setAvailability(prev => ({ 
-          ...prev, 
-          [field]: { 
-            available: false, 
-            message: '', 
-            checking: false 
-          } 
-        }))
+        setAvailability((prev) => ({
+          ...prev,
+          [field]: {
+            available: false,
+            message: "",
+            checking: false,
+          },
+        }));
       }
-    }, 500)
-  }
+    }, 500);
+  };
 
   // Limpiar timers al desmontar
   useEffect(() => {
     return () => {
-      Object.values(debounceTimers.current).forEach(timer => {
-        if (timer) clearTimeout(timer)
-      })
-    }
-  }, [])
+      Object.values(debounceTimers.current).forEach((timer) => {
+        if (timer) clearTimeout(timer);
+      });
+    };
+  }, []);
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {}
+    const newErrors: Record<string, string> = {};
 
     // Validación de nombre completo
     if (!formData.fullName.trim()) {
-      newErrors.fullName = 'El nombre completo es requerido'
+      newErrors.fullName = "El nombre completo es requerido";
     } else if (formData.fullName.length < 3) {
-      newErrors.fullName = 'El nombre debe tener al menos 3 caracteres'
+      newErrors.fullName = "El nombre debe tener al menos 3 caracteres";
     }
 
     // Validación de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim()) {
-      newErrors.email = 'El email es requerido'
+      newErrors.email = "El email es requerido";
     } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = 'El email no es válido'
+      newErrors.email = "El email no es válido";
     }
 
     // Validación de teléfono
-    const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/
+    const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/;
     if (!formData.phone.trim()) {
-      newErrors.phone = 'El teléfono es requerido'
+      newErrors.phone = "El teléfono es requerido";
     } else if (!phoneRegex.test(formData.phone)) {
-      newErrors.phone = 'El teléfono no es válido'
+      newErrors.phone = "El teléfono no es válido";
     }
 
     // Validación de username
-    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
     if (!formData.username.trim()) {
-      newErrors.username = 'El nombre de usuario es requerido'
+      newErrors.username = "El nombre de usuario es requerido";
     } else if (!usernameRegex.test(formData.username)) {
-      newErrors.username = 'Solo letras, números y guiones bajos (3-20 caracteres)'
+      newErrors.username =
+        "Solo letras, números y guiones bajos (3-20 caracteres)";
     }
 
     // Validación de contraseña
     if (!formData.password) {
-      newErrors.password = 'La contraseña es requerida'
+      newErrors.password = "La contraseña es requerida";
     } else if (formData.password.length < 8) {
-      newErrors.password = 'La contraseña debe tener al menos 8 caracteres'
+      newErrors.password = "La contraseña debe tener al menos 8 caracteres";
     } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password = 'Debe incluir mayúsculas, minúsculas y números'
+      newErrors.password = "Debe incluir mayúsculas, minúsculas y números";
     }
 
     // Validación de confirmación
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Las contraseñas no coinciden'
+      newErrors.confirmPassword = "Las contraseñas no coinciden";
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     if (!validateForm()) {
-      return
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           fullName: formData.fullName,
@@ -163,55 +193,61 @@ export default function RegisterPage() {
           phone: formData.phone,
           username: formData.username,
           password: formData.password,
-          country: 'CO', // Valor por defecto
-          language: 'es', // Valor por defecto
-          acceptMarketing: false
+          country: "CO", // Valor por defecto
+          language: "es", // Valor por defecto
+          acceptMarketing: false,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
-        toast.success('¡Cuenta creada exitosamente! Por favor inicia sesión.')
+        toast.success("¡Cuenta creada exitosamente! Por favor inicia sesión.");
         // Redirigir a la página de login
-        router.push('/login')
+        router.push("/login");
       } else {
-        toast.error(data.error || 'Error al crear la cuenta')
+        toast.error(data.error || "Error al crear la cuenta");
         if (data.field) {
-          setErrors({ [data.field]: data.error })
+          setErrors({ [data.field]: data.error });
         }
       }
     } catch (error) {
-      toast.error('Error de conexión. Intenta nuevamente.')
+      toast.error("Error de conexión. Intenta nuevamente.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData((prev) => ({ ...prev, [field]: value }));
     // Limpiar error cuando el usuario empieza a escribir
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }))
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
 
     // Verificar disponibilidad para email y username
-    if (field === 'email' && typeof value === 'string') {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (field === "email" && typeof value === "string") {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (emailRegex.test(value)) {
-        checkAvailability('email', value)
+        checkAvailability("email", value);
       } else {
-        setAvailability(prev => ({ ...prev, email: { available: false, message: '', checking: false } }))
+        setAvailability((prev) => ({
+          ...prev,
+          email: { available: false, message: "", checking: false },
+        }));
       }
-    } else if (field === 'username' && typeof value === 'string') {
-      const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/
+    } else if (field === "username" && typeof value === "string") {
+      const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
       if (usernameRegex.test(value)) {
-        checkAvailability('username', value)
+        checkAvailability("username", value);
       } else {
-        setAvailability(prev => ({ ...prev, username: { available: false, message: '', checking: false } }))
+        setAvailability((prev) => ({
+          ...prev,
+          username: { available: false, message: "", checking: false },
+        }));
       }
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
@@ -238,9 +274,11 @@ export default function RegisterPage() {
                   type="text"
                   placeholder="Juan Pérez"
                   value={formData.fullName}
-                  onChange={(e) => handleInputChange('fullName', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("fullName", e.target.value)
+                  }
                   className={`bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 ${
-                    errors.fullName ? 'border-red-400' : ''
+                    errors.fullName ? "border-red-400" : ""
                   }`}
                   disabled={isLoading}
                 />
@@ -260,13 +298,19 @@ export default function RegisterPage() {
                     type="text"
                     placeholder="juanperez"
                     value={formData.username}
-                    onChange={(e) => handleInputChange('username', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("username", e.target.value)
+                    }
                     className={`bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 pr-10 ${
-                      errors.username ? 'border-red-400' : ''
+                      errors.username ? "border-red-400" : ""
                     } ${
-                      availability.username?.available === true ? 'border-green-400' : ''
+                      availability.username?.available === true
+                        ? "border-green-400"
+                        : ""
                     } ${
-                      availability.username?.available === false ? 'border-red-400' : ''
+                      availability.username?.available === false
+                        ? "border-red-400"
+                        : ""
                     }`}
                     disabled={isLoading}
                   />
@@ -275,24 +319,30 @@ export default function RegisterPage() {
                       <Loader2 className="w-4 h-4 text-slate-400 animate-spin" />
                     </div>
                   )}
-                  {availability.username?.available === true && !availability.username?.checking && (
-                    <div className="absolute right-0 top-0 h-full px-3 flex items-center">
-                      <Check className="w-4 h-4 text-green-400" />
-                    </div>
-                  )}
-                  {availability.username?.available === false && !availability.username?.checking && (
-                    <div className="absolute right-0 top-0 h-full px-3 flex items-center">
-                      <X className="w-4 h-4 text-red-400" />
-                    </div>
-                  )}
+                  {availability.username?.available === true &&
+                    !availability.username?.checking && (
+                      <div className="absolute right-0 top-0 h-full px-3 flex items-center">
+                        <Check className="w-4 h-4 text-green-400" />
+                      </div>
+                    )}
+                  {availability.username?.available === false &&
+                    !availability.username?.checking && (
+                      <div className="absolute right-0 top-0 h-full px-3 flex items-center">
+                        <X className="w-4 h-4 text-red-400" />
+                      </div>
+                    )}
                 </div>
                 {errors.username && (
                   <p className="text-red-400 text-sm">{errors.username}</p>
                 )}
                 {availability.username?.message && !errors.username && (
-                  <p className={`text-sm ${
-                    availability.username.available ? 'text-green-400' : 'text-red-400'
-                  }`}>
+                  <p
+                    className={`text-sm ${
+                      availability.username.available
+                        ? "text-green-400"
+                        : "text-red-400"
+                    }`}
+                  >
                     {availability.username.message}
                   </p>
                 )}
@@ -309,13 +359,17 @@ export default function RegisterPage() {
                     type="email"
                     placeholder="juan@ejemplo.com"
                     value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
                     className={`bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 pr-10 ${
-                      errors.email ? 'border-red-400' : ''
+                      errors.email ? "border-red-400" : ""
                     } ${
-                      availability.email?.available === true ? 'border-green-400' : ''
+                      availability.email?.available === true
+                        ? "border-green-400"
+                        : ""
                     } ${
-                      availability.email?.available === false ? 'border-red-400' : ''
+                      availability.email?.available === false
+                        ? "border-red-400"
+                        : ""
                     }`}
                     disabled={isLoading}
                   />
@@ -324,24 +378,30 @@ export default function RegisterPage() {
                       <Loader2 className="w-4 h-4 text-slate-400 animate-spin" />
                     </div>
                   )}
-                  {availability.email?.available === true && !availability.email?.checking && (
-                    <div className="absolute right-0 top-0 h-full px-3 flex items-center">
-                      <Check className="w-4 h-4 text-green-400" />
-                    </div>
-                  )}
-                  {availability.email?.available === false && !availability.email?.checking && (
-                    <div className="absolute right-0 top-0 h-full px-3 flex items-center">
-                      <X className="w-4 h-4 text-red-400" />
-                    </div>
-                  )}
+                  {availability.email?.available === true &&
+                    !availability.email?.checking && (
+                      <div className="absolute right-0 top-0 h-full px-3 flex items-center">
+                        <Check className="w-4 h-4 text-green-400" />
+                      </div>
+                    )}
+                  {availability.email?.available === false &&
+                    !availability.email?.checking && (
+                      <div className="absolute right-0 top-0 h-full px-3 flex items-center">
+                        <X className="w-4 h-4 text-red-400" />
+                      </div>
+                    )}
                 </div>
                 {errors.email && (
                   <p className="text-red-400 text-sm">{errors.email}</p>
                 )}
                 {availability.email?.message && !errors.email && (
-                  <p className={`text-sm ${
-                    availability.email.available ? 'text-green-400' : 'text-red-400'
-                  }`}>
+                  <p
+                    className={`text-sm ${
+                      availability.email.available
+                        ? "text-green-400"
+                        : "text-red-400"
+                    }`}
+                  >
                     {availability.email.message}
                   </p>
                 )}
@@ -357,9 +417,9 @@ export default function RegisterPage() {
                   type="tel"
                   placeholder="+57 300 123 4567"
                   value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  onChange={(e) => handleInputChange("phone", e.target.value)}
                   className={`bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 ${
-                    errors.phone ? 'border-red-400' : ''
+                    errors.phone ? "border-red-400" : ""
                   }`}
                   disabled={isLoading}
                 />
@@ -376,12 +436,14 @@ export default function RegisterPage() {
                 <div className="relative">
                   <Input
                     id="password"
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     placeholder="Mínimo 8 caracteres"
                     value={formData.password}
-                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("password", e.target.value)
+                    }
                     className={`bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 pr-10 ${
-                      errors.password ? 'border-red-400' : ''
+                      errors.password ? "border-red-400" : ""
                     }`}
                     disabled={isLoading}
                   />
@@ -413,12 +475,14 @@ export default function RegisterPage() {
                 <div className="relative">
                   <Input
                     id="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
+                    type={showConfirmPassword ? "text" : "password"}
                     placeholder="Repite tu contraseña"
                     value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("confirmPassword", e.target.value)
+                    }
                     className={`bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 pr-10 ${
-                      errors.confirmPassword ? 'border-red-400' : ''
+                      errors.confirmPassword ? "border-red-400" : ""
                     }`}
                     disabled={isLoading}
                   />
@@ -438,7 +502,9 @@ export default function RegisterPage() {
                   </Button>
                 </div>
                 {errors.confirmPassword && (
-                  <p className="text-red-400 text-sm">{errors.confirmPassword}</p>
+                  <p className="text-red-400 text-sm">
+                    {errors.confirmPassword}
+                  </p>
                 )}
               </div>
 
@@ -464,7 +530,7 @@ export default function RegisterPage() {
               {/* Link para Login */}
               <div className="text-center">
                 <p className="text-slate-400">
-                  ¿Ya tienes una cuenta?{' '}
+                  ¿Ya tienes una cuenta?{" "}
                   <Link
                     href="/login"
                     className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors"
@@ -478,5 +544,5 @@ export default function RegisterPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

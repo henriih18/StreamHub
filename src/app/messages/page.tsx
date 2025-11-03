@@ -129,7 +129,7 @@ export default function MessagesPage() {
       }
     } catch (error) {
       //console.error("Error fetching messages:", error);
-      toast.error("Error al cargar mensajes");
+      toast.error("Error al cargar los mensajes");
     } finally {
       setLoading(false);
     }
