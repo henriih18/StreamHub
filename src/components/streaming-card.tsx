@@ -34,6 +34,8 @@ interface StreamingAccount {
   }>
   profileStocks?: Array<{
     id: string
+    email: string
+    password: string
     profileName: string
     profilePin?: string
     isAvailable: boolean

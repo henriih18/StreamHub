@@ -17,6 +17,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { toast } from 'sonner'
+import ImageGallery from '@/components/admin/image-gallery'
 import PermissionManager from '@/components/admin/PermissionManager'
 import { 
   UserManagementSkeleton,
@@ -2787,7 +2788,7 @@ export default function AdminPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="typeImage" className="text-slate-300">Imagen del Tipo *</Label>
+                      {/* <Label htmlFor="typeImage" className="text-slate-300">Imagen del Tipo *</Label>
                       <div className="space-y-3">
                         <Input
                           id="typeImage"
@@ -2821,7 +2822,77 @@ export default function AdminPage() {
                         {!newStreamingType.imageUrl && !uploadingImage && (
                           <p className="text-sm text-amber-400">⚠ Debes subir una imagen para el tipo</p>
                         )}
-                      </div>
+                      </div> */}
+                      <div>
+  <Label htmlFor="typeImage" className="text-slate-300">Imagen del Tipo *</Label>
+  <div className="space-y-3">
+    {/* Opciones de imagen */}
+    <div className="grid grid-cols-1 gap-3">
+      {/* Opción 1: Subir nueva imagen */}
+      <div className="space-y-2">
+        <Label className="text-xs text-slate-400">Opción 1: Subir nueva imagen</Label>
+        <Input
+          id="typeImage"
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/svg+xml"
+          onChange={handleImageUpload}
+          disabled={uploadingImage}
+          className="bg-slate-700 border-slate-600 text-white file:bg-slate-600 file:text-white file:border-0"
+        />
+        {uploadingImage && (
+          <div className="flex items-center space-x-2 text-sm text-slate-400">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <span>Subiendo imagen...</span>
+          </div>
+        )}
+      </div>
+
+      {/* Opción 2: Usar galería */}
+      <div className="space-y-2">
+        <Label className="text-xs text-slate-400">Opción 2: Seleccionar de la galería</Label>
+        <ImageGallery 
+          onSelectImage={(base64) => {
+            setNewStreamingType(prev => ({
+              ...prev,
+              imageUrl: base64
+            }))
+            toast.success('Imagen seleccionada de la galería')
+          }}
+          currentImage={newStreamingType.imageUrl}
+        />
+      </div>
+    </div>
+
+    {/* Vista previa de la imagen seleccionada */}
+    {newStreamingType.imageUrl && (
+      <div className="space-y-2">
+        <div className="flex items-center space-x-3 p-3 bg-slate-700 rounded-lg border border-slate-600">
+          <img
+            src={newStreamingType.imageUrl}
+            alt="Preview"
+            className="w-16 h-16 object-cover rounded-lg border-2 border-slate-500"
+          />
+          <div className="flex-1">
+            <p className="text-sm text-green-400 font-medium">✓ Imagen seleccionada</p>
+            <p className="text-xs text-slate-400">Lista para usar</p>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setNewStreamingType(prev => ({ ...prev, imageUrl: '' }))}
+            className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+    )}
+    
+    {!newStreamingType.imageUrl && !uploadingImage && (
+      <p className="text-sm text-amber-400">⚠ Debes seleccionar una imagen (subir nueva o de la galería)</p>
+    )}
+  </div>
+</div>
                     </div>
                     <div>
                       <Label htmlFor="typeColor" className="text-slate-300">Color del Tema</Label>
@@ -5582,7 +5653,7 @@ export default function AdminPage() {
                   className="bg-slate-700 border-slate-600 text-white"
                 />
               </div>
-              <div>
+              {/* <div>
                 <Label htmlFor="editTypeImage" className="text-slate-300">Imagen del Tipo</Label>
                 <div className="space-y-3">
                   {editingType.imageUrl && (
@@ -5614,7 +5685,40 @@ export default function AdminPage() {
                   )}
                   <p className="text-xs text-slate-400">Sube una nueva imagen para reemplazar la actual (JPEG, PNG, SVG, WebP)</p>
                 </div>
-              </div>
+              </div> */}
+              <div>
+  <Label htmlFor="editTypeImage" className="text-slate-300">Imagen del Tipo</Label>
+  <div className="space-y-3">
+    {editingType.imageUrl && (
+      <div className="flex items-center space-x-3 p-3 bg-slate-700 rounded-lg border border-slate-600">
+        <img
+          src={editingType.imageUrl}
+          alt={editingType.name}
+          className="w-16 h-16 object-cover rounded-lg border-2 border-slate-500"
+        />
+        <div className="flex-1">
+          <p className="text-sm text-green-400 font-medium">✓ Imagen actual</p>
+          <p className="text-xs text-slate-400">{editingType.imageUrl}</p>
+        </div>
+      </div>
+    )}
+    <Input
+      id="editTypeImage"
+      type="file"
+      accept="image/jpeg,image/png,image/webp,image/svg+xml"
+      onChange={handleImageUpload}
+      disabled={uploadingImage}
+      className="bg-slate-700 border-slate-600 text-white file:bg-slate-600 file:text-white file:border-0"
+    />
+    {uploadingImage && (
+      <div className="flex items-center space-x-2 text-sm text-slate-400">
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+        <span>Subiendo imagen...</span>
+      </div>
+    )}
+    <p className="text-xs text-slate-400">Sube una nueva imagen para reemplazar la actual (JPEG, PNG, SVG, WebP)</p>
+  </div>
+</div>
               <div>
                 <Label htmlFor="editTypeColor" className="text-slate-300">Color</Label>
                 <Input

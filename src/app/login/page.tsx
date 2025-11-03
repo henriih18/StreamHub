@@ -99,7 +99,7 @@ export default function LoginPage() {
         }
       }
     } catch (error) {
-      console.error('Error:', error)
+      //console.error('Error:', error)
       toast.error('Error de conexión. Intenta nuevamente.')
     } finally {
       setIsLoading(false)

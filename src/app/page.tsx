@@ -39,6 +39,11 @@ interface StreamingAccount {
     id: string
     isAvailable: boolean
   }>
+
+  exclusiveStocks?: Array<{
+  id: string
+  isAvailable: boolean
+}>
   specialOffer?: any
   originalPrice?: number
 }
@@ -49,6 +54,8 @@ interface CartItem {
   quantity: number
   saleType: 'FULL' | 'PROFILES'
   priceAtTime: number
+
+  availableStock?: number
 }
 
 export default function Home() {
@@ -171,9 +178,9 @@ export default function Home() {
           setFilteredAccounts(allAccounts)
         }
       } catch (error) {
-        console.error('Error fetching accounts:', error)
+        //console.error('Error fetching accounts:', error)
         // Fallback to mock data if API fails
-        const mockAccounts: StreamingAccount[] = [
+        /* const mockAccounts: StreamingAccount[] = [
           {
             id: '1',
             name: 'Netflix Premium',
@@ -362,9 +369,9 @@ export default function Home() {
               color: 'bg-yellow-600'
             }
           }
-        ]
-        setStreamingAccounts(mockAccounts)
-        setFilteredAccounts(mockAccounts)
+        ] */
+        setStreamingAccounts([])
+        setFilteredAccounts([])
       }
     }
 
@@ -387,7 +394,7 @@ export default function Home() {
         setUserCredits(data.credits || 0)
       }
     } catch (error) {
-      console.error('Error fetching user credits:', error)
+      //console.error('Error fetching user credits:', error)
     }
   }
 
@@ -419,7 +426,7 @@ export default function Home() {
         setCartItems(formattedItems)
       }
     } catch (error) {
-      console.error('Error fetching cart items:', error)
+      //console.error('Error fetching cart items:', error)
     }
   }
 
@@ -449,7 +456,7 @@ export default function Home() {
         await fetchCartItems()
       }
     } catch (error) {
-      console.error('Error updating quantity:', error)
+      //console.error('Error updating quantity:', error)
     }
   }
 
@@ -474,7 +481,7 @@ export default function Home() {
 
   const handlePaymentSuccess = (newCredits: number) => {
     setUserCredits(newCredits)
-    toast.success('¡Pago procesado con éxito! Revisa tus pedidos.')
+    toast.success('¡Pago procesado con éxito! Revisa tus pedidos en el panel "Mi Cuenta".')
   }
 
   useEffect(() => {
@@ -573,10 +580,11 @@ export default function Home() {
         const accountType = account.saleType === 'PROFILES' ? 'Perfil' : 'Cuenta Completa'
         const quantityText = quantity > 1 ? `${quantity} unidades` : '1 unidad'
         
-        toast.success(`${accountType} "${account.name}" agregado al carrito`, {
+        /* toast.success(`${accountType} "${account.name}" agregado al carrito`, {
           description: `${quantityText} • $${account.price.toLocaleString('es-CO')} c/u`,
           duration: 3000,
-        })
+        }) */
+       toast.success(`${accountType} "${account.name}" agregado al carrito - ${quantityText} • $${account.price.toLocaleString('es-CO')}`)
       } else {
         const errorData = await response.json()
         toast.error(errorData.error || 'Error al agregar al carrito')
@@ -709,7 +717,7 @@ export default function Home() {
               {currentAccounts.map((account) => (
                 <StreamingCard
                   key={account.id}
-                  account={account}
+                  account={account} // IMPORTANT: no correjir
                   onAddToCart={addToCart}
                   isMostPopular={['1', '2', '3'].includes(account.id)}
                 />

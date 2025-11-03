@@ -45,10 +45,17 @@ interface StreamingAccount {
   }
   accountStocks?: Array<{
     id: string
+    email: string
+    password: string
     isAvailable: boolean
+    
   }>
   profileStocks?: Array<{
     id: string
+    email: string       
+    password: string     
+    profileName: string  
+    profilePin?: string
     isAvailable: boolean
   }>
   specialOffer?: any
@@ -184,7 +191,7 @@ const [isRetrying, setIsRetrying] = useState(false)
         }
       } catch (error) {
         //console.error('Error fetching accounts:', error)
-        console.error('Error fetching accounts:', error)
+        //console.error('Error fetching accounts:', error)
   toast.error("Error al recuperar las cuentas. Por favor, intenta de nuevo.")
         setStreamingAccounts([])
         setFilteredAccounts([])
@@ -347,7 +354,7 @@ const [isRetrying, setIsRetrying] = useState(false)
         setCartItems(formattedItems)
       }
     } catch (error) {
-      console.error('Error fetching cart:', error)
+      //console.error('Error fetching cart:', error)
     }
   }
 
@@ -405,7 +412,7 @@ const [isRetrying, setIsRetrying] = useState(false)
         toast.error(errorData.error || 'Error al actualizar cantidad')
       }
     } catch (error) {
-      console.error('Error updating quantity:', error)
+      //console.error('Error updating quantity:', error)
       toast.error('Error de conexión')
     }
   }
@@ -432,7 +439,7 @@ const [isRetrying, setIsRetrying] = useState(false)
         toast.error('Error al eliminar del carrito')
       }
     } catch (error) {
-      console.error('Error removing item:', error)
+      //console.error('Error removing item:', error)
       toast.error('Error de conexión')
     }
   }
@@ -531,6 +538,10 @@ const [isRetrying, setIsRetrying] = useState(false)
     localStorage.removeItem('user')
     router.push('/')
   }
+
+  const handleCartOpen = () => {
+  setIsCartOpen(true)
+}
 
   // Mock login functions for demo
   /* const handleAdminLogin = () => {
@@ -639,8 +650,16 @@ const [isRetrying, setIsRetrying] = useState(false)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950">
-        <Navigation />  
-      
+       {/*  <Navigation />  
+       */}
+
+       <Navigation 
+  user={user}
+  cartItemsCount={cartItems.length}
+  onCartOpen={handleCartOpen}
+  onLogin={() => router.push('/login')}
+  onLogout={handleLogout}
+/>
 
       
       
