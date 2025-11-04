@@ -137,7 +137,7 @@ async function getRealTimeStats() {
     };
 
     // Get inventory stats
-    const [regularAccounts, exclusiveAccounts] = await Promise.all([
+    /* const [regularAccounts, exclusiveAccounts] = await Promise.all([
       db.streamingAccount.findMany({
         include: {
           _count: {
@@ -167,6 +167,40 @@ async function getRealTimeStats() {
         sum +
         (account._count.accountStocks || 0) +
         (account._count.profileStocks || 0),
+      0
+    );
+
+    const totalExclusiveStock = exclusiveAccounts.reduce(
+      (sum, account) =>
+        sum +
+        (account.exclusiveStocks?.filter((stock) => stock.isAvailable).length ||
+          0),
+      0
+    ); */
+
+    // Get inventory stats
+    const [regularAccounts, exclusiveAccounts] = await Promise.all([
+      db.streamingAccount.findMany({
+        include: {
+          accountStocks: true,
+          profileStocks: true,
+          orders: true,
+        },
+      }),
+      db.exclusiveAccount.findMany({
+        include: {
+          exclusiveStocks: true,
+          orders: true,
+        },
+      }),
+    ]);
+
+    // Calculate stock totals
+    const totalRegularStock = regularAccounts.reduce(
+      (sum, account) =>
+        sum +
+        (account.accountStocks?.length || 0) +
+        (account.profileStocks?.length || 0),
       0
     );
 

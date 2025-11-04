@@ -3,10 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
-  reactStrictMode: false,
+  reactStrictMode: true,
   webpack: (config, { dev }) => {
     if (dev) {
       config.watchOptions = {
@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
     return config;
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
 };
 

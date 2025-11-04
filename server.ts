@@ -31,11 +31,23 @@ async function createCustomServer() {
       handle(req, res);
     });
 
-    // Setup Socket.IO
+    /* // Setup Socket.IO
     const io = new Server(server, {
       path: "/api/socketio",
       cors: {
         origin: "*",
+        methods: ["GET", "POST"],
+      },
+    }); */
+
+    // Setup Socket.IO
+    const io = new Server(server, {
+      path: "/api/socketio",
+      cors: {
+        origin:
+          process.env.NODE_ENV === "production"
+            ? ["https://tudominio.com"] // Reemplazar con tu dominio
+            : ["http://localhost:3000"],
         methods: ["GET", "POST"],
       },
     });

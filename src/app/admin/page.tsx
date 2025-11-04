@@ -2449,7 +2449,7 @@ export default function AdminPage() {
       <div className="p-6">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
-            <div className="flex items-center justify-between">
+            <div className="flex-wrad items-center justify-between">
               <div>
                 <h1 className="text-4xl font-bold text-white mb-2">
                   Panel de Administración
@@ -2477,14 +2477,15 @@ export default function AdminPage() {
             className="space-y-6"
           >
             <div className="bg-slate-800 border border-slate-700 rounded-lg p-1 overflow-x-auto">
-              <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-1 bg-transparent h-auto p-0">
+              {/* <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-1 bg-transparent h-auto p-0"> */}
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-1 bg-transparent h-auto p-0">
                 <TabsTrigger
                   value="resumen"
                   className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-slate-300 flex-col gap-0.5 h-auto py-0.5 px-2 text-xs md:text-sm"
                 >
                   <TrendingUp className="w-4 h-4" />
                   <span className="hidden sm:inline">Resumen</span>
-                  <span className="sm:hidden">R</span>
+                  <span className="sm:hidden">Resumen</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="tipos"
@@ -2492,7 +2493,7 @@ export default function AdminPage() {
                 >
                   <Settings className="w-4 h-4" />
                   <span className="hidden sm:inline">Tipos</span>
-                  <span className="sm:hidden">T</span>
+                  <span className="sm:hidden">Tipos</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="cuentas"
@@ -2500,7 +2501,7 @@ export default function AdminPage() {
                 >
                   <Package className="w-4 h-4" />
                   <span className="hidden sm:inline">Cuentas</span>
-                  <span className="sm:hidden">C</span>
+                  <span className="sm:hidden">Cuentas</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="stock"
@@ -2508,7 +2509,7 @@ export default function AdminPage() {
                 >
                   <CreditCard className="w-4 h-4" />
                   <span className="hidden sm:inline">Stock</span>
-                  <span className="sm:hidden">S</span>
+                  <span className="sm:hidden">Stock</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="pedidos"
@@ -2516,7 +2517,7 @@ export default function AdminPage() {
                 >
                   <ShoppingBag className="w-4 h-4" />
                   <span className="hidden sm:inline">Pedidos</span>
-                  <span className="sm:hidden">P</span>
+                  <span className="sm:hidden">Pedidos</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="usuarios"
@@ -2524,7 +2525,7 @@ export default function AdminPage() {
                 >
                   <Users className="w-4 h-4" />
                   <span className="hidden sm:inline">Usuarios</span>
-                  <span className="sm:hidden">U</span>
+                  <span className="sm:hidden">Usuarios</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="ofertas"
@@ -2532,7 +2533,7 @@ export default function AdminPage() {
                 >
                   <Gift className="w-4 h-4" />
                   <span className="hidden sm:inline">Ofertas</span>
-                  <span className="sm:hidden">O</span>
+                  <span className="sm:hidden">Ofertas</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="exclusivas"
@@ -2540,7 +2541,7 @@ export default function AdminPage() {
                 >
                   <Crown className="w-4 h-4" />
                   <span className="hidden sm:inline">Exclusivas</span>
-                  <span className="sm:hidden">E</span>
+                  <span className="sm:hidden">Exclusivas</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="soporte"
@@ -2548,7 +2549,7 @@ export default function AdminPage() {
                 >
                   <Headphones className="w-4 h-4" />
                   <span className="hidden sm:inline">Soporte</span>
-                  <span className="sm:hidden">S</span>
+                  <span className="sm:hidden">Soporte</span>
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -2558,7 +2559,7 @@ export default function AdminPage() {
               <TabsContent value="resumen" className="space-y-8">
                 {/* KPIs Principales */}
                 <div>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex-wrap items-center justify-between mb-4">
                     <h2 className="text-xl font-semibold text-white flex items-center">
                       <TrendingUp className="h-5 w-5 mr-2" />
                       Indicadores Clave de Rendimiento
@@ -2594,7 +2595,8 @@ export default function AdminPage() {
                       </Button>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"> */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <Card className="bg-slate-800/50 border-slate-700">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
@@ -2722,7 +2724,8 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
+                  {/* <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2"> */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                     {/* Cuentas Regulares */}
                     {accounts.map((account) => {
                       const totalStock =
@@ -4503,7 +4506,7 @@ export default function AdminPage() {
                             >
                               {/* Header con información básica y flecha */}
                               <div
-                                className="flex items-start justify-between cursor-pointer"
+                                className="flex-wrap items-start justify-between cursor-pointer"
                                 onClick={() =>
                                   toggleOrderExpansionInGeneral(order.id)
                                 }
@@ -4967,7 +4970,7 @@ export default function AdminPage() {
             <Suspense fallback={<UserManagementSkeleton />}>
               <TabsContent value="usuarios" className="space-y-6">
                 <Card className="bg-slate-800 border-slate-700">
-                  <CardHeader>
+                  {/* <CardHeader>
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <CardTitle className="text-white">
@@ -5026,7 +5029,67 @@ export default function AdminPage() {
                         </Button>
                       </div>
                     </div>
+                  </CardHeader> */}
+                  <CardHeader>
+                    <div className="flex flex-wrap items-start justify-between gap-4 sm:items-center">
+                      <div className="flex-1 min-w-[200px]">
+                        <CardTitle className="text-white">
+                          Gestión de Usuarios
+                        </CardTitle>
+                        <CardDescription className="text-slate-400">
+                          Ver detalles, recargar créditos y gestionar permisos
+                        </CardDescription>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:flex-nowrap">
+                        <Input
+                          placeholder="Buscar usuarios por nombre o email..."
+                          value={userSearchQuery}
+                          onChange={(e) => setUserSearchQuery(e.target.value)}
+                          className="bg-slate-700 border-slate-600 text-white placeholder-slate-400 flex-1 min-w-[180px] sm:w-64"
+                        />
+
+                        <Button
+                          onClick={() => {
+                            adminFetch("/api/admin/update-total-spent", {
+                              method: "POST",
+                            })
+                              .then((res) => res.json())
+                              .then((data) => {
+                                if (data.success) {
+                                  toast.success(
+                                    `Actualizado: ${data.updatedUsers} usuarios`
+                                  );
+                                  fetchData();
+                                } else {
+                                  toast.error(
+                                    "Error al actualizar total gastado"
+                                  );
+                                }
+                              })
+                              .catch(() =>
+                                toast.error("Error al actualizar total gastado")
+                              );
+                          }}
+                          size="sm"
+                          variant="outline"
+                          className="border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white flex-shrink-0"
+                        >
+                          <RefreshCw className="w-4 h-4 mr-1" />
+                          Actualizar Total
+                        </Button>
+
+                        <Button
+                          onClick={() => setShowBroadcastModal(true)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white flex-shrink-0"
+                          size="sm"
+                        >
+                          <Mail className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </CardHeader>
+
                   <CardContent>
                     <div className="space-y-4">
                       {filteredUsers.map((user) => (
@@ -5034,13 +5097,14 @@ export default function AdminPage() {
                           key={user.id}
                           className="p-4 bg-slate-700 rounded-lg"
                         >
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <h3 className="font-semibold text-white">
+                          {/* Cabecera */}
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3 gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2 mb-2">
+                                <h3 className="font-semibold text-white break-words">
                                   {user.name || user.email}
                                 </h3>
-                                <div className="flex items-center gap-2 mt-1">
+                                <div className="flex flex-wrap items-center gap-2 mt-1">
                                   {user.isBlocked ? (
                                     <Badge
                                       variant="destructive"
@@ -5066,13 +5130,14 @@ export default function AdminPage() {
                                   )}
                                 </div>
                               </div>
-                              <p className="text-sm text-slate-400 mb-1">
+                              <p className="text-sm text-slate-400 mb-1 break-all">
                                 {user.email}
                               </p>
                               <p className="text-xs text-slate-500">
                                 Registrado:{" "}
                                 {new Date(user.createdAt).toLocaleDateString()}
                               </p>
+
                               {user.isBlocked && (
                                 <div className="mt-2 p-2 bg-red-900/30 border border-red-700/50 rounded text-xs">
                                   <p className="text-red-400 font-medium">
@@ -5093,6 +5158,7 @@ export default function AdminPage() {
                                   )}
                                 </div>
                               )}
+
                               {!user.isBlocked && user.blockReason && (
                                 <div className="mt-2 p-2 bg-yellow-900/30 border border-yellow-700/50 rounded text-xs">
                                   <p className="text-yellow-400 font-medium">
@@ -5105,7 +5171,8 @@ export default function AdminPage() {
                                 </div>
                               )}
                             </div>
-                            <div className="text-right">
+
+                            <div className="text-left sm:text-right flex-shrink-0">
                               <p className="font-bold text-white text-lg">
                                 {formatCurrency(user.credits)}
                               </p>
@@ -5119,12 +5186,13 @@ export default function AdminPage() {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2 mt-3">
+                          {/* Botones */}
+                          <div className="flex flex-wrap gap-2 mt-3">
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => handleViewUserOrders(user)}
-                              className="border-slate-600 text-slate-300 hover:bg-slate-600"
+                              className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
                             >
                               <Eye className="w-4 h-4 mr-1" />
                               Ver Pedidos
@@ -5134,7 +5202,7 @@ export default function AdminPage() {
                               size="sm"
                               variant="outline"
                               onClick={() => toggleUserRegistration(user.id)}
-                              className="border-slate-600 text-slate-300 hover:bg-slate-600"
+                              className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
                             >
                               {expandedUserRegistration.has(user.id) ? (
                                 <>
@@ -5153,13 +5221,13 @@ export default function AdminPage() {
                               <DialogTrigger asChild>
                                 <Button
                                   size="sm"
-                                  className="bg-emerald-600 hover:bg-emerald-700"
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1 sm:flex-none"
                                 >
                                   <CreditCard className="w-4 h-4 mr-1" />
                                   Recargar
                                 </Button>
                               </DialogTrigger>
-                              <DialogContent className="bg-slate-800 border-slate-700">
+                              <DialogContent className="bg-slate-800 border-slate-700 max-w-md w-[90%] sm:w-full">
                                 <DialogHeader>
                                   <DialogTitle className="text-white">
                                     Recargar Créditos
@@ -5188,12 +5256,12 @@ export default function AdminPage() {
                                       className="bg-slate-700 border-slate-600 text-white"
                                     />
                                   </div>
-                                  <div className="flex space-x-2">
+                                  <div className="flex flex-wrap gap-2">
                                     <Button
                                       variant="outline"
                                       size="sm"
                                       onClick={() => setRechargeAmount("10000")}
-                                      className="border-slate-600 text-slate-300 hover:bg-slate-600"
+                                      className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
                                     >
                                       $10.000
                                     </Button>
@@ -5201,7 +5269,7 @@ export default function AdminPage() {
                                       variant="outline"
                                       size="sm"
                                       onClick={() => setRechargeAmount("20000")}
-                                      className="border-slate-600 text-slate-300 hover:bg-slate-600"
+                                      className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
                                     >
                                       $20.000
                                     </Button>
@@ -5209,7 +5277,7 @@ export default function AdminPage() {
                                       variant="outline"
                                       size="sm"
                                       onClick={() => setRechargeAmount("50000")}
-                                      className="border-slate-600 text-slate-300 hover:bg-slate-600"
+                                      className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
                                     >
                                       $50.000
                                     </Button>
@@ -5219,7 +5287,7 @@ export default function AdminPage() {
                                       onClick={() =>
                                         setRechargeAmount("100000")
                                       }
-                                      className="border-slate-600 text-slate-300 hover:bg-slate-600"
+                                      className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
                                     >
                                       $100.000
                                     </Button>
@@ -5243,7 +5311,7 @@ export default function AdminPage() {
                               size="sm"
                               variant="outline"
                               onClick={() => fetchRechargeHistory(user.id)}
-                              className="border-slate-600 text-slate-300 hover:bg-slate-600"
+                              className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
                             >
                               <History className="w-4 h-4 mr-1" />
                               Recargas
@@ -5253,7 +5321,7 @@ export default function AdminPage() {
                               size="sm"
                               variant="outline"
                               onClick={() => openPermissionManager(user)}
-                              className="border-slate-600 text-slate-300 hover:bg-slate-600 relative"
+                              className="border-slate-600 text-slate-300 hover:bg-slate-600 relative flex-1 sm:flex-none"
                             >
                               <Shield className="w-4 h-4 mr-1" />
                               Manage Permissions
@@ -5267,14 +5335,14 @@ export default function AdminPage() {
 
                           {/* Desplegable de Información de Registro */}
                           {expandedUserRegistration.has(user.id) && (
-                            <div className="mt-4 p-4 bg-slate-800 rounded-lg border border-slate-600">
-                              <div className="flex items-center justify-between mb-4">
+                            <div className="mt-4 p-4 bg-slate-800 rounded-lg border border-slate-600 overflow-visible">
+                              <div className="flex flex-wrap items-center justify-between mb-4 gap-2">
                                 <h4 className="text-white font-semibold flex items-center gap-2">
                                   <User className="w-4 h-4" />
                                   Información de Registro
                                 </h4>
                                 {editingUserRegistration === user.id ? (
-                                  <div className="flex gap-2">
+                                  <div className="flex gap-2 flex-wrap">
                                     <Button
                                       size="sm"
                                       onClick={() =>
@@ -5329,7 +5397,7 @@ export default function AdminPage() {
                                       Nombre Completo
                                     </Label>
                                     {editingUserRegistration === user.id ? (
-                                      <Input
+                                      <Input disabled
                                         value={
                                           userRegistrationData[user.id]
                                             ?.fullName || ""
@@ -5358,7 +5426,7 @@ export default function AdminPage() {
                                       Nombre de Usuario
                                     </Label>
                                     {editingUserRegistration === user.id ? (
-                                      <Input
+                                      <Input disabled
                                         value={
                                           userRegistrationData[user.id]
                                             ?.username || ""
@@ -5447,7 +5515,7 @@ export default function AdminPage() {
                                       Créditos
                                     </Label>
                                     {editingUserRegistration === user.id ? (
-                                      <Input
+                                      <Input disabled
                                         type="number"
                                         value={
                                           userRegistrationData[user.id]
@@ -8175,84 +8243,86 @@ export default function AdminPage() {
                         </p>
                       </div>
                     ) : (
-                      <Table>
-                        <TableHeader className="bg-slate-600/50">
-                          <TableRow>
-                            <TableHead className="text-slate-300">
-                              Fecha
-                            </TableHead>
-                            <TableHead className="text-slate-300">
-                              Monto
-                            </TableHead>
-                            <TableHead className="text-slate-300">
-                              Método
-                            </TableHead>
-                            <TableHead className="text-slate-300">
-                              Estado
-                            </TableHead>
-                            <TableHead className="text-slate-300">
-                              Administrador
-                            </TableHead>
-                            <TableHead className="text-slate-300">
-                              Notas
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {rechargeHistory.map((recharge) => (
-                            <TableRow
-                              key={recharge.id}
-                              className="border-slate-600"
-                            >
-                              <TableCell className="text-slate-300">
-                                {new Date(
-                                  recharge.createdAt
-                                ).toLocaleDateString("es-CO", {
-                                  day: "2-digit",
-                                  month: "2-digit",
-                                  year: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </TableCell>
-                              <TableCell className="text-white font-medium">
-                                {formatCurrency(recharge.amount)}
-                              </TableCell>
-                              <TableCell className="text-slate-300">
-                                <Badge
-                                  variant="outline"
-                                  className="border-slate-500 text-slate-300"
-                                >
-                                  {recharge.method || "Transferencia"}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <Badge
-                                  className={
-                                    recharge.status === "COMPLETED"
-                                      ? "bg-green-600"
-                                      : recharge.status === "PENDING"
-                                      ? "bg-yellow-600"
-                                      : "bg-red-600"
-                                  }
-                                >
-                                  {recharge.status === "COMPLETED"
-                                    ? "Completada"
-                                    : recharge.status === "PENDING"
-                                    ? "Pendiente"
-                                    : "Cancelada"}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-slate-300">
-                                {recharge.adminName || "Sistema"}
-                              </TableCell>
-                              <TableCell className="text-slate-300 text-sm">
-                                {recharge.reference || "-"}
-                              </TableCell>
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader className="bg-slate-600/50">
+                            <TableRow>
+                              <TableHead className="text-slate-300">
+                                Fecha
+                              </TableHead>
+                              <TableHead className="text-slate-300">
+                                Monto
+                              </TableHead>
+                              <TableHead className="text-slate-300">
+                                Método
+                              </TableHead>
+                              <TableHead className="text-slate-300">
+                                Estado
+                              </TableHead>
+                              <TableHead className="text-slate-300">
+                                Administrador
+                              </TableHead>
+                              <TableHead className="text-slate-300">
+                                Notas
+                              </TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                          </TableHeader>
+                          <TableBody>
+                            {rechargeHistory.map((recharge) => (
+                              <TableRow
+                                key={recharge.id}
+                                className="border-slate-600"
+                              >
+                                <TableCell className="text-slate-300">
+                                  {new Date(
+                                    recharge.createdAt
+                                  ).toLocaleDateString("es-CO", {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    year: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </TableCell>
+                                <TableCell className="text-white font-medium">
+                                  {formatCurrency(recharge.amount)}
+                                </TableCell>
+                                <TableCell className="text-slate-300">
+                                  <Badge
+                                    variant="outline"
+                                    className="border-slate-500 text-slate-300"
+                                  >
+                                    {recharge.method || "Transferencia"}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge
+                                    className={
+                                      recharge.status === "COMPLETED"
+                                        ? "bg-green-600"
+                                        : recharge.status === "PENDING"
+                                        ? "bg-yellow-600"
+                                        : "bg-red-600"
+                                    }
+                                  >
+                                    {recharge.status === "COMPLETED"
+                                      ? "Completada"
+                                      : recharge.status === "PENDING"
+                                      ? "Pendiente"
+                                      : "Cancelada"}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-slate-300">
+                                  {recharge.adminName || "Sistema"}
+                                </TableCell>
+                                <TableCell className="text-slate-300 text-sm">
+                                  {recharge.reference || "-"}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
                     )}
                   </div>
                 </div>

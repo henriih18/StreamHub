@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET environment variable is required");
+}
 
 // Rutas que no requieren autenticación
 const publicRoutes = [
@@ -26,12 +29,14 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Permitir rutas públicas y estáticas
-  if (
+  /* if (
     publicRoutes.some((route) => pathname.startsWith(route)) ||
     staticRoutes.some((route) => pathname.startsWith(route))
   ) {
     return NextResponse.next();
-  }
+  } */
+
+    
 
   // Verificar token JWT
   const token =
@@ -50,7 +55,7 @@ export async function middleware(request: NextRequest) {
 
   try {
     // Decodificar token
-    const decoded = jwt.verify(token, JWT_SECRET) as {
+    const decoded = jwt.verify(token, JWT_SECRET!) as unknown as {
       userId: string;
       email: string;
     };
