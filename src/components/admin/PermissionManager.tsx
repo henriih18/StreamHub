@@ -30,7 +30,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast-custom";
 import {
   AlertTriangle,
   Ban,
@@ -295,9 +295,9 @@ export default function PermissionManager({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-hidden bg-slate-800 border-slate-700">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-white text-lg sm:text-xl">
+          <DialogTitle className="flex flex-col items-center gap-2 text-white text-lg sm:text-xl">
             <Shield className="w-5 h-5 flex-shrink-0" />
-            <span className="truncate">
+            <span className="flex-wrap">
               Gestión de Permisos - {user.name || user.email}
             </span>
           </DialogTitle>
@@ -314,30 +314,32 @@ export default function PermissionManager({
                 className="flex flex-col items-center justify-center gap-1 text-slate-300 data-[state=active]:bg-slate-600 h-auto py-2 px-1 text-xs min-w-0"
               >
                 <Settings className="w-4 h-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Acciones</span>
-                <span className="sm:hidden">A</span>
+                <span className="hidden sm:inline text-white">Acciones</span>
+                <span className="sm:hidden text-white">Acciones</span>
               </TabsTrigger>
               <TabsTrigger
                 value="history"
                 className="flex flex-col items-center justify-center gap-1 text-slate-300 data-[state=active]:bg-slate-600 h-auto py-2 px-1 text-xs min-w-0"
               >
                 <History className="w-4 h-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Historial</span>
-                <span className="sm:hidden">H</span>
+                <span className="hidden sm:inline text-white">Historial</span>
+                <span className="sm:hidden text-white">Historial</span>
               </TabsTrigger>
               <TabsTrigger
                 value="stats"
                 className="flex flex-col items-center justify-center gap-1 text-slate-300 data-[state=active]:bg-slate-600 h-auto py-2 px-1 text-xs min-w-0"
               >
                 <Info className="w-4 h-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Estadísticas</span>
-                <span className="sm:hidden">E</span>
+                <span className="hidden sm:inline text-white">
+                  Estadísticas
+                </span>
+                <span className="sm:hidden text-white">Estadisticas</span>
               </TabsTrigger>
             </TabsList>
           </div>
 
           <TabsContent value="actions" className="flex-1">
-            <ScrollArea className="h-[500px] pr-4">
+            <ScrollArea className="h-[400px]">
               <div className="space-y-6">
                 {/* User Status */}
                 <Card className="bg-slate-700 border-slate-600">
@@ -504,7 +506,7 @@ export default function PermissionManager({
                         htmlFor="warningNotify"
                         className="flex items-center gap-2 text-slate-300"
                       >
-                        <Bell className="w-4 h-4" />
+                        <Bell className="w-4 h-4 text-yellow-400" />
                         Notificar al usuario por mensaje interno
                       </Label>
                     </div>
@@ -640,7 +642,7 @@ export default function PermissionManager({
                         htmlFor="blockNotify"
                         className="flex items-center gap-2 text-slate-300"
                       >
-                        <Bell className="w-4 h-4" />
+                        <Bell className="w-4 h-4 text-yellow-400" />
                         Notificar al usuario por mensaje interno
                       </Label>
                     </div>
@@ -666,22 +668,23 @@ export default function PermissionManager({
 
                 {/* Unblock Action */}
                 {user.isBlocked && (
-                  <Card>
+                  <Card className="bg-slate-700 border-slate-600">
                     <CardHeader>
-                      <CardTitle className="text-lg flex items-center gap-2">
+                      <CardTitle className="text-lg flex items-center gap-2 font-semibold text-white">
                         <Unlock className="w-5 h-5 text-green-400" />
                         Desbloquear Usuario
                       </CardTitle>
-                      <CardDescription>
+                      <CardDescription className="text-slate-300">
                         Restablece el acceso del usuario a la plataforma
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <Label htmlFor="unblockReason">
+                        <Label className="font-semibold text-white" htmlFor="unblockReason">
                           Motivo del desbloqueo
                         </Label>
                         <Textarea
+                        className="text-slate-200"
                           id="unblockReason"
                           placeholder="Describe el motivo del desbloqueo..."
                           value={unblockData.reason}
@@ -710,7 +713,7 @@ export default function PermissionManager({
                           htmlFor="unblockNotify"
                           className="flex items-center gap-2"
                         >
-                          <Bell className="w-4 h-4" />
+                          <Bell className="w-4 h-4 font-semibold text-yellow-400"/>
                           Notificar al usuario por mensaje interno
                         </Label>
                       </div>
@@ -736,12 +739,12 @@ export default function PermissionManager({
           </TabsContent>
 
           <TabsContent value="history" className="flex-1">
-            <ScrollArea className="h-[500px] pr-4">
-              <div className="space-y-6">
+            <ScrollArea className="h-[400px]">
+              <div className="space-y-6 bg-slate-800">
                 {/* Warnings History */}
-                <Card>
+                <Card className="bg-slate-700 border-slate-600">
                   <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
+                    <CardTitle className="text-lg flex items-center gap-2 font-semibold text-white">
                       <AlertTriangle className="w-5 h-5 text-yellow-400" />
                       Historial de Advertencias ({warnings.length})
                     </CardTitle>
@@ -752,7 +755,7 @@ export default function PermissionManager({
                         Cargando historial...
                       </div>
                     ) : warnings.length === 0 ? (
-                      <div className="text-center py-4 text-gray-400">
+                      <div className="text-center py-4 text-slate-300">
                         No hay advertencias registradas
                       </div>
                     ) : (
@@ -780,13 +783,13 @@ export default function PermissionManager({
                                     <Badge variant="secondary">Inactiva</Badge>
                                   )}
                                 </div>
-                                <p className="text-sm text-gray-300 mb-1">
+                                <p className="text-sm text-slate-300 mb-1">
                                   {warning.message}
                                 </p>
-                                <p className="text-xs text-gray-400 mb-2">
+                                <p className="text-xs text-slate-300 mb-2">
                                   Motivo: {warning.reason}
                                 </p>
-                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                <div className="flex items-center gap-2 text-xs text-gray-400">
                                   <Calendar className="w-3 h-3" />
                                   {formatDate(warning.createdAt)}
                                 </div>
@@ -800,9 +803,9 @@ export default function PermissionManager({
                 </Card>
 
                 {/* Blocks History */}
-                <Card>
+                <Card className="bg-slate-700 border-slate-600">
                   <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
+                    <CardTitle className="text-lg flex items-center gap-2 font-semibold text-white">
                       <Ban className="w-5 h-5 text-red-400" />
                       Historial de Bloqueos ({blocks.length})
                     </CardTitle>
@@ -813,7 +816,7 @@ export default function PermissionManager({
                         Cargando historial...
                       </div>
                     ) : blocks.length === 0 ? (
-                      <div className="text-center py-4 text-gray-400">
+                      <div className="text-center py-4 text-slate-300">
                         No hay bloqueos registrados
                       </div>
                     ) : (
@@ -842,11 +845,11 @@ export default function PermissionManager({
                                     <Badge variant="secondary">Inactivo</Badge>
                                   )}
                                 </div>
-                                <p className="text-sm text-gray-300 mb-2">
+                                <p className="text-sm text-slate-300 mb-2">
                                   {block.reason}
                                 </p>
-                                <div className="flex items-center gap-4 text-xs text-gray-500">
-                                  <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-4 text-xs text-slate-300">
+                                  <div className="flex items-center gap-1 ">
                                     <Calendar className="w-3 h-3" />
                                     {formatDate(block.createdAt)}
                                   </div>
@@ -870,11 +873,11 @@ export default function PermissionManager({
           </TabsContent>
 
           <TabsContent value="stats" className="flex-1">
-            <ScrollArea className="h-[500px] pr-4">
+            <ScrollArea className="h-[400px]">
               <div className="space-y-6">
-                <Card>
+                <Card className="bg-slate-700 border-slate-600">
                   <CardHeader>
-                    <CardTitle className="text-lg">
+                    <CardTitle className="text-lg font-semibold text-white">
                       Resumen de Permisos
                     </CardTitle>
                   </CardHeader>
@@ -902,27 +905,29 @@ export default function PermissionManager({
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="bg-slate-700 border-slate-600">
                   <CardHeader>
-                    <CardTitle className="text-lg">
+                    <CardTitle className="text-lg font-semibold text-white">
                       Información del Usuario
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
-                        <User className="w-4 h-4" />
-                        <span className="text-sm">Email: {user.email}</span>
+                        <User className="w-4 h-4 font-semibold text-slate-300" />
+                        <span className="text-sm text-slate-300">
+                          Email: {user.email}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <ShoppingBag className="w-4 h-4" />
-                        <span className="text-sm">
+                        <ShoppingBag className="w-4 h-4 font-semibold text-white" />
+                        <span className="text-sm text-slate-300">
                           Pedidos: {user._count.orders}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        <span className="text-sm">
+                        <Calendar className="w-4 h-4 font-semibold text-white" />
+                        <span className="text-sm text-slate-300">
                           Miembro desde: {formatDate(user.createdAt)}
                         </span>
                       </div>

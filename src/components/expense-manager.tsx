@@ -22,7 +22,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast-custom";
 import {
   DollarSign,
   Plus,
@@ -268,7 +268,7 @@ export function ExpenseManager({ isOpen, onClose }: ExpenseManagerProps) {
           </div>
         </div>
 
-        <ScrollArea className="flex-1">
+        <ScrollArea className="h-[500px] flex-1">
           <div className="p-6">
             {loading ? (
               <div className="flex items-center justify-center h-64">

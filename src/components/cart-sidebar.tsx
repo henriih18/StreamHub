@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { QuantitySelector } from "@/components/ui/quantity-selector";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast-custom";
 
 interface StreamingAccount {
   id: string;

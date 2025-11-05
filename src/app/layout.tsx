@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "StreamHub - Premium Streaming Accounts",
+  title: "StreamHub",
   description:
     "Tu plataforma de confianza para cuentas de streaming premium. Accede a Netflix, Disney+, HBO Max y más.",
   keywords: [
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "StreamHub Team" }],
   icons: {
-    icon: "/favicon.ico",
+    icon: "/logoS.png",
   },
   openGraph: {
     title: "StreamHub",
@@ -88,9 +88,9 @@ export default async function RootLayout({
           theme="dark"
           toastOptions={{
             style: {
-              background:
+             /*  background:
                 "linear-gradient(135deg, rgba(139, 92, 246, 0.85) 0%, rgba(236, 72, 153, 0.85) 100%)",
-              border: "1px solid rgba(255, 255, 255, 0.3)",
+              border: "1px solid rgba(255, 255, 255, 0.3)", */
               borderRadius: "12px",
               padding: "16px 20px",
               margin: "8px",

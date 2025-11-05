@@ -27,7 +27,7 @@ import {
   Home,
   ShoppingCart,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast-custom";
 import { CartSidebar } from "@/components/cart-sidebar";
 
 interface Message {
@@ -685,7 +685,7 @@ export default function MessagesPage() {
               <Card className="bg-slate-800 border-slate-700">
                 <CardHeader>
                   <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       {getMessageIcon(selectedMessage.type)}
                       <div>
                         <CardTitle className="text-white">

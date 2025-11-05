@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { toast } from "sonner";
 
 export async function POST(request: NextRequest) {
   try {

@@ -31,7 +31,7 @@ import {
   Monitor,
   RefreshCw,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast-custom";
 import { CartSidebar } from "@/components/cart-sidebar";
 
 interface Order {

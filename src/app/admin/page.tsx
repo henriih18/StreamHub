@@ -42,7 +42,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast-custom";
 import ImageGallery from "@/components/admin/image-gallery";
 import PermissionManager from "@/components/admin/PermissionManager";
 import {
@@ -3335,41 +3335,7 @@ export default function AdminPage() {
                         />
                       </div>
                       <div>
-                        {/* <Label htmlFor="typeImage" className="text-slate-300">Imagen del Tipo *</Label>
-                      <div className="space-y-3">
-                        <Input
-                          id="typeImage"
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp,image/svg+xml"
-                          onChange={handleImageUpload}
-                          disabled={uploadingImage}
-                          className="bg-slate-700 border-slate-600 text-white file:bg-slate-600 file:text-white file:border-0"
-                        />
-                        {uploadingImage && (
-                          <div className="flex items-center space-x-2 text-sm text-slate-400">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            <span>Subiendo imagen...</span>
-                          </div>
-                        )}
-                        {newStreamingType.imageUrl && (
-                          <div className="space-y-2">
-                            <div className="flex items-center space-x-3 p-3 bg-slate-700 rounded-lg border border-slate-600">
-                              <img
-                                src={newStreamingType.imageUrl}
-                                alt="Preview"
-                                className="w-16 h-16 object-cover rounded-lg border-2 border-slate-500"
-                              />
-                              <div className="flex-1">
-                                <p className="text-sm text-green-400 font-medium">✓ Imagen cargada</p>
-                                <p className="text-xs text-slate-400">Lista para usar</p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        {!newStreamingType.imageUrl && !uploadingImage && (
-                          <p className="text-sm text-amber-400">⚠ Debes subir una imagen para el tipo</p>
-                        )}
-                      </div> */}
+                       
                         <div>
                           <Label htmlFor="typeImage" className="text-slate-300">
                             Imagen del Tipo *
@@ -4970,66 +4936,6 @@ export default function AdminPage() {
             <Suspense fallback={<UserManagementSkeleton />}>
               <TabsContent value="usuarios" className="space-y-6">
                 <Card className="bg-slate-800 border-slate-700">
-                  {/* <CardHeader>
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <CardTitle className="text-white">
-                          Gestión de Usuarios
-                        </CardTitle>
-                        <CardDescription className="text-slate-400">
-                          Ver detalles, recargar créditos y gestionar permisos
-                        </CardDescription>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          placeholder="Buscar usuarios por nombre o email..."
-                          value={userSearchQuery}
-                          onChange={(e) => setUserSearchQuery(e.target.value)}
-                          className="bg-slate-700 border-slate-600 text-white placeholder-slate-400 w-64"
-                        />
-                        <Button
-                          onClick={() => {
-                            adminFetch("/api/admin/update-total-spent", {
-                              method: "POST",
-                            })
-                              .then((res) => res.json())
-                              .then((data) => {
-                                if (data.success) {
-                                  toast.success(
-                                    `Actualizado: ${data.updatedUsers} usuarios`
-                                  );
-                                  fetchData(); // Refresh data
-                                } else {
-                                  toast.error(
-                                    "Error al actualizar total gastado"
-                                  );
-                                }
-                              })
-                              .catch((err) => {
-                                console.error("Error:", err);
-                                toast.error(
-                                  "Error al actualizar total gastado"
-                                );
-                              });
-                          }}
-                          size="sm"
-                          variant="outline"
-                          className="border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white"
-                          title="Actualizar total gastado para todos los usuarios"
-                        >
-                          <RefreshCw className="w-4 h-4 mr-1" />
-                          Actualizar Total
-                        </Button>
-                        <Button
-                          onClick={() => setShowBroadcastModal(true)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
-                          title="Enviar mensaje a todos los usuarios"
-                        >
-                          <Mail className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader> */}
                   <CardHeader>
                     <div className="flex flex-wrap items-start justify-between gap-4 sm:items-center">
                       <div className="flex-1 min-w-[200px]">
@@ -5397,7 +5303,8 @@ export default function AdminPage() {
                                       Nombre Completo
                                     </Label>
                                     {editingUserRegistration === user.id ? (
-                                      <Input disabled
+                                      <Input
+                                        disabled
                                         value={
                                           userRegistrationData[user.id]
                                             ?.fullName || ""
@@ -5426,7 +5333,8 @@ export default function AdminPage() {
                                       Nombre de Usuario
                                     </Label>
                                     {editingUserRegistration === user.id ? (
-                                      <Input disabled
+                                      <Input
+                                        disabled
                                         value={
                                           userRegistrationData[user.id]
                                             ?.username || ""
@@ -5515,7 +5423,8 @@ export default function AdminPage() {
                                       Créditos
                                     </Label>
                                     {editingUserRegistration === user.id ? (
-                                      <Input disabled
+                                      <Input
+                                        disabled
                                         type="number"
                                         value={
                                           userRegistrationData[user.id]
@@ -6053,9 +5962,9 @@ export default function AdminPage() {
                     {topUsersBySales.map((user, index) => (
                       <div
                         key={user.id}
-                        className="flex items-center justify-between p-3 bg-slate-700 rounded-lg"
+                        className="flex flex-wrap items-center justify-between p-3 bg-slate-700 rounded-lg"
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                           <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                             {index + 1}
                           </div>
@@ -6902,9 +6811,9 @@ export default function AdminPage() {
                     {topUsersBySales.map((user, index) => (
                       <div
                         key={user.id}
-                        className="flex items-center justify-between p-3 bg-slate-700 rounded-lg"
+                        className="flex flex-wrap items-center justify-between p-3 bg-slate-700 rounded-lg"
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                           <div className="w-8 h-8 bg-yellow-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                             {index + 1}
                           </div>
@@ -7155,7 +7064,7 @@ export default function AdminPage() {
                             >
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
-                                  <div className="flex items-center gap-3 mb-2">
+                                  <div className="flex flex-wrap items-center gap-3 mb-2">
                                     <span className="text-2xl">
                                       {contact.type === "whatsapp"
                                         ? "💬"

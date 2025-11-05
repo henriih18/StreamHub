@@ -13,7 +13,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Image as ImageIcon, Trash2, Download, Eye } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast-custom";
 
 /* interface SavedImage {
   id: string

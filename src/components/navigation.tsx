@@ -203,7 +203,7 @@ export default function Navigation({
                     Hub
                   </span>
                   {user && (
-                    <span className="text-lg font-medium text-emerald-400 hidden sm:inline">
+                    <span className="text-lg font-medium text-emerald-400">
                       | {user.username || user.email}
                     </span>
                   )}

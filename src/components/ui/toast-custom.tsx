@@ -25,9 +25,16 @@ export function CustomToast({ message, type, id }: CustomToastProps) {
   )
 }
 
+type ToastOptions = {
+  description?: string
+  duration?: number
+  style?: React.CSSProperties
+}
+
+
 // Funciones helper para mostrar toasts personalizados
 export const toast = {
-  success: (message: string) => {
+  success: (message: string, /* p0: { duration: number } */ options?: ToastOptions) => {
     return sonnerToast.success(message, {
       icon: <CheckCircle className="w-5 h-5 text-white drop-shadow-lg" />,
       style: {

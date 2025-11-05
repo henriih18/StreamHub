@@ -288,7 +288,7 @@ model UserActivity {
   id        String   @id @default(cuid())
   userId    String
   action    String   // USER_REGISTERED, EMAIL_VERIFIED, LOGIN, LOGOUT, etc.
-  details   String?  // JSON con detalles adicionales
+  details   String?  @db.Text   // JSON con detalles adicionales
   timestamp DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
