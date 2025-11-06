@@ -61,6 +61,8 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
 
     // Invalidate cache when new type is added
     userCache.delete("admin:streaming-types:list");
+    // Also invalidate streaming accounts cache since they depend on types
+    userCache.delete("admin:streaming-accounts:list");
 
     return NextResponse.json(newType);
   } catch (error) {

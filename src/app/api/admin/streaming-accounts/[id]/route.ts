@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { userCache } from "@/lib/cache";
 
 export async function PUT(
   request: NextRequest,
@@ -37,6 +38,9 @@ export async function PUT(
         pricePerProfile,
       },
     });
+
+    // Invalidate cache when account is updated
+    userCache.delete("admin:streaming-accounts:list");
 
     return NextResponse.json(updatedAccount);
   } catch (error) {
@@ -94,6 +98,9 @@ export async function DELETE(
     await db.streamingAccount.delete({
       where: { id },
     });
+
+    // Invalidate cache when account is deleted
+    userCache.delete("admin:streaming-accounts:list");
 
     return NextResponse.json({
       message: "Cuenta de streaming eliminada correctamente",

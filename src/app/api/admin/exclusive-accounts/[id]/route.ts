@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { userCache } from "@/lib/cache";
 
 // Temporarily disable authentication for development
 // TODO: Implement proper authentication with NextAuth
@@ -77,6 +78,9 @@ export async function PUT(
       usedSlots: account.orders.length,
     };
 
+    // Invalidate cache when exclusive account is updated
+    userCache.delete("admin:exclusive-accounts:list");
+
     return NextResponse.json(transformedAccount);
   } catch (error) {
     //console.error('Error updating exclusive account:', error)
@@ -132,6 +136,9 @@ export async function DELETE(
         where: { id },
       });
     });
+
+    // Invalidate cache when exclusive account is deleted
+    userCache.delete("admin:exclusive-accounts:list");
 
     return NextResponse.json({ message: "Cuenta eliminada exitosamente" });
   } catch (error) {

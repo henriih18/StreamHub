@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { userCache } from "@/lib/cache";
 
 export async function DELETE(
   request: NextRequest,
@@ -24,6 +25,9 @@ export async function DELETE(
     await db.specialOffer.delete({
       where: { id },
     });
+
+    // Invalidate cache when special offer is deleted
+    userCache.delete("admin:special-offers:list");
 
     return NextResponse.json({
       message: "Oferta especial eliminada con éxito",

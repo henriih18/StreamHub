@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { userCache } from "@/lib/cache";
 
 export async function PUT(
   request: NextRequest,
@@ -20,6 +21,11 @@ export async function PUT(
         isActive,
       },
     });
+
+    // Invalidate cache when type is updated
+    userCache.delete("admin:streaming-types:list");
+    // Also invalidate streaming accounts cache since they depend on types
+    userCache.delete("admin:streaming-accounts:list");
 
     return NextResponse.json(updatedType);
   } catch (error) {
@@ -70,6 +76,11 @@ export async function DELETE(
     await db.streamingType.delete({
       where: { id },
     });
+
+    // Invalidate cache when type is deleted
+    userCache.delete("admin:streaming-types:list");
+    // Also invalidate streaming accounts cache since they depend on types
+    userCache.delete("admin:streaming-accounts:list");
 
     return NextResponse.json({
       message: "Tipo de Streaming eliminado correctamente",

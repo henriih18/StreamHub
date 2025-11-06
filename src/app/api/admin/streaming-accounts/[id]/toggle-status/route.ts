@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { userCache } from "@/lib/cache";
 
 export async function PUT(
   request: NextRequest,
@@ -27,6 +28,9 @@ export async function PUT(
         isActive: !account.isActive,
       },
     });
+
+    // Invalidate cache when account status is toggled
+    userCache.delete("admin:streaming-accounts:list");
 
     return NextResponse.json({
       ...updatedAccount,

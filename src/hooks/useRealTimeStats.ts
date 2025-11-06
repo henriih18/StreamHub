@@ -45,7 +45,7 @@ export function useRealTimeStats() {
     });
 
     // Initialize socket connection
-   /*  const socket = io("/api/socketio", {
+    /* const socket = io("/api/socketio", {
       transports: ["websocket", "polling"],
       upgrade: true,
       rememberUpgrade: true,
