@@ -368,9 +368,9 @@ export default function ImageGallery({
                               {formatFileSize(image.size)}
                             </Badge>
                           </div> */}
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <h3 className="text-sm font-medium text-white truncate">
+                          <div className="flex flex-wrap items-center justify-between gap-1">
+                            <div className="flex flex-wrap items-center space-x-2 gap-1">
+                              <h3 className="text-sm font-medium text-white break-all">
                                 {image.name}
                               </h3>
                               {image.source === "server" && (
