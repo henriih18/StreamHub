@@ -1167,9 +1167,9 @@ export default function AdminPage() {
         },
       });
 
-      if (!response.ok) {
+      /* if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
+      } */
 
       return response;
     } catch (error) {

@@ -18,7 +18,8 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
       userCache.set(cacheKey, types, 10 * 60 * 1000);
     }
 
-    return createStaticJsonResponse(types);
+    /* return createStaticJsonResponse(types); */
+    return NextResponse.json(types);
   } catch (error) {
     //console.error('Error fetching streaming types:', error)
     return NextResponse.json(
