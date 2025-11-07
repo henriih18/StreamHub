@@ -122,19 +122,27 @@ async function getRealTimeStats() {
       const onlineData = await onlineUsersResponse.json();
       onlineUsers = {
         current: onlineData.current || 0,
-        peakToday: onlineData.peakToday || Math.floor(Math.random() * 80) + 30,
+        /* peakToday: onlineData.peakToday || Math.floor(Math.random() * 80) + 30,
         averageToday:
-          onlineData.averageToday || Math.floor(Math.random() * 40) + 15,
+          onlineData.averageToday || Math.floor(Math.random() * 40) + 15, */
+        peakToday: onlineData.peakToday || 0,
+        averageToday: onlineData.averageToday || 0,
       };
     }
 
     // Get performance metrics (simulated for now)
-    const pagePerformance = {
+    /* const pagePerformance = {
       loadTime: Math.random() * 500 + 200,
       responseTime: Math.random() * 100 + 50,
       uptime: 99.5 + Math.random() * 0.5,
       performanceScore: 85 + Math.floor(Math.random() * 15),
-    };
+    }; */
+    const pagePerformance = {
+  loadTime: 0,
+  responseTime: 0,
+  uptime: 100,
+  performanceScore: 100,
+};
 
     // Get inventory stats
     /* const [regularAccounts, exclusiveAccounts] = await Promise.all([

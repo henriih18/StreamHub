@@ -84,13 +84,53 @@ export default function Home() {
   });
 
   // Real-time updates for messages
-  useRealTimeUpdates({
+   useRealTimeUpdates({
     userId: user?.id,
     onMessageUpdate: (messageData) => {
       // Trigger navigation update when message count changes
       window.dispatchEvent(new CustomEvent("messagesUpdated"));
     },
   });
+
+    /* useRealTimeUpdates({
+    userId: user?.id,
+    onMessageUpdate: (messageData) => {
+      // Trigger navigation update when message count changes
+      window.dispatchEvent(new CustomEvent("messagesUpdated"));
+    },
+    onStockUpdate: (stockData) => {
+      setStreamingAccounts(prev => 
+        prev.map(account => {
+          if (account.id === stockData.accountId) {
+            const updatedAccount = { ...account };
+            
+            if (stockData.accountType === "exclusive") {
+              // Update exclusive stock
+              updatedAccount.exclusiveStocks = account.exclusiveStocks?.map((stock, index) => 
+                index < stockData.newStock ? { ...stock, isAvailable: true } 
+                : { ...stock, isAvailable: false }
+              ) || [];
+            } else if (stockData.type === 'PROFILES') {
+              // Update regular profile stock
+              updatedAccount.profileStocks = account.profileStocks?.map((stock, index) => 
+                index < stockData.newStock ? { ...stock, isAvailable: true } 
+                : { ...stock, isAvailable: false }
+              ) || [];
+            } else {
+              // Update regular account stock
+              updatedAccount.accountStocks = account.accountStocks?.map((stock, index) => 
+                index < stockData.newStock ? { ...stock, isAvailable: true } 
+                : { ...stock, isAvailable: false }
+              ) || [];
+            }
+            
+            return updatedAccount;
+          }
+          return account;
+        })
+      );
+    }
+  }); */
 
   // Check authentication on mount (optional)
   useEffect(() => {
