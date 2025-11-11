@@ -106,8 +106,7 @@ async function getRealTimeStats() {
     const conversionRate =
       totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0;
 
-    // Get online users from real tracking system
-    const onlineUsersResponse = await fetch(
+   /*  const onlineUsersResponse = await fetch(
       `${
         process.env.NEXTAUTH_URL || "http://localhost:3000"
       }/api/admin/online-users`
@@ -122,12 +121,40 @@ async function getRealTimeStats() {
       const onlineData = await onlineUsersResponse.json();
       onlineUsers = {
         current: onlineData.current || 0,
-        /* peakToday: onlineData.peakToday || Math.floor(Math.random() * 80) + 30,
-        averageToday:
-          onlineData.averageToday || Math.floor(Math.random() * 40) + 15, */
+       
         peakToday: onlineData.peakToday || 0,
         averageToday: onlineData.averageToday || 0,
       };
+    } */
+
+          // Get online users from real tracking system
+    let onlineUsers = {
+      current: 0,
+      peakToday: 0,
+      averageToday: 0,
+    };
+
+    try {
+      const onlineUsersResponse = await fetch(
+        `${
+          process.env.NEXTAUTH_URL || "http://localhost:3000"
+        }/api/admin/online-users`,
+        { 
+          signal: AbortSignal.timeout(5000) // Timeout de 5 segundos
+        }
+      );
+
+      if (onlineUsersResponse.ok) {
+        const onlineData = await onlineUsersResponse.json();
+        onlineUsers = {
+          current: onlineData.current || 0,
+          peakToday: onlineData.peakToday || 0,
+          averageToday: onlineData.averageToday || 0,
+        };
+      }
+    } catch (error) {
+      console.warn("Error fetching online users:", error);
+      // Usar valores por defecto si hay error
     }
 
     // Get performance metrics (simulated for now)

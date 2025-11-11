@@ -110,6 +110,7 @@ import {
 import { ProfitsCard } from "@/components/profits-card";
 import { CartSidebar } from "@/components/cart-sidebar";
 import { useRealTimeStats } from "@/hooks/useRealTimeStats";
+import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates"; 
 
 interface User {
   id: string;
@@ -399,6 +400,71 @@ export default function AdminPage() {
   const [loadingRechargeHistory, setLoadingRechargeHistory] = useState(false);
   const [selectedUserForRechargeHistory, setSelectedUserForRechargeHistory] =
     useState<string | null>(null);
+
+    // Actualizaciones en tiempo real para admin
+  useRealTimeUpdates({
+    userId: user?.id,
+    isAdmin: true, // Importante: marcar como admin
+    onMessageUpdate: (messageData) => {
+      // Opcional: manejar actualizaciones de mensajes
+    },
+    onStockUpdate: (stockData) => {
+      // Actualizar cuentas regulares
+      setAccounts(prev => 
+        prev.map(account => {
+          if (account.id === stockData.accountId) {
+            const updatedAccount = { ...account };
+            
+            if (stockData.type === 'PROFILES') {
+              // Actualizar stock de perfiles
+              updatedAccount._count = {
+                ...updatedAccount._count,
+                profileStocks: stockData.newStock
+              };
+            } else {
+              // Actualizar stock de cuentas completas
+              updatedAccount._count = {
+                ...updatedAccount._count,
+                accountStocks: stockData.newStock
+              };
+            }
+            
+            return updatedAccount;
+          }
+          return account;
+        })
+      );
+
+      // Actualizar cuentas exclusivas
+      setExclusiveAccounts(prev => 
+        prev.map(account => {
+          if (account.id === stockData.accountId && stockData.accountType === "exclusive") {
+            const updatedAccount = { ...account };
+            
+            // Actualizar el conteo de stocks exclusivos disponibles
+            if (updatedAccount.exclusiveStocks) {
+              const availableStock = updatedAccount.exclusiveStocks.map((stock, index) => 
+                index < stockData.newStock ? { ...stock, isAvailable: true } 
+                : { ...stock, isAvailable: false }
+              );
+              updatedAccount.exclusiveStocks = availableStock;
+            }
+            
+            return updatedAccount;
+          }
+          return account;
+        })
+      );
+    },
+    onAccountUpdate: (accountData) => {
+      // Recargar cuentas cuando se crea/actualiza/elimina una
+      fetchData();
+    },
+    onOrderUpdate: (orderData) => {
+      // Opcional: actualizar estadísticas cuando hay nuevos pedidos
+      refreshStats();
+    }
+  });
 
   // User action counts
   const [userActionCounts, setUserActionCounts] = useState<

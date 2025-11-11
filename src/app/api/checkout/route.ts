@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { SaleType } from '@prisma/client'
+import { getIO } from '@/lib/socket'
 
 export async function POST(request: NextRequest) {
   try {
@@ -244,6 +245,37 @@ const orders: any[] = []
 
       return orders
     })
+
+     // Emitir actualizaciones de stock en tiempo real
+    const io = getIO();
+    if (io) {
+      for (const cartItem of cart.items) {
+        const { streamingAccount, exclusiveAccount, quantity, saleType } = cartItem;
+        
+        if (streamingAccount) {
+          // Calcular stock restante
+          const currentStock = saleType === 'PROFILES' 
+            ? streamingAccount.profileStocks?.filter(stock => stock.isAvailable).length || 0
+            : streamingAccount.accountStocks?.filter(stock => stock.isAvailable).length || 0;
+          
+          io.emit("stockUpdated", {
+            accountId: streamingAccount.id,
+            accountType: "regular",
+            type: saleType,
+            newStock: Math.max(0, currentStock - quantity)
+          });
+        } else if (exclusiveAccount) {
+          const currentStock = exclusiveAccount.exclusiveStocks?.filter(stock => stock.isAvailable).length || 0;
+          
+          io.emit("stockUpdated", {
+            accountId: exclusiveAccount.id,
+            accountType: "exclusive",
+            type: exclusiveAccount.saleType,
+            newStock: Math.max(0, currentStock - quantity)
+          });
+        }
+      }
+    }
 
     // Get updated user credits
     const updatedUser = await db.user.findUnique({

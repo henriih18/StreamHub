@@ -84,15 +84,8 @@ export default function Home() {
   });
 
   // Real-time updates for messages
-   useRealTimeUpdates({
-    userId: user?.id,
-    onMessageUpdate: (messageData) => {
-      // Trigger navigation update when message count changes
-      window.dispatchEvent(new CustomEvent("messagesUpdated"));
-    },
-  });
 
-    /* useRealTimeUpdates({
+     useRealTimeUpdates({
     userId: user?.id,
     onMessageUpdate: (messageData) => {
       // Trigger navigation update when message count changes
@@ -130,7 +123,7 @@ export default function Home() {
         })
       );
     }
-  }); */
+  });
 
   // Check authentication on mount (optional)
   useEffect(() => {
@@ -152,9 +145,7 @@ export default function Home() {
     checkAuth();
   }, []);
 
-  // Fetch streaming accounts from API
-  useEffect(() => {
-    const fetchAccounts = async () => {
+  const fetchAccounts = async () => {
       try {
         const userId = user?.id || null;
         // console.log('Fetching accounts for userId:', userId)
@@ -233,6 +224,8 @@ export default function Home() {
       }
     };
 
+  // Fetch streaming accounts from API
+  useEffect(() => {
     fetchAccounts();
   }, [user]);
 
@@ -354,7 +347,12 @@ export default function Home() {
     toast.success(
       '¡Pago procesado con éxito! Revisa tus pedidos en el panel "Mi Cuenta"'
     );
+    //actualiza las cuentas despues de checkout
+   fetchAccounts(); 
   };
+
+  
+  
 
   useEffect(() => {
     if (searchQuery.trim() === "") {
