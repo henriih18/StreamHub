@@ -402,111 +402,6 @@ export default function AdminPage() {
   const [selectedUserForRechargeHistory, setSelectedUserForRechargeHistory] =
     useState<string | null>(null);
 
-  /* useEffect(() => {
-    const loadUser = async () => {
-      try {
-        // Obtener el ID del usuario desde localStorage o donde lo guardes
-        const userId =
-          localStorage.getItem("userId") || sessionStorage.getItem("userId");
-
-        if (userId) {
-          const response = await fetch(`/api/auth/user?userId=${userId}`);
-          const data = await response.json();
-
-          if (data.user) {
-            setUser(data.user);
-            console.log("👤 Usuario cargado:", data.user);
-          }
-        }
-      } catch (error) {
-        console.error("❌ Error cargando usuario:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUser();
-  }, []); */
-
-  useRealTimeUpdates({
-    userId: user?.id,
-    isAdmin: true,
-    onMessageUpdate: (messageData) => {},
-
-    onStockUpdate: (stockData) => {
-      console.log("📦 Admin recibió actualización de stock:", stockData);
-
-      // 🔑 SOLO procesar cuentas regulares aquí
-      if (stockData.accountType === "regular") {
-        console.log("🔄 Procesando cuenta regular:", stockData.type);
-
-        // Actualizar cuentas regulares
-        setAccounts((prev) =>
-          prev.map((account) => {
-            if (account.id === stockData.accountId) {
-              const updatedAccount = { ...account };
-
-              if (stockData.type === "PROFILES") {
-                //  Actualizar solo el contador de perfiles
-                console.log("🔄 Procesando cuenta regular");
-                updatedAccount._count = {
-                  ...updatedAccount._count,
-                  profileStocks: stockData.newStock,
-                };
-              } else {
-                // 🔢 Actualizar solo el contador de cuentas
-                updatedAccount._count = {
-                  ...updatedAccount._count,
-                  accountStocks: stockData.newStock,
-                };
-              }
-
-              return updatedAccount;
-            }
-            return account;
-          })
-        );
-      }
-
-      // 🔑 SOLO procesar cuentas exclusivas aquí
-      if (stockData.accountType === "exclusive") {
-        console.log("🔄 Procesando cuenta exclusiva");
-
-        // Actualizar cuentas exclusivas
-        setExclusiveAccounts((prev) =>
-          prev.map((account) => {
-            if (account.id === stockData.accountId) {
-              const updatedAccount = { ...account };
-
-              // 🔑 Actualizar el ARRAY de stocks exclusivos
-              if (updatedAccount.exclusiveStocks) {
-                updatedAccount.exclusiveStocks =
-                  updatedAccount.exclusiveStocks.map((stock, index) =>
-                    index < stockData.newStock
-                      ? { ...stock, isAvailable: true }
-                      : { ...stock, isAvailable: false }
-                  );
-              }
-
-              return updatedAccount;
-            }
-            return account;
-          })
-        );
-      }
-    },
-
-    onAccountUpdate: (accountData) => {
-      // Recargar cuentas cuando se crea/actualiza/elimina una
-      fetchData();
-    },
-
-    onOrderUpdate: (orderData) => {
-      // Opcional: actualizar estadísticas cuando hay nuevos pedidos
-      refreshStats();
-    },
-  });
-
   // User action counts
   const [userActionCounts, setUserActionCounts] = useState<
     Record<string, number>
@@ -683,6 +578,197 @@ export default function AdminPage() {
     textColor: "#ffffff",
   });
   const [loadingBanner, setLoadingBanner] = useState(false);
+  /*
+  console.log("🚀 AdminPage mounted");
+  console.log("👤 User state:", user);
+  console.log("🆔 User ID:", user?.id);
+  console.log("👑 User role:", user?.role);
+
+   useRealTimeUpdates({
+    userId: user?.id,
+    isAdmin: true,
+    onMessageUpdate: (messageData) => {},
+
+    onStockUpdate: async (stockData) => {
+      console.log("📦 Admin recibió actualización de stock:", stockData);
+
+      try {
+        if (stockData.accountType === "regular") {
+          console.log("🔄 Procesando cuenta regular:", stockData.type);
+
+          // Para cuentas regulares, refrescar desde la API para obtener datos consistentes
+          const response = await fetch("/api/admin/streaming-accounts");
+          if (response.ok) {
+            const updatedAccounts = await response.json();
+            setAccounts(updatedAccounts);
+            console.log(
+              "✅ Cuentas regulares actualizadas:",
+              updatedAccounts.length
+            );
+          }
+        } else if (stockData.accountType === "exclusive") {
+          console.log("🔄 Procesando cuenta exclusiva");
+
+          // Para cuentas exclusivas, refrescar desde la API
+          const response = await fetch("/api/admin/exclusive-accounts");
+          if (response.ok) {
+            const updatedAccounts = await response.json();
+            setExclusiveAccounts(updatedAccounts);
+            console.log(
+              "✅ Cuentas exclusivas actualizadas:",
+              updatedAccounts.length
+            );
+          }
+        }
+      } catch (error) {
+        console.error("❌ Error refrescando cuentas:", error);
+        // Fallback: usar tu lógica existente
+        if (stockData.accountType === "regular") {
+          setAccounts((prev) =>
+            prev.map((account) => {
+              if (account.id === stockData.accountId) {
+                const updatedAccount = { ...account };
+                if (stockData.type === "PROFILES") {
+                  updatedAccount._count = {
+                    ...updatedAccount._count,
+                    profileStocks: stockData.newStock,
+                  };
+                } else {
+                  updatedAccount._count = {
+                    ...updatedAccount._count,
+                    accountStocks: stockData.newStock,
+                  };
+                }
+                return updatedAccount;
+              }
+              return account;
+            })
+          );
+        } else if (stockData.accountType === "exclusive") {
+          setExclusiveAccounts((prev) =>
+            prev.map((account) => {
+              if (account.id === stockData.accountId) {
+                const updatedAccount = { ...account };
+                if (updatedAccount.exclusiveStocks) {
+                  updatedAccount.exclusiveStocks =
+                    updatedAccount.exclusiveStocks.map((stock, index) =>
+                      index < stockData.newStock
+                        ? { ...stock, isAvailable: true }
+                        : { ...stock, isAvailable: false }
+                    );
+                }
+                return updatedAccount;
+              }
+              return account;
+            })
+          );
+        }
+      }
+    },
+    
+  }); */
+
+  // Función para actualizar el inventario manualmente
+  const refreshInventory = async () => {
+    try {
+      console.log("🔄 Actualizando inventario...");
+
+      if (!user?.id) {
+        toast.error("Usuario no autenticado");
+        return;
+      }
+
+      // Usar adminFetch como hace fetchData() para autenticación
+      const [accountsRes, exclusiveRes] = await Promise.all([
+        adminFetch("/api/admin/streaming-accounts"),
+        adminFetch("/api/admin/exclusive-accounts"),
+      ]);
+
+      if (accountsRes.ok) {
+        const accountsData = await accountsRes.json();
+        setAccounts(accountsData);
+        console.log("✅ Cuentas regulares actualizadas:", accountsData.length);
+      }
+
+      if (exclusiveRes.ok) {
+        const exclusiveData = await exclusiveRes.json();
+        setExclusiveAccounts(exclusiveData);
+        console.log(
+          "✅ Cuentas exclusivas actualizadas:",
+          exclusiveData.length
+        );
+      }
+
+      toast.success("Inventario actualizado");
+    } catch (error) {
+      console.error("❌ Error actualizando inventario:", error);
+      toast.error("No se pudo actualizar el inventario");
+    }
+  };
+
+  // Función para actualizar métricas de negocio
+  const refreshBusinessMetrics = async () => {
+    try {
+      console.log("🔄 Actualizando métricas de negocio...");
+
+      if (!user?.id) {
+        toast.error('Usuario no autenticado');
+        return;
+      }
+
+      // Recargar datos necesarios para las métricas
+      const [ordersRes, accountsRes, usersRes] = await Promise.all([
+        adminFetch("/api/admin/orders"),
+        adminFetch("/api/admin/streaming-accounts"),
+        adminFetch("/api/admin/users-with-action-counts"),
+      ]);
+
+      if (ordersRes.ok && accountsRes.ok) {
+        const ordersData = await ordersRes.json();
+        const accountsData = await accountsRes.json();
+
+        let usersData;
+        if (usersRes.ok) {
+          const usersWithCountsData = await usersRes.json();
+          usersData = usersWithCountsData.success
+            ? usersWithCountsData.data.users
+            : await adminFetch("/api/admin/users").then((res) => res.json());
+        } else {
+          usersData = await adminFetch("/api/admin/users").then((res) =>
+            res.json()
+          );
+        }
+
+        // Recalcular estadísticas usando la función existente
+        const newStats = calculateAdvancedStats(
+          usersData,
+          ordersData,
+          accountsData
+        );
+
+        // Actualizar el estado manteniendo los otros datos
+        setStats((prevStats) => ({
+          ...prevStats,
+          totalRevenue: newStats.totalRevenue,
+          totalUsers: newStats.totalUsers,
+          totalOrders: newStats.totalOrders,
+          salesByType: newStats.salesByType,
+          topProducts: newStats.topProducts,
+          revenueByMonth: newStats.revenueByMonth,
+          userGrowth: newStats.userGrowth,
+          averageOrderValue: newStats.averageOrderValue,
+          conversionRate: newStats.conversionRate,
+        }));
+
+        toast.success(
+          "Las métricas de negocio se han actualizado correctamente"
+        );
+      }
+    } catch (error) {
+      console.error("❌ Error actualizando métricas:", error);
+      toast.error("No se pudieron actualizar las métricas");
+    }
+  };
 
   const handleSaveBanner = async () => {
     if (!bannerData.text.trim()) {
@@ -1556,6 +1642,7 @@ export default function AdminPage() {
           notes: "",
         });
         fetchData();
+        refreshInventory();
       } else {
         toast.error("Error al agregar stock");
       }
@@ -1604,6 +1691,7 @@ export default function AdminPage() {
           notes: "",
         });
         fetchData();
+        refreshInventory();
       } else {
         const error = await response.json();
         toast.error(error.message || "Error al agregar stock exclusivo");
@@ -2812,22 +2900,15 @@ export default function AdminPage() {
                       <span className="text-xs text-slate-400">
                         {accounts.length + exclusiveAccounts.length} cuentas
                       </span>
-                      {realTimeStats?.totalStock !== undefined && (
-                        <div
-                          className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-                            isConnected
-                              ? "bg-emerald-500/20 text-emerald-400"
-                              : "bg-red-500/20 text-red-400"
-                          }`}
-                        >
-                          <div
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              isConnected ? "bg-emerald-400" : "bg-red-400"
-                            } animate-pulse`}
-                          />
-                          Stock: {realTimeStats.totalStock}
-                        </div>
-                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={refreshInventory}
+                        className="h-8 px-3 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+                      >
+                        <RefreshCw className="h-3 w-3 mr-1" />
+                        Actualizar
+                      </Button>
                     </div>
                   </div>
 
@@ -3249,10 +3330,25 @@ export default function AdminPage() {
 
                 {/* Métricas del Negocio */}
                 <div>
-                  <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
+                  {/* <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
                     <BarChart3 className="h-5 w-5 mr-2" />
                     Métricas del Negocio
-                  </h2>
+                  </h2> */}
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-semibold text-white flex items-center">
+                      <BarChart3 className="h-5 w-5 mr-2" />
+                      Métricas del Negocio
+                    </h2>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={refreshBusinessMetrics}
+                      className="h-8 px-3 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+                    >
+                      <RefreshCw className="h-3 w-3 mr-1" />
+                      Actualizar
+                    </Button>
+                  </div>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <Card className="bg-slate-800/50 border-slate-700">
                       <CardHeader>

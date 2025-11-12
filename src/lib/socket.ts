@@ -11,6 +11,12 @@ export const setupSocket = (io: Server) => {
       // console.log(`User ${userId} registered for message updates`);
     });
 
+    // Handle admin registration for real-time updates
+    socket.on("registerAdmin", () => {
+      socket.join("admins");
+      console.log("👑 Admin registered for real-time updates");
+    });
+
     // Handle messages
     socket.on("message", (msg: { text: string; senderId: string }) => {
       // Echo: broadcast message only the client who send the message
@@ -55,6 +61,23 @@ export const setupSocket = (io: Server) => {
   }, 5000);
 };
 
+// Function to broadcast stock updates to all connected clients
+export const broadcastStockUpdate = (io: Server, stockData: any) => {
+  io.emit("stockUpdated", stockData);
+  console.log("📦 Broadcasting stock update:", stockData);
+};
+
+// Function to broadcast account updates to all connected clients
+export const broadcastAccountUpdate = (io: Server, accountData: any) => {
+  io.emit("accountUpdated", accountData);
+  console.log("🔄 Broadcasting account update:", accountData);
+};
+
+// Function to broadcast order updates to all connected clients
+export const broadcastOrderUpdate = (io: Server, orderData: any) => {
+  io.emit("orderUpdated", orderData);
+  console.log("🛒 Broadcasting order update:", orderData);
+};
 // Function to broadcast message updates to specific users
 export const broadcastMessageUpdate = (
   io: Server,
@@ -106,7 +129,7 @@ async function getRealTimeStats() {
     const conversionRate =
       totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0;
 
-   /*  const onlineUsersResponse = await fetch(
+    /*  const onlineUsersResponse = await fetch(
       `${
         process.env.NEXTAUTH_URL || "http://localhost:3000"
       }/api/admin/online-users`
@@ -127,7 +150,7 @@ async function getRealTimeStats() {
       };
     } */
 
-          // Get online users from real tracking system
+    // Get online users from real tracking system
     let onlineUsers = {
       current: 0,
       peakToday: 0,
@@ -139,8 +162,8 @@ async function getRealTimeStats() {
         `${
           process.env.NEXTAUTH_URL || "http://localhost:3000"
         }/api/admin/online-users`,
-        { 
-          signal: AbortSignal.timeout(5000) // Timeout de 5 segundos
+        {
+          signal: AbortSignal.timeout(5000), // Timeout de 5 segundos
         }
       );
 
@@ -165,11 +188,11 @@ async function getRealTimeStats() {
       performanceScore: 85 + Math.floor(Math.random() * 15),
     }; */
     const pagePerformance = {
-  loadTime: 0,
-  responseTime: 0,
-  uptime: 100,
-  performanceScore: 100,
-};
+      loadTime: 0,
+      responseTime: 0,
+      uptime: 100,
+      performanceScore: 100,
+    };
 
     // Get inventory stats
     /* const [regularAccounts, exclusiveAccounts] = await Promise.all([

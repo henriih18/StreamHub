@@ -1,20 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getIO, broadcastStockUpdate } from "@/lib/socket";
 
 // Temporarily disable authentication for development
 // TODO: Implement proper authentication with NextAuth
 
-export async function POST(request: NextRequest) {
+/* export async function POST(request: NextRequest) {
   try {
     // For development, we'll skip authentication check
     // In production, uncomment the following:
-    /*
-    const session = await getServerSession(authOptions)
     
-    if (!session?.user || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-    */
+    //const session = await getServerSession(authOptions)
+    
+   // if (!session?.user || session.user.role !== 'ADMIN') {
+     // return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    //}
+   
+
+    
 
     const data = await request.json();
     //console.log('Received data for exclusive stock:', data)
@@ -67,6 +70,80 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     //console.error('Error creating exclusive stock:', error)
 
+    return NextResponse.json(
+      { error: "Error al agregar stock" },
+      { status: 500 }
+    );
+  }
+} */
+
+  export async function POST(request: NextRequest) {
+  try {
+    const data = await request.json();
+    const { exclusiveAccountId, email, password, pin, profileName, notes } = data;
+
+    // Validate required fields
+    if (!exclusiveAccountId || !email || !password) {
+      return NextResponse.json(
+        { error: "El email y la contraseña son requeridos" },
+        { status: 400 }
+      );
+    }
+
+    // Check if exclusive account exists
+    const exclusiveAccount = await db.exclusiveAccount.findUnique({
+      where: { id: exclusiveAccountId },
+    });
+
+    if (!exclusiveAccount) {
+      return NextResponse.json(
+        { error: "Cuenta exclusiva no encontrada" },
+        { status: 404 }
+      );
+    }
+
+    // Create exclusive stock
+    const stock = await db.exclusiveStock.create({
+      data: {
+        exclusiveAccountId,
+        email,
+        password,
+        pin: pin || null,
+        profileName: profileName || null,
+        notes: notes || null,
+      },
+      include: {
+        exclusiveAccount: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+          },
+        },
+      },
+    });
+
+    // Emit real-time stock update
+    const io = getIO();
+    if (io) {
+      const updatedStocks = await db.exclusiveStock.findMany({
+        where: {
+          exclusiveAccountId,
+          isAvailable: true
+        }
+      });
+
+      broadcastStockUpdate(io, {
+        accountId: exclusiveAccountId,
+        accountType: "exclusive",
+        type: exclusiveAccount.saleType,
+        newStock: updatedStocks.length
+      });
+    }
+
+    return NextResponse.json(stock);
+  } catch (error) {
+    //console.error('Error creating exclusive stock:', error)
     return NextResponse.json(
       { error: "Error al agregar stock" },
       { status: 500 }

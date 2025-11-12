@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { userCache } from "@/lib/cache";
+import { getIO, broadcastAccountUpdate } from "@/lib/socket";
+import { withAdminAuth } from "@/lib/admin-auth";
 
 // Temporarily disable authentication for development
 // TODO: Implement proper authentication with NextAuth
@@ -87,17 +89,17 @@ export async function GET() {
   }
 }
 
-export async function POST(request: NextRequest) {
+/* export async function POST(request: NextRequest) {
   try {
     // For development, we'll skip authentication check
     // In production, uncomment the following:
-    /*
-    const session = await getServerSession(authOptions)
     
-    if (!session?.user || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-    */
+    //const session = await getServerSession(authOptions)
+    
+    //if (!session?.user || session.user.role !== 'ADMIN') {
+    //  return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    //}
+   
 
     const data = await request.json();
 
@@ -135,13 +137,13 @@ export async function POST(request: NextRequest) {
       !parsedDuration ||
       parsedDuration <= 0
     ) {
-      /* console.log('Validation failed. Missing/invalid fields:', {
+      console.log('Validation failed. Missing/invalid fields:', {
         name: !!name,
         description: !!description,
         type: !!type,
         price: parsedPrice,
         duration: parsedDuration
-      }) */
+      })
       return NextResponse.json(
         {
           error:
@@ -205,4 +207,72 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+} */
+
+  export const POST = withAdminAuth(async (request: NextRequest) => {
+  try {
+    const {
+      name,
+      description,
+      type,
+      price,
+      duration,
+      quality,
+      screens,
+      saleType,
+      maxProfiles,
+      pricePerProfile,
+    } = await request.json();
+
+    // Validate required fields
+    if (
+      !name ||
+      !description ||
+      !type ||
+      !price ||
+      !duration ||
+      !quality ||
+      !screens
+    ) {
+      return NextResponse.json(
+        { error: "Faltan campos obligatorios" },
+        { status: 400 }
+      );
+    }
+
+    const streamingAccount = await db.streamingAccount.create({
+      data: {
+        name,
+        description,
+        type,
+        price: parseFloat(price),
+        duration,
+        quality,
+        screens: parseInt(screens),
+        saleType: saleType || "FULL",
+        maxProfiles: maxProfiles ? parseInt(maxProfiles) : null,
+        pricePerProfile: pricePerProfile ? parseFloat(pricePerProfile) : null,
+      },
+    });
+
+    // Invalidate cache when new account is created
+    userCache.delete("admin:streaming-accounts:list");
+
+    // Emit real-time account update
+    const io = getIO();
+    if (io) {
+      broadcastAccountUpdate(io, {
+        action: "created",
+        account: streamingAccount
+      });
+    }
+
+    return NextResponse.json(streamingAccount);
+  } catch (error) {
+    //console.error('Error creating streaming account:', error)
+    return NextResponse.json(
+      { error: "Error al crear una cuenta de streaming" },
+      { status: 500 }
+    );
+  }
+});
