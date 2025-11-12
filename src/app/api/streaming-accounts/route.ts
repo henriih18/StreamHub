@@ -175,8 +175,8 @@ export async function POST(request: NextRequest) {
         data: {
           name: type,
           description: `${type} streaming service`,
-          icon: getIconForType(type),
-          color: getColorForType(type)
+          /* icon: getIconForType(type),
+          color: getColorForType(type) */
         }
       })
     }
@@ -211,7 +211,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function getIconForType(type: string): string {
+/* function getIconForType(type: string): string {
   const icons: { [key: string]: string } = {
     'Netflix': '🎬',
     'Disney+': '🏰',
@@ -237,4 +237,4 @@ function getColorForType(type: string): string {
     'Peacock': 'bg-yellow-500'
   }
   return colors[type] || 'bg-gray-500'
-}
+} */

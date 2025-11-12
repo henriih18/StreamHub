@@ -6,9 +6,9 @@ import { withAdminAuth } from "@/lib/admin-auth";
 export const GET = withAdminAuth(async (request: NextRequest) => {
   try {
     const cacheKey = "admin:streaming-accounts:list";
-    let accounts = userCache.get(cacheKey);
+    let cachedData = userCache.get(cacheKey);
 
-    if (!accounts) {
+    /* if (!accounts) {
       accounts = await db.streamingAccount.findMany({
         include: {
           _count: {
@@ -26,9 +26,55 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
 
       // Cache for 7 minutes - accounts change moderately
       userCache.set(cacheKey, accounts, 7 * 60 * 1000);
+    } */
+
+     if (!cachedData) {
+      // Get accounts with real available stock
+      const rawAccounts = await db.streamingAccount.findMany({
+        where: {
+          isActive: true
+        },
+        include: {
+          streamingType: {
+            select: {
+              icon: true,
+              color: true,
+              imageUrl: true
+            }
+          },
+          accountStocks: {
+            where: {
+              isAvailable: true  // Solo contar disponibles
+            }
+          },
+          profileStocks: {
+            where: {
+              isAvailable: true  // Solo contar disponibles
+            }
+          },
+          orders: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+
+      // Transform to match frontend expectations
+      const accounts = rawAccounts.map(account => ({
+        ...account,
+        _count: {
+          accountStocks: account.accountStocks.length,
+          profileStocks: account.profileStocks.length,   
+          orders: account.orders.length,
+        }
+      }));
+
+      // Cache for 7 minutes
+      userCache.set(cacheKey, accounts, 7 * 60 * 1000);
+      cachedData = accounts;
     }
 
-    return NextResponse.json(accounts);
+    return NextResponse.json(cachedData);
   } catch (error) {
     //console.error('Error fetching streaming accounts:', error)
     return NextResponse.json(

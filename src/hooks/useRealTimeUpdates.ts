@@ -121,13 +121,13 @@ export function useRealTimeUpdates({
     return () => {
       disconnect();
     };
-  }, [connect, disconnect]);
+  }, [connect, disconnect, userId, isAdmin]);
 
   // Reconnect when userId or isAdmin changes
   useEffect(() => {
     if (socketRef.current?.connected) {
       disconnect();
-      setTimeout(connect, 100);
+      setTimeout(connect, 10);
     }
   }, [userId, isAdmin, connect, disconnect]);
 
