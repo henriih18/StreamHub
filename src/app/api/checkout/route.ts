@@ -248,7 +248,12 @@ const orders: any[] = []
 
      // Emitir actualizaciones de stock en tiempo real
     const io = getIO();
+    console.log("🔍 IO disponible:", !!io); 
     if (io) {
+
+      console.log("🚀 Iniciando emisión de stock updates");
+  console.log("📊 Items en carrito:", cart.items.length);
+
       for (const cartItem of cart.items) {
         const { streamingAccount, exclusiveAccount, quantity, saleType } = cartItem;
         
@@ -264,6 +269,8 @@ const orders: any[] = []
             type: saleType,
             newStock: Math.max(0, currentStock - quantity)
           });
+
+          
         } else if (exclusiveAccount) {
           const currentStock = exclusiveAccount.exclusiveStocks?.filter(stock => stock.isAvailable).length || 0;
           
@@ -273,7 +280,10 @@ const orders: any[] = []
             type: exclusiveAccount.saleType,
             newStock: Math.max(0, currentStock - quantity)
           });
+
+          
         }
+        
       }
     }
 
@@ -291,7 +301,7 @@ const orders: any[] = []
     })
 
   } catch (error) {
-    //console.error('Error processing checkout:', error)
+    console.error('Error processing checkout:', error)
     
     if (error instanceof Error) {
       return NextResponse.json(

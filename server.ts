@@ -46,7 +46,7 @@ async function createCustomServer() {
       cors: {
         origin:
           process.env.NODE_ENV === "production"
-            ? ["https://tudominio.com"] // Reemplazar con tu dominio
+            ? ["https://tudominio.com"] // Reemplazar dominio
             : ["http://localhost:3000"],
         methods: ["GET", "POST"],
       },

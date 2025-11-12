@@ -36,25 +36,30 @@ export function useRealTimeUpdates({
         rememberUpgrade: true,
         timeout: 20000,
         forceNew: true,
+         reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
       });
 
       socketRef.current = socket;
 
       socket.on("connect", () => {
-        // console.log('WebSocket connected')
+        console.log('WebSocket connected')
         reconnectAttempts.current = 0;
 
         // Register for updates
         if (userId) {
+          console.log('👤 Registrando usuario:', userId);
           socket.emit("registerUser", userId);
         }
         if (isAdmin) {
+          console.log('👑 Registrando admin'); 
           socket.emit("registerAdmin");
         }
       });
 
       socket.on("disconnect", (reason) => {
-        // console.log('WebSocket disconnected:', reason)
+        console.log('WebSocket disconnected:', reason)
 
         // Attempt to reconnect
         if (reconnectAttempts.current < maxReconnectAttempts) {
@@ -77,7 +82,7 @@ export function useRealTimeUpdates({
       });
 
       socket.on("stockUpdated", (stockData: any) => {
-        // console.log('Stock updated:', stockData)
+         console.log('Stock updated:', stockData)
         onStockUpdate?.(stockData);
       });
 

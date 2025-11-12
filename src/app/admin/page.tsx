@@ -111,6 +111,7 @@ import { ProfitsCard } from "@/components/profits-card";
 import { CartSidebar } from "@/components/cart-sidebar";
 import { useRealTimeStats } from "@/hooks/useRealTimeStats";
 import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
+import { useSession } from "next-auth/react";
 
 interface User {
   id: string;
@@ -401,125 +402,105 @@ export default function AdminPage() {
   const [selectedUserForRechargeHistory, setSelectedUserForRechargeHistory] =
     useState<string | null>(null);
 
-  // Actualizaciones en tiempo real para admin
+  /* useEffect(() => {
+    const loadUser = async () => {
+      try {
+        // Obtener el ID del usuario desde localStorage o donde lo guardes
+        const userId =
+          localStorage.getItem("userId") || sessionStorage.getItem("userId");
+
+        if (userId) {
+          const response = await fetch(`/api/auth/user?userId=${userId}`);
+          const data = await response.json();
+
+          if (data.user) {
+            setUser(data.user);
+            console.log("👤 Usuario cargado:", data.user);
+          }
+        }
+      } catch (error) {
+        console.error("❌ Error cargando usuario:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUser();
+  }, []); */
+
   useRealTimeUpdates({
     userId: user?.id,
-    isAdmin: true, // Importante: marcar como admin
-    onMessageUpdate: (messageData) => {
-      // Opcional: manejar actualizaciones de mensajes
-    },
-    /* onStockUpdate: (stockData) => {
-      fetch("/api/admin/streaming-accounts/cache-invalidate", {
-        method: "POST",
-      }).catch(() => {
-        // Si falla, continuamos con la actualización local
-      });
-      // Actualizar cuentas regulares
-      setAccounts((prev) =>
-        prev.map((account) => {
-          if (account.id === stockData.accountId) {
-            const updatedAccount = { ...account };
-
-            if (stockData.type === "PROFILES") {
-              // Actualizar stock de perfiles
-              updatedAccount._count = {
-                ...updatedAccount._count,
-                profileStocks: stockData.newStock,
-              };
-            } else {
-              // Actualizar stock de cuentas completas
-              updatedAccount._count = {
-                ...updatedAccount._count,
-                accountStocks: stockData.newStock,
-              };
-            }
-
-            return updatedAccount;
-          }
-          return account;
-        })
-      );
-
-      // Actualizar cuentas exclusivas
-      setExclusiveAccounts((prev) =>
-        prev.map((account) => {
-          if (
-            account.id === stockData.accountId &&
-            stockData.accountType === "exclusive"
-          ) {
-            const updatedAccount = { ...account };
-
-            // Actualizar el conteo de stocks exclusivos disponibles
-            if (updatedAccount.exclusiveStocks) {
-              const availableStock = updatedAccount.exclusiveStocks.map(
-                (stock, index) =>
-                  index < stockData.newStock
-                    ? { ...stock, isAvailable: true }
-                    : { ...stock, isAvailable: false }
-              );
-              updatedAccount.exclusiveStocks = availableStock;
-            }
-
-            return updatedAccount;
-          }
-          return account;
-        })
-      );
-    }, */
+    isAdmin: true,
+    onMessageUpdate: (messageData) => {},
 
     onStockUpdate: (stockData) => {
-  console.log('📦 Admin recibió actualización de stock:', stockData);
-  
-  // Actualizar cuentas regulares - ACTUALIZAR ARRAYS DIRECTAMENTE
-  setAccounts(prev => 
-    prev.map(account => {
-      if (account.id === stockData.accountId) {
-        const updatedAccount = { ...account };
-        
-        if (stockData.type === 'PROFILES') {
-          // 🔑 Actualizar el ARRAY de perfiles
-          updatedAccount._count.profileStocks = account._count.profileStocks?.map((stock, index) => 
-            index < stockData.newStock ? { ...stock, isAvailable: true } 
-            : { ...stock, isAvailable: false }
-          ) || [];
-        } else {
-          // 🔑 Actualizar el ARRAY de cuentas
-          updatedAccount._count.accountStocks = account._count.accountStocks?.map((stock, index) => 
-            index < stockData.newStock ? { ...stock, isAvailable: true } 
-            : { ...stock, isAvailable: false }
-          ) || [];
-        }
-        
-        return updatedAccount;
-      }
-      return account;
-    })
-  );
+      console.log("📦 Admin recibió actualización de stock:", stockData);
 
-  // Actualizar cuentas exclusivas
-  setExclusiveAccounts(prev => 
-    prev.map(account => {
-      if (account.id === stockData.accountId && stockData.accountType === "exclusive") {
-        const updatedAccount = { ...account };
-        
-        // 🔑 Actualizar el ARRAY de stocks exclusivos
-        if (updatedAccount.exclusiveStocks) {
-          updatedAccount.exclusiveStocks = updatedAccount.exclusiveStocks.map((stock, index) => 
-            index < stockData.newStock ? { ...stock, isAvailable: true } 
-            : { ...stock, isAvailable: false }
-          );
-        }
-        
-        return updatedAccount;
+      // 🔑 SOLO procesar cuentas regulares aquí
+      if (stockData.accountType === "regular") {
+        console.log("🔄 Procesando cuenta regular:", stockData.type);
+
+        // Actualizar cuentas regulares
+        setAccounts((prev) =>
+          prev.map((account) => {
+            if (account.id === stockData.accountId) {
+              const updatedAccount = { ...account };
+
+              if (stockData.type === "PROFILES") {
+                //  Actualizar solo el contador de perfiles
+                console.log("🔄 Procesando cuenta regular");
+                updatedAccount._count = {
+                  ...updatedAccount._count,
+                  profileStocks: stockData.newStock,
+                };
+              } else {
+                // 🔢 Actualizar solo el contador de cuentas
+                updatedAccount._count = {
+                  ...updatedAccount._count,
+                  accountStocks: stockData.newStock,
+                };
+              }
+
+              return updatedAccount;
+            }
+            return account;
+          })
+        );
       }
-      return account;
-    })
-  );
-},
+
+      // 🔑 SOLO procesar cuentas exclusivas aquí
+      if (stockData.accountType === "exclusive") {
+        console.log("🔄 Procesando cuenta exclusiva");
+
+        // Actualizar cuentas exclusivas
+        setExclusiveAccounts((prev) =>
+          prev.map((account) => {
+            if (account.id === stockData.accountId) {
+              const updatedAccount = { ...account };
+
+              // 🔑 Actualizar el ARRAY de stocks exclusivos
+              if (updatedAccount.exclusiveStocks) {
+                updatedAccount.exclusiveStocks =
+                  updatedAccount.exclusiveStocks.map((stock, index) =>
+                    index < stockData.newStock
+                      ? { ...stock, isAvailable: true }
+                      : { ...stock, isAvailable: false }
+                  );
+              }
+
+              return updatedAccount;
+            }
+            return account;
+          })
+        );
+      }
+    },
+
     onAccountUpdate: (accountData) => {
       // Recargar cuentas cuando se crea/actualiza/elimina una
       fetchData();
     },
+
     onOrderUpdate: (orderData) => {
       // Opcional: actualizar estadísticas cuando hay nuevos pedidos
       refreshStats();
