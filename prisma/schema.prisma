@@ -122,9 +122,11 @@ model StreamingAccount {
   orders      Order[]
   accountStocks AccountStock[]      // Individual accounts in stock
   profileStocks AccountProfile[]    // Individual profiles in stock
+  vendorPricing        VendorPricing?
   cartItems   CartItem[]
   streamingType StreamingType? @relation(fields: [type], references: [name])
   specialOffers SpecialOffer[]
+  
   
   @@unique([name, type])
 }
@@ -387,6 +389,7 @@ model AnnouncementBanner {
 
 enum Role {
   USER
+  VENDEDOR
   ADMIN
 }
 
@@ -416,4 +419,15 @@ enum MessageType {
   UNBLOCK_NOTICE
   RESTRICTION_NOTICE
   SYSTEM_NOTIFICATION
+}
+
+model VendorPricing {
+  id                    String   @id @default(cuid())
+  streamingAccountId    String   @unique
+  vendorPrice           Float
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  
+  streamingAccount     StreamingAccount @relation(fields: [streamingAccountId], references: [id])
 }

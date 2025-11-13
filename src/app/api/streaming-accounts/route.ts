@@ -7,6 +7,16 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId')
     // console.log('API: Received request for userId:', userId) // Debug log
     
+
+    let userRole = "USER";
+    if (userId) {
+      const user = await db.user.findUnique({
+        where: { id: userId },
+        select: { role: true }
+      });
+      userRole = user?.role || "USER";
+    }
+    
     // Get regular streaming accounts
     const accounts = await db.streamingAccount.findMany({
       where: {
@@ -29,7 +39,8 @@ export async function GET(request: NextRequest) {
           where: {
             isAvailable: true
           }
-        }
+        },
+        vendorPricing: true
       },
       orderBy: {
         createdAt: 'desc'
@@ -114,20 +125,44 @@ export async function GET(request: NextRequest) {
                 where: {
                   isAvailable: true
                 }
-              }
+              },
+             /*  vendorPricing: true */
             }
           }
         }
       })
     }
 
-    // console.log('API: Returning - Regular accounts:', accounts.length, 'Exclusive accounts:', exclusiveAccounts.length, 'Special offers:', specialOffers.length) // Debug log
+        // Aplicar precios según el rol del usuario
+    const processedAccounts = accounts.map(account => {
+      let finalPrice = account.price;
+      let originalPrice = undefined;
+
+      // Si es VENDEDOR y tiene configuración de precios, aplicar descuento
+      if (userRole === 'VENDEDOR' && account.vendorPricing && account.vendorPricing.isActive) {
+        originalPrice = account.price;
+        finalPrice = account.vendorPricing.vendorPrice; // <-- PRECIO FINAL DIRECTO
+      }
+
+      return {
+        ...account,
+        price: finalPrice,
+        originalPrice: originalPrice
+      };
+    });
 
     return NextResponse.json({
-      regularAccounts: accounts,
+      regularAccounts: processedAccounts,
       exclusiveAccounts,
       specialOffers
     })
+    
+
+    /* return NextResponse.json({
+      regularAccounts: accounts,
+      exclusiveAccounts,
+      specialOffers
+    }) */
   } catch (error) {
     //console.error('Error fetching streaming accounts:', error)
     return NextResponse.json(
@@ -175,8 +210,7 @@ export async function POST(request: NextRequest) {
         data: {
           name: type,
           description: `${type} streaming service`,
-          /* icon: getIconForType(type),
-          color: getColorForType(type) */
+         
         }
       })
     }
@@ -210,31 +244,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
-/* function getIconForType(type: string): string {
-  const icons: { [key: string]: string } = {
-    'Netflix': '🎬',
-    'Disney+': '🏰',
-    'HBO Max': '🎭',
-    'Amazon Prime': '📦',
-    'Hulu': '📺',
-    'Apple TV+': '🍎',
-    'Paramount+': '🎪',
-    'Peacock': '🦚'
-  }
-  return icons[type] || '📺'
-}
-
-function getColorForType(type: string): string {
-  const colors: { [key: string]: string } = {
-    'Netflix': 'bg-red-500',
-    'Disney+': 'bg-blue-500',
-    'HBO Max': 'bg-purple-500',
-    'Amazon Prime': 'bg-orange-500',
-    'Hulu': 'bg-green-500',
-    'Apple TV+': 'bg-gray-800',
-    'Paramount+': 'bg-blue-600',
-    'Peacock': 'bg-yellow-500'
-  }
-  return colors[type] || 'bg-gray-500'
-} */

@@ -1,5 +1,7 @@
 "use client";
-
+import {
+  Percent,
+} from "lucide-react";
 import { useState } from "react";
 import {
   Card,
@@ -78,12 +80,15 @@ interface StreamingCardProps {
 
   onAddToCart: (account: StreamingAccount, quantity: number) => void;
   isMostPopular?: boolean;
+
+  userRole?: string; 
 }
 
 export function StreamingCard({
   account,
   onAddToCart,
   isMostPopular = false,
+  userRole,
 }: StreamingCardProps) {
   const [quantity, setQuantity] = useState(1);
 
@@ -103,6 +108,7 @@ export function StreamingCard({
   const isExclusiveAccount =
     !account.streamingType && !account.accountStocks && !account.profileStocks;
   const isSpecialOffer = !!account.specialOffer;
+  const isVendor = userRole === 'VENDEDOR'; 
 
   // Calculate max quantity based on account type
   const maxQuantity = isExclusiveAccount ? exclusiveStock : availableStock;
@@ -176,7 +182,35 @@ export function StreamingCard({
       )}
 
       {/* Special badges - Enhanced for Exclusive */}
+      {/* <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+        {isExclusiveAccount && (
+          <Badge className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white border-0 px-3 py-1 text-xs font-bold shadow-lg shadow-amber-500/30">
+            <Crown className="w-3 h-3 mr-1" />
+            EXCLUSIVO
+          </Badge>
+        )}
+        {isMostPopular && !isExclusiveAccount && (
+          <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 px-3 py-1 text-xs font-bold">
+            <TrendingUp className="w-3 h-3 mr-1" />
+            MÁS POPULAR
+          </Badge>
+        )}
+        {isSpecialOffer && !isExclusiveAccount && (
+          <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 px-3 py-1 text-xs font-bold">
+            <Gift className="w-3 h-3 mr-1" />
+            {account.specialOffer?.discountPercentage}% OFF
+          </Badge>
+        )}
+      </div> */}
+
+            {/* Special badges - Enhanced for Exclusive */}
       <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+        {isVendor && account.originalPrice && (  // <-- AGREGAR ESTE BLOQUE
+          <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0 px-3 py-1 text-xs font-bold shadow-lg shadow-blue-500/30">
+            <Percent className="w-3 h-3 mr-1" />
+            PRECIO VENDEDOR
+          </Badge>
+        )}
         {isExclusiveAccount && (
           <Badge className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white border-0 px-3 py-1 text-xs font-bold shadow-lg shadow-amber-500/30">
             <Crown className="w-3 h-3 mr-1" />
@@ -382,6 +416,15 @@ export function StreamingCard({
                     /{account.saleType === "PROFILES" ? "perfil" : "mes"}
                   </span>
                 </div>
+                {account.originalPrice && (  
+                  <p
+                    className={`text-xs mt-1 ${
+                      isVendor ? "text-blue-400" : "text-green-400"
+                    }`}
+                  >
+                    {isVendor ? "Precio para vendedores" : "Precio con descuento"}
+                  </p>
+                )}
                 <p
                   className={`text-xs mt-1 ${
                     isExclusiveAccount ? "text-amber-300/60" : "text-gray-400"

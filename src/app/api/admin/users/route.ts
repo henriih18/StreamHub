@@ -34,7 +34,8 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
       });
 
       // Transform the data to match the expected interface
-      users = users.map((user) => ({
+      // Transform the data to match expected interface
+users = (users || []).map((user) => ({
         ...user,
         name: user.fullName,
         isActive: !user.isBlocked,

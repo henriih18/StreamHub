@@ -85,44 +85,50 @@ export default function Home() {
 
   // Real-time updates for messages
 
-     useRealTimeUpdates({
+  useRealTimeUpdates({
     userId: user?.id,
     onMessageUpdate: (messageData) => {
       // Trigger navigation update when message count changes
       window.dispatchEvent(new CustomEvent("messagesUpdated"));
     },
     onStockUpdate: (stockData) => {
-      setStreamingAccounts(prev => 
-        prev.map(account => {
+      setStreamingAccounts((prev) =>
+        prev.map((account) => {
           if (account.id === stockData.accountId) {
             const updatedAccount = { ...account };
-            
+
             if (stockData.accountType === "exclusive") {
               // Update exclusive stock
-              updatedAccount.exclusiveStocks = account.exclusiveStocks?.map((stock, index) => 
-                index < stockData.newStock ? { ...stock, isAvailable: true } 
-                : { ...stock, isAvailable: false }
-              ) || [];
-            } else if (stockData.type === 'PROFILES') {
+              updatedAccount.exclusiveStocks =
+                account.exclusiveStocks?.map((stock, index) =>
+                  index < stockData.newStock
+                    ? { ...stock, isAvailable: true }
+                    : { ...stock, isAvailable: false }
+                ) || [];
+            } else if (stockData.type === "PROFILES") {
               // Update regular profile stock
-              updatedAccount.profileStocks = account.profileStocks?.map((stock, index) => 
-                index < stockData.newStock ? { ...stock, isAvailable: true } 
-                : { ...stock, isAvailable: false }
-              ) || [];
+              updatedAccount.profileStocks =
+                account.profileStocks?.map((stock, index) =>
+                  index < stockData.newStock
+                    ? { ...stock, isAvailable: true }
+                    : { ...stock, isAvailable: false }
+                ) || [];
             } else {
               // Update regular account stock
-              updatedAccount.accountStocks = account.accountStocks?.map((stock, index) => 
-                index < stockData.newStock ? { ...stock, isAvailable: true } 
-                : { ...stock, isAvailable: false }
-              ) || [];
+              updatedAccount.accountStocks =
+                account.accountStocks?.map((stock, index) =>
+                  index < stockData.newStock
+                    ? { ...stock, isAvailable: true }
+                    : { ...stock, isAvailable: false }
+                ) || [];
             }
-            
+
             return updatedAccount;
           }
           return account;
         })
       );
-    }
+    },
   });
 
   // Check authentication on mount (optional)
@@ -145,32 +151,106 @@ export default function Home() {
     checkAuth();
   }, []);
 
-  const fetchAccounts = async () => {
+  /* const fetchAccounts = async () => {
+    try {
+      const userId = user?.id || null;
+      // console.log('Fetching accounts for userId:', userId)
+      const url = userId
+        ? `/api/streaming-accounts?userId=${userId}`
+        : "/api/streaming-accounts";
+      // console.log('API URL:', url)
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        // console.log('API Response:', data)
+
+        // Start with all regular and exclusive accounts
+        let allAccounts = [
+          ...(data.exclusiveAccounts || []),
+          ...(data.regularAccounts || []),
+        ];
+
+        // console.log('All accounts before special offers:', allAccounts.length)
+
+        // Apply special offers to existing accounts instead of creating duplicates
+        if (data.specialOffers) {
+          data.specialOffers.forEach((offer: any) => {
+            if (offer.streamingAccount) {
+              // Find if the account already exists in our array
+              const existingAccountIndex = allAccounts.findIndex(
+                (account) => account.id === offer.streamingAccount.id
+              );
+
+              if (existingAccountIndex !== -1) {
+                // Update existing account with special offer
+                allAccounts[existingAccountIndex] = {
+                  ...allAccounts[existingAccountIndex],
+                  specialOffer: offer,
+                  originalPrice: offer.streamingAccount.price,
+                  price: offer.discountPercentage
+                    ? offer.streamingAccount.price *
+                      (1 - offer.discountPercentage / 100)
+                    : offer.specialPrice || offer.streamingAccount.price,
+                };
+              } else {
+                // If account doesn't exist (shouldn't happen), add it
+                allAccounts.push({
+                  ...offer.streamingAccount,
+                  specialOffer: offer,
+                  originalPrice: offer.streamingAccount.price,
+                  price: offer.discountPercentage
+                    ? offer.streamingAccount.price *
+                      (1 - offer.discountPercentage / 100)
+                    : offer.specialPrice || offer.streamingAccount.price,
+                });
+              }
+            }
+          });
+        }
+
+        // Sort accounts: exclusive accounts first, then regular accounts
+        allAccounts = allAccounts.sort((a: any, b: any) => {
+          // Only priority: exclusive accounts first, regular accounts after
+          const aIsExclusive =
+            !a.streamingType && !a.accountStocks && !a.profileStocks;
+          const bIsExclusive =
+            !b.streamingType && !b.accountStocks && !b.profileStocks;
+
+          if (aIsExclusive && !bIsExclusive) return -1;
+          if (!aIsExclusive && bIsExclusive) return 1;
+
+          return 0; // Keep original order within each category
+        });
+        setStreamingAccounts(allAccounts);
+        setFilteredAccounts(allAccounts);
+      }
+    } catch (error) {
+      setStreamingAccounts([]);
+      setFilteredAccounts([]);
+    }
+  }; */
+
+    const fetchAccounts = async () => {
       try {
         const userId = user?.id || null;
-        // console.log('Fetching accounts for userId:', userId)
         const url = userId
           ? `/api/streaming-accounts?userId=${userId}`
           : "/api/streaming-accounts";
-        // console.log('API URL:', url)
         const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
-          // console.log('API Response:', data)
 
-          // Start with all regular and exclusive accounts
+          // Iniciar con todas las cuentas (ya vienen con precios ajustados por rol)
           let allAccounts = [
             ...(data.exclusiveAccounts || []),
             ...(data.regularAccounts || []),
           ];
 
-          // console.log('All accounts before special offers:', allAccounts.length)
-
-          // Apply special offers to existing accounts instead of creating duplicates
+          // Aplicar ofertas especiales (el backend ya aplicó precios de vendedor si corresponde)
           if (data.specialOffers) {
             data.specialOffers.forEach((offer: any) => {
               if (offer.streamingAccount) {
-                // Find if the account already exists in our array
+                // Find if account already exists in our array
                 const existingAccountIndex = allAccounts.findIndex(
                   (account) => account.id === offer.streamingAccount.id
                 );
@@ -180,7 +260,7 @@ export default function Home() {
                   allAccounts[existingAccountIndex] = {
                     ...allAccounts[existingAccountIndex],
                     specialOffer: offer,
-                    originalPrice: offer.streamingAccount.price,
+                    originalPrice: offer.streamingAccount.originalPrice || allAccounts[existingAccountIndex].price,
                     price: offer.discountPercentage
                       ? offer.streamingAccount.price *
                         (1 - offer.discountPercentage / 100)
@@ -191,7 +271,7 @@ export default function Home() {
                   allAccounts.push({
                     ...offer.streamingAccount,
                     specialOffer: offer,
-                    originalPrice: offer.streamingAccount.price,
+                    originalPrice: offer.streamingAccount.originalPrice || offer.streamingAccount.price,
                     price: offer.discountPercentage
                       ? offer.streamingAccount.price *
                         (1 - offer.discountPercentage / 100)
@@ -348,11 +428,8 @@ export default function Home() {
       '¡Pago procesado con éxito! Revisa tus pedidos en el panel "Mi Cuenta"'
     );
     //actualiza las cuentas despues de checkout
-   fetchAccounts(); 
+    fetchAccounts();
   };
-
-  
-  
 
   useEffect(() => {
     if (searchQuery.trim() === "") {
@@ -637,6 +714,7 @@ export default function Home() {
                   account={account} // IMPORTANT: No corregir
                   onAddToCart={addToCart}
                   isMostPopular={["1", "2", "3"].includes(account.id)}
+                  userRole={user?.role}
                 />
               ))}
             </div>

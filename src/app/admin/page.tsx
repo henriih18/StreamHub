@@ -3,6 +3,17 @@
 import { useState, useEffect, Suspense } from "react";
 import Navigation from "@/components/navigation";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -27,6 +38,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogFooter,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -106,6 +118,7 @@ import {
   Phone,
   HelpCircle,
   X,
+  Percent,
 } from "lucide-react";
 import { ProfitsCard } from "@/components/profits-card";
 import { CartSidebar } from "@/components/cart-sidebar";
@@ -146,6 +159,7 @@ interface StreamingAccount {
   name: string;
   type: string;
   price: number;
+
   duration: string;
   quality: string;
   screens: number;
@@ -578,6 +592,21 @@ export default function AdminPage() {
     textColor: "#ffffff",
   });
   const [loadingBanner, setLoadingBanner] = useState(false);
+
+  // Estado para modal de precios de vendedor
+  /* const [showVendorPricingModal, setShowVendorPricingModal] = useState(false);
+  const [vendorPricing, setVendorPricing] = useState<{
+    [key: string]: {
+      vendorPrice: number
+    };}>({});
+  const [loadingVendorPricing, setLoadingVendorPricing] = useState(false); */
+  // Reemplaza el estado actual con esto:
+const [vendorPricing, setVendorPricing] = useState<{[key: string]: {vendorPrice: number; discountPercentage: number}}>({});
+const [showVendorPricingModal, setShowVendorPricingModal] = useState(false);
+const [loadingVendorPricing, setLoadingVendorPricing] = useState(false);
+const [searchQuery, setSearchQuery] = useState("");
+
+
   /*
   console.log("🚀 AdminPage mounted");
   console.log("👤 User state:", user);
@@ -688,6 +717,7 @@ export default function AdminPage() {
         const accountsData = await accountsRes.json();
         setAccounts(accountsData);
         console.log("✅ Cuentas regulares actualizadas:", accountsData.length);
+        loadVendorPricing();
       }
 
       if (exclusiveRes.ok) {
@@ -697,6 +727,7 @@ export default function AdminPage() {
           "✅ Cuentas exclusivas actualizadas:",
           exclusiveData.length
         );
+        loadVendorPricing();
       }
 
       toast.success("Inventario actualizado");
@@ -712,7 +743,7 @@ export default function AdminPage() {
       console.log("🔄 Actualizando métricas de negocio...");
 
       if (!user?.id) {
-        toast.error('Usuario no autenticado');
+        toast.error("Usuario no autenticado");
         return;
       }
 
@@ -726,6 +757,7 @@ export default function AdminPage() {
       if (ordersRes.ok && accountsRes.ok) {
         const ordersData = await ordersRes.json();
         const accountsData = await accountsRes.json();
+        loadVendorPricing();
 
         let usersData;
         if (usersRes.ok) {
@@ -997,6 +1029,88 @@ export default function AdminPage() {
 
     return filteredOrders;
   };
+
+  const loadVendorPricing = async () => {
+    try {
+      const response = await fetch("/api/admin/vendor-pricing");
+      if (response.ok) {
+        const accounts = await response.json();
+        const pricingData: { [key: string]: { vendorPrice: number; discountPercentage: number; } } = {};
+
+        accounts.forEach((account: any) => {
+          if (account.vendorPricing) {
+            pricingData[account.id] = {
+              vendorPrice: account.vendorPricing.vendorPrice,
+              discountPercentage: 0
+            };
+          } else {
+            pricingData[account.id] = { vendorPrice: 0, discountPercentage: 0 };
+          }
+        });
+
+        setVendorPricing(pricingData);
+      }
+    } catch (error) {
+      console.error("Error al cargar precios de vendedor:", error);
+    }
+  };
+
+  /* const saveVendorPricing = async () => {
+    setLoadingVendorPricing(true);
+    try {
+      const response = await fetch("/api/admin/vendor-pricing", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ pricing: vendorPricing }),
+      });
+
+      if (response.ok) {
+        toast.success("Precios de vendedor actualizados correctamente");
+        setShowVendorPricingModal(false);
+      } else {
+        toast.error("Error al actualizar precios de vendedor");
+      }
+    } catch (error) {
+      toast.error("Error de conexión");
+    } finally {
+      setLoadingVendorPricing(false);
+    }
+  }; */
+
+  const saveVendorPricing = async () => {
+  setLoadingVendorPricing(true);
+  try {
+    const response = await fetch('/api/admin/vendor-pricing', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        pricing: Object.fromEntries(
+          Object.entries(vendorPricing).map(([id, data]) => [
+            id, 
+            { 
+              vendorPrice: data.vendorPrice 
+            }
+          ])
+        )
+      }),
+    });
+    
+    if (response.ok) {
+      toast.success("Precios de vendedor actualizados correctamente");
+      setShowVendorPricingModal(false);
+    } else {
+      toast.error("Error al actualizar precios de vendedor");
+    }
+  } catch (error) {
+    toast.error("Error de conexión");
+  } finally {
+    setLoadingVendorPricing(false);
+  }
+};
 
   const calculateAdvancedStats = (
     usersData: User[],
@@ -4028,10 +4142,27 @@ export default function AdminPage() {
               </Card>
 
               <Card className="bg-slate-800 border-slate-700">
-                <CardHeader>
+                <CardHeader className="flex justify-between">
                   <CardTitle className="text-white">
                     Cuentas Existentes
                   </CardTitle>
+                  <div className="flex justify-between items-center mb-6">
+                    {/* <h2 className="text-2xl font-bold">Cuentas de Streaming</h2> */}
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => setShowVendorPricingModal(true)}
+                        variant="outline"
+                        className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 border-none"
+                      >
+                        <Percent className="w-4 h-4" />
+                        Precios Vendedores
+                      </Button>
+                      {/* <Button onClick={() => setShowEditAccountDialog(true)}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Agregar Cuenta
+                      </Button> */}
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -8613,6 +8744,88 @@ export default function AdminPage() {
           </DialogContent>
         </Dialog>
       </div>
+      {/* Modal de Precios de Vendedor */}
+
+      <AlertDialog
+        open={showVendorPricingModal}
+        onOpenChange={setShowVendorPricingModal}
+      >
+        <AlertDialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto bg-slate-800 border-slate-700">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-white">
+              <Percent className="w-5 h-5" />
+              Configurar Precios para Vendedores
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400">
+              Ingresa el precio final que verán los usuarios con rol VENDEDOR
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="space-y-4 py-4">
+            {accounts.map((account: any) => (
+              <div
+                key={account.id}
+                className="flex items-center justify-between p-4 border border-slate-600 rounded-lg bg-slate-700/50"
+              >
+                <div className="flex-1">
+                  <p className="font-medium text-white">{account.name}</p>
+                  <p className="text-sm text-slate-400">
+                    Precio normal: ${account.price.toLocaleString("es-CO")}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {account.type} • {account.duration} • {account.screens}{" "}
+                    pantallas
+                  </p>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
+                    <Label className="text-sm whitespace-nowrap text-slate-300">
+                      Precio Vendedor:
+                    </Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="100"
+                      placeholder="0"
+                      className="w-32 bg-slate-700 border-slate-600 text-white"
+                      value={vendorPricing[account.id]?.vendorPrice || ""}
+                      onChange={(e) =>
+                        setVendorPricing((prev) => ({
+                          ...prev,
+                          [account.id]: {
+                            vendorPrice: parseFloat(e.target.value) || 0,
+                          },
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel asChild>
+              <Button
+                variant="outline"
+                className="border-slate-600 text-slate-300 hover:bg-slate-700"
+              >
+                Cancelar
+              </Button>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Button
+                onClick={saveVendorPricing}
+                disabled={loadingVendorPricing}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {loadingVendorPricing ? "Guardando..." : "Guardar Precios"}
+              </Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
