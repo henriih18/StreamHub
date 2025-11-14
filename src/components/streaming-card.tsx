@@ -382,7 +382,7 @@ export function StreamingCard({
             <div className="flex items-baseline justify-between">
               <div>
                 <div className="flex items-baseline space-x-1">
-                  {account.originalPrice && (
+                  {/* {account.originalPrice && (
                     <span
                       className={`text-lg line-through ${
                         isExclusiveAccount
@@ -395,7 +395,29 @@ export function StreamingCard({
                         maximumFractionDigits: 0,
                       })}
                     </span>
-                  )}
+                  )} */}
+
+                  {/* Mostrar precio tachado solo para VENDEDORES */}
+{isVendor && account.originalPrice && (
+  <span
+    className={`text-lg line-through text-gray-400`}
+  >
+    $     {account.originalPrice.toLocaleString("es-CO", {
+      maximumFractionDigits: 0,
+    })}
+  </span>
+)}
+
+{/* Mostrar precio tachado solo para OFERTAS ESPECIALES */}
+{!isVendor && account.originalPrice && account.specialOffer && (
+  <span
+    className={`text-lg line-through text-gray-400`}
+  >
+    $     {account.originalPrice.toLocaleString("es-CO", {
+      maximumFractionDigits: 0,
+    })}
+  </span>
+)}
                   <span
                     className={`text-3xl font-bold ${
                       isExclusiveAccount
@@ -416,7 +438,7 @@ export function StreamingCard({
                     /{account.saleType === "PROFILES" ? "perfil" : "mes"}
                   </span>
                 </div>
-                {account.originalPrice && (  
+                {/* {account.originalPrice && (  
                   <p
                     className={`text-xs mt-1 ${
                       isVendor ? "text-blue-400" : "text-green-400"
@@ -424,7 +446,18 @@ export function StreamingCard({
                   >
                     {isVendor ? "Precio para vendedores" : "Precio con descuento"}
                   </p>
-                )}
+                )} */}
+                {isVendor && account.originalPrice && (
+  <p className="text-xs mt-1 text-blue-400">
+    Precio para vendedores
+  </p>
+)}
+
+{!isVendor && account.originalPrice && account.specialOffer && (
+  <p className="text-xs mt-1 text-orange-400">
+    Precio con descuento
+  </p>
+)}
                 <p
                   className={`text-xs mt-1 ${
                     isExclusiveAccount ? "text-amber-300/60" : "text-gray-400"

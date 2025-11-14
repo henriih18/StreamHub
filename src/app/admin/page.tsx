@@ -119,6 +119,7 @@ import {
   HelpCircle,
   X,
   Percent,
+  Save,
 } from "lucide-react";
 import { ProfitsCard } from "@/components/profits-card";
 import { CartSidebar } from "@/components/cart-sidebar";
@@ -601,11 +602,15 @@ export default function AdminPage() {
     };}>({});
   const [loadingVendorPricing, setLoadingVendorPricing] = useState(false); */
   // Reemplaza el estado actual con esto:
-const [vendorPricing, setVendorPricing] = useState<{[key: string]: {vendorPrice: number; discountPercentage: number}}>({});
-const [showVendorPricingModal, setShowVendorPricingModal] = useState(false);
-const [loadingVendorPricing, setLoadingVendorPricing] = useState(false);
-const [searchQuery, setSearchQuery] = useState("");
-
+  const [vendorPricing, setVendorPricing] = useState<{
+    [key: string]: { vendorPrice: number; discountPercentage: number };
+  }>({});
+  const [showVendorPricingModal, setShowVendorPricingModal] = useState(false);
+  const [loadingVendorPricing, setLoadingVendorPricing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [enabledVendorInputs, setEnabledVendorInputs] = useState<Set<string>>(
+    new Set()
+  );
 
   /*
   console.log("🚀 AdminPage mounted");
@@ -1030,7 +1035,7 @@ const [searchQuery, setSearchQuery] = useState("");
     return filteredOrders;
   };
 
-  const loadVendorPricing = async () => {
+  /* const loadVendorPricing = async () => {
     try {
       const response = await fetch("/api/admin/vendor-pricing");
       if (response.ok) {
@@ -1049,6 +1054,29 @@ const [searchQuery, setSearchQuery] = useState("");
         });
 
         setVendorPricing(pricingData);
+      }
+    } catch (error) {
+      console.error("Error al cargar precios de vendedor:", error);
+    }
+  }; */
+
+  const loadVendorPricing = async () => {
+    try {
+      const response = await fetch("/api/admin/vendor-pricing");
+      if (response.ok) {
+        const pricingData = await response.json();
+        const formattedPricing: {
+          [key: string]: { vendorPrice: number; discountPercentage: number };
+        } = {};
+
+        pricingData.forEach((item: any) => {
+          formattedPricing[item.streamingAccountId] = {
+            vendorPrice: item.vendorPrice,
+            discountPercentage: 0,
+          };
+        });
+
+        setVendorPricing(formattedPricing);
       }
     } catch (error) {
       console.error("Error al cargar precios de vendedor:", error);
@@ -1080,37 +1108,37 @@ const [searchQuery, setSearchQuery] = useState("");
   }; */
 
   const saveVendorPricing = async () => {
-  setLoadingVendorPricing(true);
-  try {
-    const response = await fetch('/api/admin/vendor-pricing', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        pricing: Object.fromEntries(
-          Object.entries(vendorPricing).map(([id, data]) => [
-            id, 
-            { 
-              vendorPrice: data.vendorPrice 
-            }
-          ])
-        )
-      }),
-    });
-    
-    if (response.ok) {
-      toast.success("Precios de vendedor actualizados correctamente");
-      setShowVendorPricingModal(false);
-    } else {
-      toast.error("Error al actualizar precios de vendedor");
+    setLoadingVendorPricing(true);
+    try {
+      const response = await fetch("/api/admin/vendor-pricing", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pricing: Object.fromEntries(
+            Object.entries(vendorPricing).map(([id, data]) => [
+              id,
+              {
+                vendorPrice: data.vendorPrice,
+              },
+            ])
+          ),
+        }),
+      });
+
+      if (response.ok) {
+        toast.success("Precios de vendedor actualizados correctamente");
+        setShowVendorPricingModal(false);
+      } else {
+        toast.error("Error al actualizar precios de vendedor");
+      }
+    } catch (error) {
+      toast.error("Error de conexión");
+    } finally {
+      setLoadingVendorPricing(false);
     }
-  } catch (error) {
-    toast.error("Error de conexión");
-  } finally {
-    setLoadingVendorPricing(false);
-  }
-};
+  };
 
   const calculateAdvancedStats = (
     usersData: User[],
@@ -4150,11 +4178,14 @@ const [searchQuery, setSearchQuery] = useState("");
                     {/* <h2 className="text-2xl font-bold">Cuentas de Streaming</h2> */}
                     <div className="flex gap-2">
                       <Button
-                        onClick={() => setShowVendorPricingModal(true)}
+                        onClick={async () => {
+                          setShowVendorPricingModal(true);
+                          await loadVendorPricing(); // Cargar precios al abrir
+                        }}
                         variant="outline"
-                        className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 border-none"
+                        className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 border-none font-bold text-white"
                       >
-                        <Percent className="w-4 h-4" />
+                        <Percent className="w-4 h-4 font-bold text-white" />
                         Precios Vendedores
                       </Button>
                       {/* <Button onClick={() => setShowEditAccountDialog(true)}>
@@ -8744,73 +8775,281 @@ const [searchQuery, setSearchQuery] = useState("");
           </DialogContent>
         </Dialog>
       </div>
+
       {/* Modal de Precios de Vendedor */}
 
-      <AlertDialog
+      {/* <AlertDialog
         open={showVendorPricingModal}
         onOpenChange={setShowVendorPricingModal}
-      >
-        <AlertDialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto bg-slate-800 border-slate-700">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-white">
-              <Percent className="w-5 h-5" />
+      > */}
+
+      <AlertDialog
+  open={showVendorPricingModal}
+  onOpenChange={(open) => {
+    setShowVendorPricingModal(open);
+    
+    // Si se está cerrando el modal, deshabilitar todos los inputs
+    if (!open) {
+      setEnabledVendorInputs(new Set());
+    }
+  }}
+>
+        <AlertDialogContent
+          className="
+      w-[95vw] 
+      max-w-md 
+      sm:max-w-2xl 
+      lg:max-w-4xl 
+      xl:max-w-5xl
+      mx-auto 
+      max-h-[90vh] 
+      overflow-y-auto 
+      bg-slate-900 
+      border-slate-700 
+      shadow-2xl
+      rounded-xl
+    "
+        >
+          <AlertDialogHeader className="border-b border-slate-700 pb-4">
+            <AlertDialogTitle className="flex items-center gap-3 text-white text-xl">
+              <div className="p-2 bg-emerald-600 rounded-lg">
+                <Percent className="w-6 h-6 text-white" />
+              </div>
               Configurar Precios para Vendedores
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-400">
-              Ingresa el precio final que verán los usuarios con rol VENDEDOR
+            <AlertDialogDescription className="text-slate-400 text-base mt-2">
+              Habilita y configura los precios especiales que verán los usuarios
+              con rol VENDEDOR
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <div className="space-y-4 py-4">
-            {accounts.map((account: any) => (
-              <div
-                key={account.id}
-                className="flex items-center justify-between p-4 border border-slate-600 rounded-lg bg-slate-700/50"
-              >
-                <div className="flex-1">
-                  <p className="font-medium text-white">{account.name}</p>
-                  <p className="text-sm text-slate-400">
-                    Precio normal: ${account.price.toLocaleString("es-CO")}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {account.type} • {account.duration} • {account.screens}{" "}
-                    pantallas
-                  </p>
-                </div>
+          {/* Barra de estadísticas */}
+          <div
+            className="
+        grid 
+        grid-cols-1 
+        sm:grid-cols-2 
+        lg:grid-cols-3 
+        gap-4 
+        py-4 
+        border-b 
+        border-slate-700
+      "
+          >
+            <div className="bg-slate-800 rounded-lg p-4 text-center w-full">
+              <p className="text-2xl font-bold text-emerald-400">
+                {
+                  Object.values(vendorPricing).filter((p) => p.vendorPrice > 0)
+                    .length
+                }
+              </p>
+              <p className="text-sm text-slate-400">Precios Configurados</p>
+            </div>
 
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2">
-                    <Label className="text-sm whitespace-nowrap text-slate-300">
-                      Precio Vendedor:
-                    </Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="100"
-                      placeholder="0"
-                      className="w-32 bg-slate-700 border-slate-600 text-white"
-                      value={vendorPricing[account.id]?.vendorPrice || ""}
-                      onChange={(e) =>
-                        setVendorPricing((prev) => ({
-                          ...prev,
-                          [account.id]: {
-                            vendorPrice: parseFloat(e.target.value) || 0,
-                          },
-                        }))
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
+            <div className="bg-slate-800 rounded-lg p-4 text-center w-full">
+              <p className="text-2xl font-bold text-blue-400">
+                {accounts.length}
+              </p>
+              <p className="text-sm text-slate-400">Total de Cuentas</p>
+            </div>
           </div>
 
-          <AlertDialogFooter>
+          <div className="space-y-3 py-4">
+            {accounts.map((account: any) => {
+              const hasVendorPrice = vendorPricing[account.id]?.vendorPrice > 0;
+              const isEnabled = enabledVendorInputs.has(account.id);
+              const discountPercentage = hasVendorPrice
+                ? Math.round(
+                    (1 -
+                      vendorPricing[account.id].vendorPrice / account.price) *
+                      100
+                  )
+                : 0;
+
+              return (
+                <div
+                  key={account.id}
+                  className="
+              border border-slate-600 
+              rounded-xl 
+              bg-gradient-to-r 
+              from-slate-800/50 
+              to-slate-700/50 
+              hover:from-slate-800/70 
+              hover:to-slate-700/70 
+              transition-all 
+              duration-200 
+              overflow-hidden
+            "
+                >
+                  <div className="p-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                      {/* Información */}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          <h3 className="text-lg font-semibold text-white">
+                            {account.name}
+                          </h3>
+                          {hasVendorPrice && (
+                            <Badge className="bg-emerald-600 text-white text-xs px-2 py-1">
+                              Configurado
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-400">
+                              Precio normal:
+                            </span>
+                            <span className="font-medium text-white">
+                              ${account.price.toLocaleString("es-CO")}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-400">Tipo:</span>
+                            <Badge
+                              variant="outline"
+                              className="border-slate-600 text-slate-300 text-xs"
+                            >
+                              {account.type}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-400">Duración:</span>
+                            <span className="text-slate-300">
+                              {account.duration}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 mt-2 text-sm text-slate-500">
+                          <span>{account.screens} pantallas</span>
+                          <span>•</span>
+                          <span>{account.quality}</span>
+                        </div>
+                      </div>
+
+                      {/* Controles */}
+                      <div className="flex flex-col sm:flex-row items-center lg:items-end gap-4">
+                        <Button
+                          variant={isEnabled ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => {
+                            setEnabledVendorInputs((prev) => {
+                              const newSet = new Set(prev);
+                              if (newSet.has(account.id)) {
+                                newSet.delete(account.id);
+                                /* setVendorPricing((prev) => ({
+                            ...prev,
+                            [account.id]: {
+                              vendorPrice: 0,
+                              discountPercentage: 0,
+                            },
+                          })); */
+                              } else {
+                                newSet.add(account.id);
+                              }
+                              return newSet;
+                            });
+                          }}
+                          className={`
+                      ${
+                        isEnabled
+                          ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600"
+                          : "border-slate-600 text-slate-300 hover:bg-slate-700"
+                      }
+                      transition-colors duration-200 w-full sm:w-auto
+                    `}
+                        >
+                          {isEnabled ? (
+                            <>
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Habilitado
+                            </>
+                          ) : (
+                            <>
+                              <Lock className="w-4 h-4 mr-2" />
+                              Habilitar
+                            </>
+                          )}
+                        </Button>
+
+                        {/* Precio */}
+                        <div className="flex items-center gap-3">
+                          <div className="flex flex-col items-center">
+                            <Label className="text-xs text-slate-400 mb-1 whitespace-nowrap">
+                              Precio Vendedor
+                            </Label>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="100"
+                              placeholder="0"
+                              disabled={!isEnabled}
+                              className={`
+                          w-32 h-10 text-center font-medium
+                          ${
+                            isEnabled
+                              ? "bg-slate-700 border-emerald-600 text-white focus:border-emerald-500"
+                              : "bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed"
+                          }
+                          transition-colors duration-200
+                        `}
+                              value={
+                                vendorPricing[account.id]?.vendorPrice || ""
+                              }
+                              onChange={(e) =>
+                                setVendorPricing((prev) => ({
+                                  ...prev,
+                                  [account.id]: {
+                                    vendorPrice:
+                                      parseFloat(e.target.value) || 0,
+                                    discountPercentage: 0,
+                                  },
+                                }))
+                              }
+                            />
+                          </div>
+
+                          {hasVendorPrice && (
+                            <div className="flex flex-col items-center">
+                              <span className="text-xs text-slate-400 mb-1">
+                                Descuento
+                              </span>
+                              <Badge
+                                variant="secondary"
+                                className={`
+                            text-sm font-bold px-3 py-1
+                            ${
+                              discountPercentage >= 30
+                                ? "bg-red-600 text-white"
+                                : discountPercentage >= 15
+                                ? "bg-orange-600 text-white"
+                                : "bg-blue-600 text-white"
+                            }
+                          `}
+                              >
+                                -{discountPercentage}%
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <AlertDialogFooter className="border-t border-slate-700 pt-4">
             <AlertDialogCancel asChild>
               <Button
                 variant="outline"
-                className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                className="border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors duration-200"
               >
+                <X className="w-4 h-4 mr-2" />
                 Cancelar
               </Button>
             </AlertDialogCancel>
@@ -8818,9 +9057,19 @@ const [searchQuery, setSearchQuery] = useState("");
               <Button
                 onClick={saveVendorPricing}
                 disabled={loadingVendorPricing}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white transition-colors duration-200"
               >
-                {loadingVendorPricing ? "Guardando..." : "Guardar Precios"}
+                {loadingVendorPricing ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Guardar Precios
+                  </>
+                )}
               </Button>
             </AlertDialogAction>
           </AlertDialogFooter>

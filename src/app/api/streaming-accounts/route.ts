@@ -47,6 +47,23 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    const processedAccounts = accounts.map(account => {
+      let finalPrice = account.price;
+      let originalPrice: number | undefined = undefined;
+
+      // Si es VENDEDOR y tiene configuración de precios, aplicar descuento
+      if (userRole === 'VENDEDOR' && account.vendorPricing && account.vendorPricing.isActive) {
+        originalPrice = account.price;
+        finalPrice = account.vendorPricing.vendorPrice;
+      }
+
+      return {
+        ...account,
+        price: finalPrice,
+        originalPrice: originalPrice
+      };
+    });
+
     // Get exclusive accounts
     let exclusiveAccounts: any[] = []
     // console.log('API: Fetching exclusive accounts for user:', userId) // Debug log
@@ -126,43 +143,20 @@ export async function GET(request: NextRequest) {
                   isAvailable: true
                 }
               },
-             /*  vendorPricing: true */
+              vendorPricing: true
             }
           }
         }
       })
     }
-
-        // Aplicar precios según el rol del usuario
-    const processedAccounts = accounts.map(account => {
-      let finalPrice = account.price;
-      let originalPrice = undefined;
-
-      // Si es VENDEDOR y tiene configuración de precios, aplicar descuento
-      if (userRole === 'VENDEDOR' && account.vendorPricing && account.vendorPricing.isActive) {
-        originalPrice = account.price;
-        finalPrice = account.vendorPricing.vendorPrice; // <-- PRECIO FINAL DIRECTO
-      }
-
-      return {
-        ...account,
-        price: finalPrice,
-        originalPrice: originalPrice
-      };
-    });
+    
+    
 
     return NextResponse.json({
       regularAccounts: processedAccounts,
       exclusiveAccounts,
       specialOffers
     })
-    
-
-    /* return NextResponse.json({
-      regularAccounts: accounts,
-      exclusiveAccounts,
-      specialOffers
-    }) */
   } catch (error) {
     //console.error('Error fetching streaming accounts:', error)
     return NextResponse.json(

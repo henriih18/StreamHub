@@ -1,5 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+
+export async function GET() {
+  try {
+    const pricing = await db.vendorPricing.findMany({
+      include: {
+        streamingAccount: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            type: true,
+            duration: true,
+            screens: true
+          }
+        }
+      }
+    });
+
+    return NextResponse.json(pricing);
+  } catch (error) {
+    console.error("Error al obtener precios de vendedor:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
+      { status: 500 }
+    );
+  }
+}
 export async function PUT(request: NextRequest) {
   try {
     const { pricing } = await request.json();

@@ -132,7 +132,7 @@ export default function Home() {
   });
 
   // Check authentication on mount (optional)
-  useEffect(() => {
+  /* useEffect(() => {
     const checkAuth = () => {
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
@@ -149,7 +149,54 @@ export default function Home() {
     };
 
     checkAuth();
-  }, []);
+  }, []); */
+
+  /* useEffect(() => {
+  const checkAuth = () => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser && parsedUser.id) {
+          setUser(parsedUser);
+        }
+      } catch (error) {
+        localStorage.removeItem("user");
+      }
+    }
+    setIsLoading(false);
+  };
+
+  const handleUserLogin = (event: any) => {
+    setUser(event.detail);
+  };
+
+  checkAuth();
+  window.addEventListener('userLoggedIn', handleUserLogin);
+  
+  return () => {
+    window.removeEventListener('userLoggedIn', handleUserLogin);
+  };
+}, []); */
+
+useEffect(() => {
+  const storedUser = localStorage.getItem("user");
+
+  if (storedUser) {
+    try {
+      const parsedUser = JSON.parse(storedUser);
+      if (parsedUser?.id) {
+        setUser(parsedUser);
+      }
+    } catch (error) {
+      localStorage.removeItem("user");
+    }
+  }
+
+  setIsLoading(false);
+}, []);
+
+
 
   /* const fetchAccounts = async () => {
     try {
@@ -305,9 +352,15 @@ export default function Home() {
     };
 
   // Fetch streaming accounts from API
-  useEffect(() => {
+  /* useEffect(() => {
     fetchAccounts();
-  }, [user]);
+  }, [user?.id, user?.role]); */
+  useEffect(() => {
+  if (!user) return;
+  fetchAccounts();
+  console.log("👀 user en page.tsx:", user);
+}, [user]);
+
 
   // Fetch cart items if user is logged in
   useEffect(() => {
