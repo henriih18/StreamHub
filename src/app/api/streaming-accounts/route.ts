@@ -5,9 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
-    // console.log('API: Received request for userId:', userId) // Debug log
     
-
     let userRole = "USER";
     if (userId) {
       const user = await db.user.findUnique({
@@ -47,7 +45,43 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    const processedAccounts = accounts.map(account => {
+    // 🔥 NUEVO: Calcular stock real considerando reservas
+    const accountsWithRealStock = await Promise.all(
+      accounts.map(async (account) => {
+        // Verificar reservas activas para esta cuenta
+        const reservations = await db.stockReservation.aggregate({
+          where: {
+            accountId: account.id,
+            accountType: 'STREAMING',
+            expiresAt: { gt: new Date() }
+          },
+          _sum: { quantity: true }
+        })
+
+        const reservedQuantity = reservations._sum.quantity || 0
+        
+        // Calcular stock real considerando reservas
+        const realAccountStock = Math.max(0, (account.accountStocks?.length || 0) - reservedQuantity)
+        const realProfileStock = Math.max(0, (account.profileStocks?.length || 0) - reservedQuantity)
+
+        // Actualizar los arrays de stock con cantidades reales
+        const updatedAccountStocks = Array(realAccountStock).fill(null).map((_, index) => 
+          account.accountStocks[index] || { id: `temp-${index}`, isAvailable: true }
+        )
+        
+        const updatedProfileStocks = Array(realProfileStock).fill(null).map((_, index) => 
+          account.profileStocks[index] || { id: `temp-${index}`, isAvailable: true }
+        )
+
+        return {
+          ...account,
+          accountStocks: updatedAccountStocks,
+          profileStocks: updatedProfileStocks
+        }
+      })
+    )
+
+    const processedAccounts = accountsWithRealStock.map(account => {
       let finalPrice = account.price;
       let originalPrice: number | undefined = undefined;
 
@@ -66,9 +100,8 @@ export async function GET(request: NextRequest) {
 
     // Get exclusive accounts
     let exclusiveAccounts: any[] = []
-    // console.log('API: Fetching exclusive accounts for user:', userId) // Debug log
     
-    // Build the where condition based on whether user is logged in
+    // Build where condition based on whether user is logged in
     const whereCondition: any = {
       isActive: true,
       OR: [
@@ -110,10 +143,37 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    // 🔥 NUEVO: Calcular stock real para cuentas exclusivas
+    const exclusiveAccountsWithRealStock = await Promise.all(
+      exclusiveAccounts.map(async (account) => {
+        // Verificar reservas activas para esta cuenta exclusiva
+        const reservations = await db.stockReservation.aggregate({
+          where: {
+            accountId: account.id,
+            accountType: 'EXCLUSIVE',
+            expiresAt: { gt: new Date() }
+          },
+          _sum: { quantity: true }
+        })
+
+        const reservedQuantity = reservations._sum.quantity || 0
+        const realAvailableStock = Math.max(0, (account.exclusiveStocks?.length || 0) - reservedQuantity)
+
+        // Actualizar los stocks con cantidades reales
+        const updatedExclusiveStocks = Array(realAvailableStock).fill(null).map((_, index) => 
+          account.exclusiveStocks[index] || { id: `temp-${index}`, isAvailable: true }
+        )
+
+        return {
+          ...account,
+          exclusiveStocks: updatedExclusiveStocks
+        }
+      })
+    )
+
     // Get special offers for user
     let specialOffers: any[] = []
     if (userId) {
-      // console.log('API: Fetching special offers for user:', userId) // Debug log
       specialOffers = await db.specialOffer.findMany({
         where: {
           userId: userId,
@@ -133,16 +193,8 @@ export async function GET(request: NextRequest) {
                   imageUrl: true
                 }
               },
-              accountStocks: {
-                where: {
-                  isAvailable: true
-                }
-              },
-              profileStocks: {
-                where: {
-                  isAvailable: true
-                }
-              },
+              accountStocks: true,
+              profileStocks: true,
               vendorPricing: true
             }
           }
@@ -150,15 +202,36 @@ export async function GET(request: NextRequest) {
       })
     }
     
-    
+    // 🔥 NUEVO: Aplicar ofertas especiales a las cuentas con stock real
+    const finalAccounts = processedAccounts.map(account => {
+      // Buscar si hay oferta especial para esta cuenta
+      const matchingOffer = specialOffers.find(offer => 
+        offer.streamingAccount && offer.streamingAccount.id === account.id
+      );
+
+      if (matchingOffer) {
+        const offerPrice = matchingOffer.discountPercentage
+          ? account.price * (1 - matchingOffer.discountPercentage / 100)
+          : matchingOffer.specialPrice || account.price;
+
+        return {
+          ...account,
+          specialOffer: matchingOffer,
+          originalPrice: account.originalPrice || account.price,
+          price: offerPrice
+        };
+      }
+
+      return account;
+    });
 
     return NextResponse.json({
-      regularAccounts: processedAccounts,
-      exclusiveAccounts,
+      regularAccounts: finalAccounts,
+      exclusiveAccounts: exclusiveAccountsWithRealStock,
       specialOffers
     })
   } catch (error) {
-    //console.error('Error fetching streaming accounts:', error)
+    console.error('Error fetching streaming accounts:', error)
     return NextResponse.json(
       { error: 'Error al obtener las cuentas de streaming' },
       { status: 500 }
@@ -204,7 +277,6 @@ export async function POST(request: NextRequest) {
         data: {
           name: type,
           description: `${type} streaming service`,
-         
         }
       })
     }
@@ -231,7 +303,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(account, { status: 201 })
   } catch (error) {
-    //console.error('Error creating streaming account:', error)
+    console.error('Error creating streaming account:', error)
     return NextResponse.json(
       { error: 'Error al crear una cuenta de streaming' },
       { status: 500 }

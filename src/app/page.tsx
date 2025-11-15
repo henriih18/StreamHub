@@ -294,7 +294,7 @@ useEffect(() => {
           ];
 
           // Aplicar ofertas especiales (el backend ya aplicó precios de vendedor si corresponde)
-          if (data.specialOffers) {
+          /* if (data.specialOffers) {
             data.specialOffers.forEach((offer: any) => {
               if (offer.streamingAccount) {
                 // Find if account already exists in our array
@@ -327,7 +327,36 @@ useEffect(() => {
                 }
               }
             });
-          }
+          } */
+
+            if (data.specialOffers) {
+          data.specialOffers.forEach((offer: any) => {
+            if (offer.streamingAccount) {
+              // Find if account already exists in our array
+              const existingAccountIndex = allAccounts.findIndex(
+                (account) => account.id === offer.streamingAccount.id
+              );
+
+              if (existingAccountIndex !== -1) {
+                // Update existing account with special offer (solo para mostrar)
+                allAccounts[existingAccountIndex] = {
+                  ...allAccounts[existingAccountIndex],
+                  specialOffer: offer,
+                  originalPrice: offer.streamingAccount.originalPrice || offer.streamingAccount.price,
+                  // 🔥 ELIMINADO: No calcular precio aquí, el backend ya lo hizo
+                };
+              } else {
+                // If account doesn't exist (shouldn't happen), add it
+                allAccounts.push({
+                  ...offer.streamingAccount,
+                  specialOffer: offer,
+                  originalPrice: offer.streamingAccount.originalPrice || offer.streamingAccount.price,
+                  // 🔥 ELIMINADO: No calcular precio aquí, el backend ya lo hizo
+                });
+              }
+            }
+          });
+        }
 
           // Sort accounts: exclusive accounts first, then regular accounts
           allAccounts = allAccounts.sort((a: any, b: any) => {

@@ -431,3 +431,15 @@ model VendorPricing {
   
   streamingAccount     StreamingAccount @relation(fields: [streamingAccountId], references: [id])
 }
+
+model StockReservation {
+  id          String   @id @default(cuid())
+  userId      String
+  accountId   String   // streamingAccountId o exclusiveAccountId
+  accountType String   // "STREAMING" o "EXCLUSIVE"
+  quantity    Int
+  expiresAt   DateTime @default(now())
+  createdAt   DateTime @default(now())
+  
+  @@unique([userId, accountId, accountType])
+}

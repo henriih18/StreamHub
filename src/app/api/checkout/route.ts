@@ -92,6 +92,57 @@ export async function POST(request: NextRequest) {
         }
       })
 
+            // 🔥 NUEVO: Verificar reservas antes de procesar
+      for (const cartItem of cart.items) {
+        const { streamingAccount, exclusiveAccount, quantity, saleType } = cartItem
+        
+        if (streamingAccount) {
+          const reservation = await tx.stockReservation.findFirst({
+            where: {
+              userId: userId,
+              accountId: streamingAccount.id,
+              accountType: 'STREAMING'
+            }
+          })
+
+          if (!reservation || reservation.expiresAt < new Date()) {
+            throw new Error(`Tu reserva para ${streamingAccount.name} expiró. Por favor, agrécala nuevamente al carrito.`)
+          }
+
+          if (reservation.quantity < quantity) {
+            throw new Error(`La cantidad reservada para ${streamingAccount.name} es insuficiente.`)
+          }
+
+          // 🔥 NUEVO: Eliminar reserva
+          await tx.stockReservation.delete({
+            where: { id: reservation.id }
+          })
+        } else if (exclusiveAccount) {
+          const reservation = await tx.stockReservation.findFirst({
+            where: {
+              userId: userId,
+              accountId: exclusiveAccount.id,
+              accountType: 'EXCLUSIVE'
+            }
+          })
+
+          if (!reservation || reservation.expiresAt < new Date()) {
+            throw new Error(`Tu reserva para ${exclusiveAccount.name} expiró. Por favor, agrécala nuevamente al carrito.`)
+          }
+
+          if (reservation.quantity < quantity) {
+            throw new Error(`La cantidad reservada para ${exclusiveAccount.name} es insuficiente.`)
+          }
+
+          // 🔥 NUEVO: Eliminar reserva
+          await tx.stockReservation.delete({
+            where: { id: reservation.id }
+          })
+        }
+      }
+
+      // Continuar con el resto del código existente...
+
      // Create orders for each cart item
 const orders: any[] = []
       for (const cartItem of cart.items) {
