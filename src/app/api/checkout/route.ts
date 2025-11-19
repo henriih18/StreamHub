@@ -92,7 +92,10 @@ export async function POST(request: NextRequest) {
         }
       })
 
-            // 🔥 NUEVO: Verificar reservas antes de procesar
+            //Verificar reservas antes de procesar
+
+            const reservationsToDelete: string[] = []
+
       for (const cartItem of cart.items) {
         const { streamingAccount, exclusiveAccount, quantity, saleType } = cartItem
         
@@ -113,10 +116,12 @@ export async function POST(request: NextRequest) {
             throw new Error(`La cantidad reservada para ${streamingAccount.name} es insuficiente.`)
           }
 
-          // 🔥 NUEVO: Eliminar reserva
-          await tx.stockReservation.delete({
+          //Eliminar reserva
+          /* await tx.stockReservation.delete({
             where: { id: reservation.id }
-          })
+          }) */
+         reservationsToDelete.push(reservation.id)
+
         } else if (exclusiveAccount) {
           const reservation = await tx.stockReservation.findFirst({
             where: {
@@ -134,14 +139,22 @@ export async function POST(request: NextRequest) {
             throw new Error(`La cantidad reservada para ${exclusiveAccount.name} es insuficiente.`)
           }
 
-          // 🔥 NUEVO: Eliminar reserva
-          await tx.stockReservation.delete({
+          //Eliminar reserva
+          /* await tx.stockReservation.delete({
             where: { id: reservation.id }
-          })
+          }) */
+
+            reservationsToDelete.push(reservation.id)
         }
       }
 
-      // Continuar con el resto del código existente...
+    if (reservationsToDelete.length > 0) {
+  await tx.stockReservation.deleteMany({
+    where: {
+      id: { in: reservationsToDelete }
+    }
+  })
+}
 
      // Create orders for each cart item
 const orders: any[] = []

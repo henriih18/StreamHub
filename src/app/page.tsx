@@ -538,7 +538,7 @@ useEffect(() => {
   const endIndex = startIndex + itemsPerPage;
   const currentAccounts = (filteredAccounts || []).slice(startIndex, endIndex);
 
-  const getAvailableStock = (account: StreamingAccount): number => {
+  /* const getAvailableStock = (account: StreamingAccount): number => {
     // For exclusive accounts, check if they have any exclusiveStocks
     const isExclusiveAccount =
       !account.streamingType &&
@@ -562,7 +562,37 @@ useEffect(() => {
         account.accountStocks?.filter((stock) => stock.isAvailable).length || 0
       );
     }
-  };
+  }; */
+
+  const getAvailableStock = (account: StreamingAccount): number => {
+  // For exclusive accounts, check if they have any exclusiveStocks
+  const isExclusiveAccount =
+    !account.streamingType &&
+    !account.accountStocks &&
+    !account.profileStocks;
+  
+  if (isExclusiveAccount) {
+    // For exclusive accounts, we'd need to check reservations too
+    return 999; // Assume unlimited for exclusive accounts for now
+  }
+
+  // 🔥 NUEVO: Considerar stock físico vs stock en carrito
+  const physicalStock = account.saleType === "PROFILES"
+    ? (account.profileStocks?.filter((stock) => stock.isAvailable).length || 0)
+    : (account.accountStocks?.filter((stock) => stock.isAvailable).length || 0);
+
+  // 🔥 NUEVO: Buscar si este item está en el carrito del usuario
+  const cartItem = cartItems.find(item => 
+    item.streamingAccount?.id === account.id && 
+    item.saleType === account.saleType
+  );
+
+  // 🔥 NUEVO: Calcular stock real considerando lo que está en el carrito
+  const reservedInCart = cartItem ? cartItem.quantity : 0;
+  const realAvailableStock = physicalStock - reservedInCart;
+
+  return Math.max(0, realAvailableStock); // 🔥 NUEVO: Nunca negativo
+};
 
   const addToCart = async (account: StreamingAccount, quantity: number = 1) => {
     if (!user) {

@@ -222,6 +222,7 @@ model CartItem {
   quantity          Int      @default(1)
   saleType          SaleType @default(FULL)
   priceAtTime       Float    // Price when added to cart
+  reservationExpiresAt DateTime?  //Tiempo de expiración de la reserva
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   cart              Cart     @relation(fields: [cartId], references: [id])

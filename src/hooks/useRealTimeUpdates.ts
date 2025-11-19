@@ -43,6 +43,24 @@ export function useRealTimeUpdates({
 
       socketRef.current = socket;
 
+      useEffect(() => {
+  if (!socket || !userId) return
+
+  socket.on('cartItemExpired', (_data) => {
+    /* toast.error(data.message, {
+      duration: 5000,
+      description: 'El tiempo de reserva ha expirado'
+    }) */
+    
+    // Disparar evento para actualizar el carrito
+    window.dispatchEvent(new CustomEvent('cartUpdated'))
+  })
+
+  return () => {
+    socket.off('cartItemExpired')
+  }
+}, [socket, userId])
+
       socket.on("connect", () => {
         console.log('WebSocket connected')
         reconnectAttempts.current = 0;

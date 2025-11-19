@@ -44,7 +44,7 @@ export const toast = {
       }
     })
   },
-  error: (message: string) => {
+  error: (message: string,  /* p0: { duration: number } */) => {
     return sonnerToast.error(message, {
       icon: <XCircle className="w-5 h-5 text-white drop-shadow-lg" />,
       style: {

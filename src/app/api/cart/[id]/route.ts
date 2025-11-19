@@ -148,7 +148,7 @@ async function updateCartTotal(cartId: string) {
         )
       }
 
-      // 🔥 OBTENER CART ITEM CON EL CART PARA TENER EL USER ID
+      //OBTENER CART ITEM CON EL CART PARA TENER EL USER ID
       const cartItem = await tx.cartItem.findUnique({
         where: { id: resolvedParams.id },
         include: {
@@ -158,7 +158,7 @@ async function updateCartTotal(cartId: string) {
               profileStocks: true
             }
           },
-          cart: {  // 🔥 INCLUIR EL CART PARA OBTENER USER ID
+          cart: {  //INCLUIR EL CART PARA OBTENER USER ID
             select: {
               userId: true
             }
@@ -188,7 +188,7 @@ async function updateCartTotal(cartId: string) {
         )
       }
 
-      // 🔥 VERIFICAR STOCK CONSIDERANDO RESERVAS
+      //VERIFICAR STOCK CONSIDERANDO RESERVAS
       if (cartItem.streamingAccount) {
         // Contar stock disponible
         const availableStock = cartItem.saleType === 'PROFILES'
@@ -218,7 +218,7 @@ async function updateCartTotal(cartId: string) {
         // 🔥 BUSCAR LA RESERVA ACTUAL DEL USUARIO
         const currentReservation = await tx.stockReservation.findFirst({
           where: {
-            userId: cartItem.cart.userId,  // ✅ AHORA SÍ EXISTE
+            userId: cartItem.cart.userId,  //AHORA SÍ EXISTE
             accountId: cartItem.streamingAccountId,
             accountType: 'STREAMING'
           }
@@ -237,25 +237,25 @@ async function updateCartTotal(cartId: string) {
           )
         }
 
-        // 🔥 ACTUALIZAR O CREAR LA RESERVA
+        // ACTUALIZAR O CREAR LA RESERVA
         if (currentReservation) {
           // Actualizar reserva existente
           await tx.stockReservation.update({
             where: { id: currentReservation.id },
             data: {
               quantity: quantity,
-              expiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutos
+              expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 10 minutos
             }
           })
         } else {
           // Crear nueva reserva
           await tx.stockReservation.create({
             data: {
-              userId: cartItem.cart.userId,  // ✅ USAR EL USER ID DEL CART
+              userId: cartItem.cart.userId,  // USAR EL USER ID DEL CART
               accountId: cartItem.streamingAccountId,
               accountType: 'STREAMING',
               quantity: quantity,
-              expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+              expiresAt: new Date(Date.now() + 5 * 60 * 1000)
             }
           })
         }
@@ -289,7 +289,64 @@ async function updateCartTotal(cartId: string) {
   })
 }
 
-export async function DELETE(
+/* export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const resolvedParams = await params
+    
+    //OBTENER EL USER ID ANTES DE ELIMINAR
+    const cartItem = await db.cartItem.findUnique({
+      where: { id: resolvedParams.id },
+      include: {
+        cart: {
+          select: {
+            userId: true
+          }
+        }
+      }
+    })
+
+    if (!cartItem) {
+      return NextResponse.json(
+        { error: 'Artículo del carrito no encontrado' },
+        { status: 404 }
+      )
+    }
+
+    //ELIMINAR LA RESERVA SI EXISTE
+    if (cartItem.streamingAccountId && cartItem.cart) {
+      await db.stockReservation.deleteMany({
+        where: {
+          userId: cartItem.cart.userId,
+          accountId: cartItem.streamingAccountId,
+          accountType: 'STREAMING'
+        }
+      })
+    }
+
+    // Eliminar el item del carrito
+    await db.cartItem.delete({
+      where: { id: resolvedParams.id }
+    })
+
+    // Update cart total
+    if (cartItem.cartId) {
+      await updateCartTotal(cartItem.cartId)
+    }
+
+    return NextResponse.json({ message: 'Artículo eliminado del carrito' })
+  } catch (error) {
+    console.error('Error removing cart item:', error)
+    return NextResponse.json(
+      { error: 'Error al eliminar el artículo del carrito' },
+      { status: 500 }
+    )
+  }
+} */
+
+  /* export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -326,6 +383,17 @@ export async function DELETE(
       })
     }
 
+    // 🔥 ELIMINAR RESERVA PARA CUENTAS EXCLUSIVAS
+    if (cartItem.exclusiveAccountId && cartItem.cart) {
+      await db.stockReservation.deleteMany({
+        where: {
+          userId: cartItem.cart.userId,
+          accountId: cartItem.exclusiveAccountId,
+          accountType: 'EXCLUSIVE'
+        }
+      })
+    }
+
     // Eliminar el item del carrito
     await db.cartItem.delete({
       where: { id: resolvedParams.id }
@@ -336,7 +404,85 @@ export async function DELETE(
       await updateCartTotal(cartItem.cartId)
     }
 
-    return NextResponse.json({ message: 'Artículo eliminado del carrito' })
+    return NextResponse.json({ 
+      message: 'Artículo eliminado del carrito',
+      itemName: cartItem.streamingAccountId ? 'Streaming Account' : 'Exclusive Account'
+    })
+  } catch (error) {
+    console.error('Error removing cart item:', error)
+    return NextResponse.json(
+      { error: 'Error al eliminar el artículo del carrito' },
+      { status: 500 }
+    )
+  }
+} */
+
+  // Reemplaza la función DELETE completa por esta versión corregida:
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const resolvedParams = await params
+    
+    // 🔥 OBTENER EL ITEM ANTES DE ELIMINAR
+    const cartItem = await db.cartItem.findUnique({
+      where: { id: resolvedParams.id },
+      include: {
+        cart: {
+          select: {
+            userId: true
+          }
+        }
+      }
+    })
+
+    if (!cartItem) {
+      return NextResponse.json(
+        { error: 'Artículo del carrito no encontrado' },
+        { status: 404 }
+      )
+    }
+
+    // 🔥 ELIMINAR LA RESERVA PRIMERO (importante que el item)
+    if (cartItem.streamingAccountId && cartItem.cart) {
+      await db.stockReservation.deleteMany({
+        where: {
+          userId: cartItem.cart.userId,
+          accountId: cartItem.streamingAccountId,
+          accountType: 'STREAMING'
+        }
+      })
+    }
+
+    if (cartItem.exclusiveAccountId && cartItem.cart) {
+      await db.stockReservation.deleteMany({
+        where: {
+          userId: cartItem.cart.userId,
+          accountId: cartItem.exclusiveAccountId,
+          accountType: 'EXCLUSIVE'
+        }
+      })
+    }
+
+    // 🔥 ELIMINAR EL ITEM DEL CARRITO
+    await db.cartItem.delete({
+      where: { id: resolvedParams.id }
+    })
+
+    // 🔥 ACTUALIZAR EL TOTAL DEL CARRITO
+    if (cartItem.cartId) {
+      await updateCartTotal(cartItem.cartId)
+    }
+
+    // 🔥 RETORNAR INFORMACIÓN DETALLADA PARA EL FRONTEND
+    return NextResponse.json({ 
+      message: 'Artículo eliminado del carrito',
+      itemName: cartItem.streamingAccountId ? 'Streaming Account' : 'Exclusive Account',
+      itemId: cartItem.id,
+      cartId: cartItem.cartId,
+      userId: cartItem.cart?.userId
+    })
   } catch (error) {
     console.error('Error removing cart item:', error)
     return NextResponse.json(

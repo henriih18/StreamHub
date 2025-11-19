@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { userId, streamingAccountId, quantity, saleType } = body
 
-    // 🔥 VALIDACIONES RÁPIDAS
+    // VALIDACIONES RÁPIDAS
     if (!userId || !streamingAccountId) {
       return NextResponse.json(
         { error: 'Se requieren el ID de usuario y el ID de la cuenta de Streaming.' },
@@ -206,7 +206,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 🔥 OBTENER DATOS NECESARIOS (SIN TRANSACCIÓN)
+    // OBTENER DATOS NECESARIOS (SIN TRANSACCIÓN)
     const [user, streamingAccount, existingReservations, cart] = await Promise.all([
       db.user.findUnique({
         where: { id: userId },
@@ -216,7 +216,7 @@ export async function POST(request: NextRequest) {
         where: { id: streamingAccountId },
         include: {
           vendorPricing: true,
-          profileStocks: true,  // ✅ Verificar que esté incluido
+          profileStocks: true,  //Verificar que esté incluido
       accountStocks: true
         }
       }),
@@ -240,7 +240,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 🔥 CÁLCULOS DE STOCK
+    //CÁLCULOS DE STOCK
     const availableStock = saleType === 'PROFILES' 
       ? (streamingAccount.profileStocks?.length || 0)
       : (streamingAccount.accountStocks?.length || 0)
@@ -254,7 +254,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 🔥 OBTENER OFERTAS ESPECIALES
+    // OBTENER OFERTAS ESPECIALES
     const specialOffer = await db.specialOffer.findFirst({
       where: {
         userId: userId,
@@ -267,7 +267,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // 🔥 CÁLCULO DE PRECIOS
+    // CÁLCULO DE PRECIOS
     let finalPrice = streamingAccount.price
     let originalPrice: number | undefined = undefined
 
@@ -285,7 +285,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`🛒 Carrito Add - User: ${userId}, Account: ${streamingAccountId}, Role: ${user.role}, Final Price: ${finalPrice}, Original: ${originalPrice}`)
 
-    // 🔥 ENFOQUE SIN TRANSACCIÓN - Operaciones atómicas individuales
+    //ENFOQUE SIN TRANSACCIÓN - Operaciones atómicas individuales
     try {
       // Create or get cart
       let cartToUse = cart
@@ -345,7 +345,7 @@ export async function POST(request: NextRequest) {
           )
         }
 
-        // 🔥 ACTUALIZAR RESERVA PRIMERO
+        // ACTUALIZAR RESERVA PRIMERO
         await db.stockReservation.upsert({
           where: {
             userId_accountId_accountType: {
@@ -367,11 +367,12 @@ export async function POST(request: NextRequest) {
           }
         })
 
-        // 🔥 ACTUALIZAR CART ITEM DESPUÉS
+        //ACTUALIZAR CART ITEM DESPUÉS
         const updatedItem = await db.cartItem.update({
           where: { id: existingItem.id },
           data: {
-            quantity: newQuantity
+            quantity: newQuantity,
+            reservationExpiresAt: new Date(Date.now() + 10 * 60 * 1000)
           }
         })
 
@@ -413,7 +414,8 @@ export async function POST(request: NextRequest) {
             streamingAccountId,
             quantity: quantity || 1,
             saleType: saleType || 'FULL',
-            priceAtTime
+            priceAtTime,
+            reservationExpiresAt: new Date(Date.now() + 10 * 60 * 1000)
           }
         })
 

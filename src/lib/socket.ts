@@ -326,3 +326,24 @@ function getRelativeTime(dateString: string) {
   const diffDays = Math.floor(diffHours / 24);
   return `Hace ${diffDays} d`;
 }
+
+
+setInterval(async () => {
+  try {
+    const response = await fetch(`${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/cleanup/reservations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      if (data.deletedCount > 0) {
+        console.log(`Limpieza automática: ${data.deletedCount} reservas expiradas eliminadas`)
+      }
+    }
+  } catch (error) {
+    console.error('Error en limpieza automática de reservas:', error)
+  }
+}, 5 * 60 * 1000) // Cada 5 minutos
