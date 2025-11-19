@@ -10,10 +10,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { QuantitySelector } from "@/components/ui/quantity-selector";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "@/components/ui/toast-custom";
 import { useCountdown } from '@/hooks/useCountdown'
 import { Clock, AlertCircle } from 'lucide-react'
+import { io } from 'socket.io-client'
 
 interface StreamingAccount {
   id: string;
@@ -52,7 +53,6 @@ interface CartItem {
   saleType: "FULL" | "PROFILES";
   priceAtTime: number;
   availableStock?: number;
-
   reservationExpiresAt?: string;
 }
 
@@ -66,6 +66,8 @@ interface CartSidebarProps {
   userCredits?: number;
   userId?: string;
   onPaymentSuccess?: (newCredits: number) => void;
+  fetchCart?: () => void; // 🔥 AÑADIR ESTA FUNCIÓN
+  fetchStreamingAccounts?: () => void; // 🔥 AÑADIR ESTA FUNCIÓN
 }
 
 export function CartSidebar({
@@ -78,16 +80,66 @@ export function CartSidebar({
   userCredits = 0,
   userId,
   onPaymentSuccess,
+  fetchCart,
+  fetchStreamingAccounts,
 }: CartSidebarProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
-  const total = (items || []).reduce(
+  const [expiringItems, setExpiringItems] = useState<Set<string>>(new Set());
+  const [cartItems, setCartItems] = useState<CartItem[]>(items || []); // 🔥 AÑADIR ESTE ESTADO
+
+  // Sincronizar items con props
+  useEffect(() => {
+    setCartItems(items || [])
+  }, [items])
+
+  const total = cartItems.reduce(
     (sum, item) => sum + item.priceAtTime * item.quantity,
     0
   );
-  const [expiringItems, setExpiringItems] = useState<Set<string>>(new Set())
 
-  
+  // 🔥 WEBSOCKET: Escuchar notificaciones de expiración
+  useEffect(() => {
+    const socket = io()
+
+    // Escuchar cuando items expiran
+    socket.on('cartExpired', (data) => {
+      console.log('Items expiraron:', data)
+      
+      // Mostrar notificación al usuario
+      toast.warning(
+         "Artículos expirados"
+        
+      )
+
+      // Recargar el carrito
+      fetchCart?.()
+    })
+
+    // Escuchar actualizaciones forzadas
+    socket.on('cartUpdate', (data) => {
+      console.log('🔄 Actualización de carrito:', data)
+      
+      if (data.action === 'refresh') {
+        // Recargar el carrito
+        fetchCart?.()
+      }
+    })
+
+    // Escuchar actualizaciones de stock
+    socket.on('stockUpdated', (data) => {
+      console.log('📦 Stock actualizado:', data)
+      
+      // Recargar las cuentas disponibles
+      fetchStreamingAccounts?.()
+    })
+
+    return () => {
+      socket.off('cartExpired')
+      socket.off('cartUpdate')
+      socket.off('stockUpdated')
+    }
+  }, [fetchCart, fetchStreamingAccounts])
 
   const handleCheckout = async () => {
     if (!userId) {
@@ -119,47 +171,103 @@ export function CartSidebar({
           setPaymentSuccess(false);
         }, 2000);
       } else {
-        //console.error('Payment error:', data.error)
+        toast.error(data.error || 'Error en el pago')
       }
     } catch (error) {
-      //console.error('Payment processing error:', error)
+      console.error('Payment processing error:', error)
+      toast.error('Error de conexión al procesar el pago')
     } finally {
       setIsProcessing(false);
     }
   };
 
-  //Componente para el contador
-const CountdownTimer = ({ expiresAt, onExpire }: { expiresAt?: string; onExpire: () => void }) => {
-  /* const { minutes, seconds, formatted, isExpired } = useCountdown(expiresAt, {
-    onExpire
-  }) */
-
+  // Componente para el contador
+  const CountdownTimer = ({ expiresAt, onExpire }: { expiresAt?: string; onExpire: () => void }) => {
     const { minutes, seconds, formatted, isExpired } = useCountdown(
-  expiresAt as string | Date | null,
-  {
-    onExpire
+      expiresAt as string | Date | null,
+      {
+        onExpire
+      }
+    )
+
+    if (!expiresAt || isExpired) {
+      return null
+    }
+
+    const isWarning = minutes < 2 // Menos de 2 minutos = advertencia
+
+    return (
+      <div className={`flex items-center space-x-1 text-xs ${
+        isWarning ? 'text-orange-400' : 'text-gray-400'
+      }`}>
+        <Clock className="w-3 h-3" />
+        <span>{formatted}</span>
+        {isWarning && <AlertCircle className="w-3 h-3 text-orange-400" />}
+      </div>
+    )
   }
-)
 
-  if (!expiresAt || isExpired) {
-    return null
-  }
+  // 🔥 MANEJAR EXPIRACIÓN DEL ITEM
+  const handleItemExpire = async (itemId: string) => {
+    // EVITAR PROCESAMIENTO DUPLICADO
+    if (expiringItems.has(itemId)) {
+      console.log('Item ya se está eliminando:', itemId)
+      return
+    }
 
-  const isWarning = minutes < 5 // Menos de 5 minutos = advertencia
+    setExpiringItems(prev => new Set(prev).add(itemId))
 
-  return (
-    <div className={`flex items-center space-x-1 text-xs ${
-      isWarning ? 'text-orange-400' : 'text-gray-400'
-    }`}>
-      <Clock className="w-3 h-3" />
-      <span>{formatted}</span>
-      {isWarning && <AlertCircle className="w-3 h-3 text-orange-400" />}
-    </div>
-  )
-}
+    try {
+      console.log('🗑️ Eliminando item expirado:', itemId)
+      
+      const response = await fetch(`/api/cart/${itemId}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('✅ Item eliminado exitosamente:', data)
+        
+        // MOSTRAR NOTIFICACIÓN CLARA
+        toast.error(`${data.itemName || 'Producto'} eliminado del carrito por tiempo expirado`)
 
-  function setCartItems(arg0: (prev: any) => any) {
-    throw new Error("Function not implemented.");
+        // ACTUALIZAR ESTADO LOCAL INMEDIATAMENTE (CRÍTICO)
+        setCartItems(prev => {
+          const updatedItems = prev.filter(item => item.id !== itemId)
+          console.log('🔄 Carrito actualizado:', updatedItems.length, 'items')
+          return updatedItems
+        })
+        
+        // DISPARAR EVENTOS PARA ACTUALIZAR OTROS COMPONENTES
+        window.dispatchEvent(new CustomEvent("cartUpdated", {
+          detail: {
+            action: 'item_removed',
+            itemId: itemId,
+            itemName: data.itemName
+          }
+        }))
+        
+        // ACTUALIZAR BADGE DE NAVEGACIÓN
+        window.dispatchEvent(new CustomEvent("cartBadgeUpdated"))
+        
+      } else {
+        const errorData = await response.json()
+        console.error('❌ Error al eliminar item:', errorData.error)
+        toast.error(errorData.error || 'Error al eliminar el artículo del carrito')
+      }
+    } catch (error) {
+      console.error('❌ Error en handleItemExpire:', error)
+      toast.error('Error de conexión al eliminar el artículo')
+    } finally {
+      // LIMPIAR ESTADO DESPUÉS DE UN TIEMPO PRUDENTE
+      setTimeout(() => {
+        setExpiringItems(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(itemId)
+          return newSet
+        })
+      }, 3000) // 3 segundos para asegurar sincronización
+    }
   }
 
   return (
@@ -175,9 +283,9 @@ const CountdownTimer = ({ expiresAt, onExpire }: { expiresAt?: string; onExpire:
       {/* Sidebar */}
       <div
         className={`
-        fixed top-0 right-0 h-full w-full md:w-96 bg-gray-900 border-l border-gray-800 shadow-xl z-50 transform transition-transform duration-300 ease-in-out
-        ${isOpen ? "translate-x-0" : "translate-x-full"}
-      `}
+          fixed top-0 right-0 h-full w-full md:w-96 bg-gray-900 border-l border-gray-800 shadow-xl z-50 transform transition-transform duration-300 ease-in-out
+          ${isOpen ? "translate-x-0" : "translate-x-full"}
+        `}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
@@ -198,7 +306,7 @@ const CountdownTimer = ({ expiresAt, onExpire }: { expiresAt?: string; onExpire:
 
           {/* Cart Items */}
           <ScrollArea className="flex-1 p-6">
-            {(items || []).length === 0 ? (
+            {cartItems.length === 0 ? (
               <div className="text-center py-12">
                 <ShoppingBag className="h-12 w-12 text-gray-600 mx-auto mb-4" />
                 <p className="text-gray-400">Tu carrito está vacío</p>
@@ -215,8 +323,7 @@ const CountdownTimer = ({ expiresAt, onExpire }: { expiresAt?: string; onExpire:
                         Tus Créditos Disponibles
                       </p>
                       <p className="text-xl font-bold text-green-300">
-                        $
-                        {userCredits.toLocaleString("es-CO", {
+                        $                         {userCredits.toLocaleString("es-CO", {
                           maximumFractionDigits: 0,
                         })}
                       </p>
@@ -226,10 +333,12 @@ const CountdownTimer = ({ expiresAt, onExpire }: { expiresAt?: string; onExpire:
               </div>
             ) : (
               <div className="space-y-4">
-                {/* {items.map((item) => (
+                {cartItems.map((item) => (
                   <div
                     key={item.id}
-                    className="bg-gray-800 rounded-lg p-4 border border-gray-700"
+                    className={`bg-gray-800 rounded-lg p-4 border border-gray-700 ${
+                      expiringItems.has(item.id) ? 'opacity-50' : ''
+                    }`}
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
@@ -293,9 +402,18 @@ const CountdownTimer = ({ expiresAt, onExpire }: { expiresAt?: string; onExpire:
                         size="sm"
                         onClick={() => onRemoveItem(item.id)}
                         className="text-red-400 hover:text-red-300"
+                        disabled={expiringItems.has(item.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
+                    </div>
+
+                    {/* Contador de tiempo restante */}
+                    <div className="mb-3">
+                      <CountdownTimer 
+                        expiresAt={item.reservationExpiresAt} 
+                        onExpire={() => handleItemExpire(item.id)}
+                      />
                     </div>
 
                     <div className="flex items-center justify-between">
@@ -306,6 +424,7 @@ const CountdownTimer = ({ expiresAt, onExpire }: { expiresAt?: string; onExpire:
                           min={1}
                           max={item.availableStock || 99}
                           size="sm"
+                          disabled={expiringItems.has(item.id)}
                         />
                         {item.availableStock !== undefined &&
                           item.availableStock <= 5 && (
@@ -320,15 +439,13 @@ const CountdownTimer = ({ expiresAt, onExpire }: { expiresAt?: string; onExpire:
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-purple-400">
-                          $
-                          {(item.priceAtTime * item.quantity).toLocaleString(
+                          $                           {(item.priceAtTime * item.quantity).toLocaleString(
                             "es-CO",
                             { maximumFractionDigits: 0 }
                           )}
                         </p>
                         <p className="text-xs text-gray-500">
-                          $
-                          {item.priceAtTime.toLocaleString("es-CO", {
+                          $                           {item.priceAtTime.toLocaleString("es-CO", {
                             maximumFractionDigits: 0,
                           })}{" "}
                           c/u
@@ -336,224 +453,13 @@ const CountdownTimer = ({ expiresAt, onExpire }: { expiresAt?: string; onExpire:
                       </div>
                     </div>
                   </div>
-                ))} */}
-                {items.map((item) => {
-  // 🔥 NUEVO: Manejar expiración del item
-  /* const handleItemExpire = async (item: CartItem) => {
-
-
-    if (expiringItems.has(item.id)) {
-    console.log('Producto ya se está eliminando:', )
-    return
-  }
-
-  // 🔥 MARCAR COMO EN PROCESAMIENTO
-  setExpiringItems(prev => new Set(prev).add(item.id))
-
-    try {
-      await fetch(`/api/cart/${item.id}`, {
-        method: 'DELETE'
-      })
-      
-      // Mostrar notificación
-      toast.error(`${item.streamingAccount?.name || item.exclusiveAccount?.name} ha sido eliminado del carrito por tiempo expirado`)
-
-      // Actualizar carrito
-      onRemoveItem(item.id)
-    } catch (error) {
-      console.error('Error eliminando el producto expirado:', error)
-    }
-  } */
-
-    // Reemplaza la función handleItemExpire por esta versión mejorada:
-const handleItemExpire = async (itemId: string) => {
-  // 🔥 EVITAR PROCESAMIENTO DUPLICADO
-  if (expiringItems.has(itemId)) {
-    console.log('Item ya se está eliminando:', itemId)
-    return
-  }
-
-  setExpiringItems(prev => new Set(prev).add(itemId))
-
-  try {
-    console.log('🗑️ Eliminando item expirado:', itemId)
-    
-    const response = await fetch(`/api/cart/${itemId}`, {
-      method: 'DELETE'
-    })
-    
-    if (response.ok) {
-      const data = await response.json()
-      console.log('✅ Item eliminado exitosamente:', data)
-      
-      // 🔥 MOSTRAR NOTIFICACIÓN CLARA
-      toast.error(`${data.itemName || 'Producto'} eliminado del carrito por tiempo expirado`)
-
-      // 🔥 ACTUALIZAR ESTADO LOCAL INMEDIATAMENTE (CRÍTICO)
-      setCartItems(prev => {
-        const updatedItems = prev.filter(item => item.id !== itemId)
-        console.log('🔄 Carrito actualizado:', updatedItems.length, 'items')
-        return updatedItems
-      })
-      
-      // 🔥 DISPARAR EVENTOS PARA ACTUALIZAR OTROS COMPONENTES
-      window.dispatchEvent(new CustomEvent("cartUpdated", {
-        detail: {
-          action: 'item_removed',
-          itemId: itemId,
-          itemName: data.itemName
-        }
-      }))
-      
-      // 🔥 ACTUALIZAR BADGE DE NAVEGACIÓN
-      window.dispatchEvent(new CustomEvent("cartBadgeUpdated"))
-      
-    } else {
-      const errorData = await response.json()
-      console.error('❌ Error al eliminar item:', errorData.error)
-      toast.error(errorData.error || 'Error al eliminar el artículo del carrito')
-    }
-  } catch (error) {
-    console.error('❌ Error en handleItemExpire:', error)
-    toast.error('Error de conexión al eliminar el artículo')
-  } finally {
-    // 🔥 LIMPIAR ESTADO DESPUÉS DE UN TIEMPO PRUDENTE
-    setTimeout(() => {
-      setExpiringItems(prev => {
-        const newSet = new Set(prev)
-        newSet.delete(itemId)
-        return newSet
-      })
-    }, 3000) // 3 segundos para asegurar sincronización
-  }
-}
-
-  return (
-    <div
-      key={item.id}
-      className="bg-gray-800 rounded-lg p-4 border border-gray-700"
-    >
-      
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          {item.streamingAccount ? (
-            <>
-              <h4 className="font-semibold text-white">
-                {item.streamingAccount.name}
-              </h4>
-              <p className="text-sm text-gray-400">
-                {item.streamingAccount.type} •{" "}
-                {item.streamingAccount.duration}
-              </p>
-              <div className="flex items-center space-x-2 mt-1">
-                <span className="text-xs bg-purple-600/20 text-purple-400 px-2 py-1 rounded border border-purple-600/30">
-                  {item.saleType === "PROFILES"
-                    ? "Perfil"
-                    : "Cuenta completa"}
-                </span>
-                <span className="text-xs text-gray-500">
-                  {item.streamingAccount.quality}
-                </span>
-              </div>
-            </>
-          ) : item.exclusiveAccount ? (
-            <>
-              <h4 className="font-semibold text-white">
-                {item.exclusiveAccount.name}
-              </h4>
-              <p className="text-sm text-gray-400">
-                {item.exclusiveAccount.description}
-              </p>
-              <div className="flex items-center space-x-2 mt-1">
-                <span className="text-xs bg-amber-600/20 text-amber-400 px-2 py-1 rounded border border-amber-600/30">
-                  Cuenta Exclusiva
-                </span>
-                <span className="text-xs bg-purple-600/20 text-purple-400 px-2 py-1 rounded border border-purple-600/30">
-                  {item.saleType === "PROFILES"
-                    ? "Perfil"
-                    : "Cuenta completa"}
-                </span>
-              </div>
-            </>
-          ) : (
-            <>
-              <h4 className="font-semibold text-white">
-                Producto no disponible
-              </h4>
-              <p className="text-sm text-gray-400">
-                Este producto ha sido eliminado
-              </p>
-              <div className="flex items-center space-x-2 mt-1">
-                <span className="text-xs bg-red-600/20 text-red-400 px-2 py-1 rounded border border-red-600/30">
-                  No disponible
-                </span>
-              </div>
-            </>
-          )}
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onRemoveItem(item.id)}
-          className="text-red-400 hover:text-red-300"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/*Contador de tiempo restante */}
-      <div className="mb-3">
-        <CountdownTimer 
-          expiresAt={item.reservationExpiresAt} 
-          /* onExpire={handleItemExpire} */
-          onExpire={() => handleItemExpire(item.id)}
-        />
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <QuantitySelector
-            value={item.quantity}
-            onChange={(value) => onUpdateQuantity(item.id, value)}
-            min={1}
-            max={item.availableStock || 99}
-            size="sm"
-          />
-          {item.availableStock !== undefined &&
-            item.availableStock <= 5 && (
-              <div className="text-xs text-orange-400">
-                {item.availableStock === 0
-                  ? "Sin stock"
-                  : `Solo ${item.availableStock} disponible${
-                      item.availableStock !== 1 ? "s" : ""
-                    }`}
-              </div>
-            )}
-        </div>
-        <div className="text-right">
-          <p className="font-semibold text-purple-400">
-            $             {(item.priceAtTime * item.quantity).toLocaleString(
-              "es-CO",
-              { maximumFractionDigits: 0 }
-            )}
-          </p>
-          <p className="text-xs text-gray-500">
-            $             {item.priceAtTime.toLocaleString("es-CO", {
-              maximumFractionDigits: 0,
-            })}{" "}
-            c/u
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-})}
+                ))}
               </div>
             )}
           </ScrollArea>
 
           {/* Footer */}
-          {(items || []).length > 0 && (
+          {cartItems.length > 0 && (
             <div className="border-t border-gray-800 p-6 space-y-4">
               {/* User Credits */}
               <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-lg p-4 border border-green-700/30">
@@ -564,8 +470,7 @@ const handleItemExpire = async (itemId: string) => {
                       Tus Créditos Disponibles
                     </p>
                     <p className="text-xl font-bold text-green-300">
-                      $
-                      {userCredits.toLocaleString("es-CO", {
+                      $                       {userCredits.toLocaleString("es-CO", {
                         maximumFractionDigits: 0,
                       })}
                     </p>
@@ -574,8 +479,7 @@ const handleItemExpire = async (itemId: string) => {
                     <div className="text-right">
                       <p className="text-xs text-red-400">Insuficientes</p>
                       <p className="text-xs text-gray-400">
-                        Necesitas $
-                        {(total - userCredits).toLocaleString("es-CO", {
+                        Necesitas $                         {(total - userCredits).toLocaleString("es-CO", {
                           maximumFractionDigits: 0,
                         })}{" "}
                         más
@@ -589,8 +493,7 @@ const handleItemExpire = async (itemId: string) => {
                 <div className="flex justify-between font-semibold text-lg">
                   <span className="text-white">Total</span>
                   <span className="text-purple-400">
-                    $
-                    {total.toLocaleString("es-CO", {
+                    $                     {total.toLocaleString("es-CO", {
                       maximumFractionDigits: 0,
                     })}
                   </span>

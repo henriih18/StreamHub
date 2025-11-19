@@ -242,8 +242,8 @@ export async function POST(request: NextRequest) {
 
     //CÁLCULOS DE STOCK
     const availableStock = saleType === 'PROFILES' 
-      ? (streamingAccount.profileStocks?.length || 0)
-      : (streamingAccount.accountStocks?.length || 0)
+      ? (streamingAccount.profileStocks?.filter(stock => stock.isAvailable).length || 0)
+      : (streamingAccount.accountStocks?.filter(stock => stock.isAvailable).length || 0)
     const reservedStock = existingReservations._sum.quantity || 0
     const realAvailableStock = availableStock - reservedStock
 
@@ -322,7 +322,7 @@ export async function POST(request: NextRequest) {
         })
 
         const currentReserved = currentStock._sum.quantity || 0
-        const availableStock = saleType === 'PROFILES' 
+        /* const availableStock = saleType === 'PROFILES' 
           ? await db.accountProfile.count({
               where: {
                     streamingAccountId: streamingAccountId,
@@ -334,7 +334,7 @@ export async function POST(request: NextRequest) {
                     streamingAccountId: streamingAccountId,
                     isAvailable: true
                   }
-                })
+                }) */
 
         const realAvailable = availableStock - currentReserved
         
@@ -356,14 +356,14 @@ export async function POST(request: NextRequest) {
           },
           update: {
             quantity: newQuantity,
-            expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+            expiresAt: new Date(Date.now() + 5 * 60 * 1000)
           },
           create: {
             userId,
             accountId: streamingAccountId,
             accountType: 'STREAMING',
             quantity: newQuantity,
-            expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+            expiresAt: new Date(Date.now() + 5 * 60 * 1000)
           }
         })
 
@@ -372,7 +372,7 @@ export async function POST(request: NextRequest) {
           where: { id: existingItem.id },
           data: {
             quantity: newQuantity,
-            reservationExpiresAt: new Date(Date.now() + 10 * 60 * 1000)
+            reservationExpiresAt: new Date(Date.now() + 5 * 60 * 1000)
           }
         })
 
@@ -392,14 +392,14 @@ export async function POST(request: NextRequest) {
           },
           update: {
             quantity: quantity || 1,
-            expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+            expiresAt: new Date(Date.now() + 5 * 60 * 1000)
           },
           create: {
             userId,
             accountId: streamingAccountId,
             accountType: 'STREAMING',
             quantity: quantity || 1,
-            expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+            expiresAt: new Date(Date.now() + 5 * 60 * 1000)
           }
         })
 
@@ -415,7 +415,7 @@ export async function POST(request: NextRequest) {
             quantity: quantity || 1,
             saleType: saleType || 'FULL',
             priceAtTime,
-            reservationExpiresAt: new Date(Date.now() + 10 * 60 * 1000)
+            reservationExpiresAt: new Date(Date.now() + 5 * 60 * 1000)
           }
         })
 

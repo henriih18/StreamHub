@@ -244,7 +244,7 @@ async function updateCartTotal(cartId: string) {
             where: { id: currentReservation.id },
             data: {
               quantity: quantity,
-              expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 10 minutos
+              expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 5 minutos
             }
           })
         } else {
@@ -425,64 +425,56 @@ export async function DELETE(
   try {
     const resolvedParams = await params
     
-    // 🔥 OBTENER EL ITEM ANTES DE ELIMINAR
+    // 🔥 VERIFICAR PRIMERO SI EL ITEM EXISTE
     const cartItem = await db.cartItem.findUnique({
       where: { id: resolvedParams.id },
       include: {
-        cart: {
-          select: {
-            userId: true
-          }
-        }
+        cart: { select: { userId: true } }
       }
     })
 
+    // 🎯 CASO 1: Item ya no existe (eliminado por limpieza)
     if (!cartItem) {
-      return NextResponse.json(
-        { error: 'Artículo del carrito no encontrado' },
-        { status: 404 }
-      )
-    }
-
-    // 🔥 ELIMINAR LA RESERVA PRIMERO (importante que el item)
-    if (cartItem.streamingAccountId && cartItem.cart) {
-      await db.stockReservation.deleteMany({
-        where: {
-          userId: cartItem.cart.userId,
-          accountId: cartItem.streamingAccountId,
-          accountType: 'STREAMING'
-        }
+      return NextResponse.json({ 
+        success: true,
+        message: 'El artículo ya expiró y fue eliminado automáticamente',
+        alreadyDeleted: true,
+        autoCleaned: true
       })
     }
 
-    if (cartItem.exclusiveAccountId && cartItem.cart) {
-      await db.stockReservation.deleteMany({
-        where: {
-          userId: cartItem.cart.userId,
-          accountId: cartItem.exclusiveAccountId,
-          accountType: 'EXCLUSIVE'
-        }
-      })
-    }
+    // 🎯 CASO 2: Item existe, eliminar manualmente
+    await db.$transaction(async (tx) => {
+      // Eliminar reserva
+      if (cartItem.streamingAccountId && cartItem.cart) {
+        await tx.stockReservation.deleteMany({
+          where: {
+            userId: cartItem.cart.userId,
+            accountId: cartItem.streamingAccountId,
+            accountType: 'STREAMING'
+          }
+        })
+      }
 
-    // 🔥 ELIMINAR EL ITEM DEL CARRITO
-    await db.cartItem.delete({
-      where: { id: resolvedParams.id }
+      // Eliminar item
+      await tx.cartItem.delete({
+        where: { id: resolvedParams.id }
+      })
+
+      // Actualizar total
+      if (cartItem.cartId) {
+        await updateCartTotal(cartItem.cartId, tx)
+      }
     })
 
-    // 🔥 ACTUALIZAR EL TOTAL DEL CARRITO
-    if (cartItem.cartId) {
-      await updateCartTotal(cartItem.cartId)
-    }
-
-    // 🔥 RETORNAR INFORMACIÓN DETALLADA PARA EL FRONTEND
     return NextResponse.json({ 
-      message: 'Artículo eliminado del carrito',
+      success: true,
+      message: 'Artículo eliminado exitosamente',
       itemName: cartItem.streamingAccountId ? 'Streaming Account' : 'Exclusive Account',
-      itemId: cartItem.id,
-      cartId: cartItem.cartId,
-      userId: cartItem.cart?.userId
+      alreadyDeleted: false,
+      manuallyDeleted: true
     })
+
   } catch (error) {
     console.error('Error removing cart item:', error)
     return NextResponse.json(
@@ -492,11 +484,12 @@ export async function DELETE(
   }
 }
 
-async function updateCartTotal(cartId: string) {
-  const items = await db.cartItem.findMany({
+async function updateCartTotal(cartId: string, tx: any = db) {
+  const items = await tx.cartItem.findMany({
     where: { cartId },
-    include: {
-      streamingAccount: true
+    select: {
+      priceAtTime: true,
+      quantity: true
     }
   })
 
@@ -504,7 +497,7 @@ async function updateCartTotal(cartId: string) {
     return total + (item.priceAtTime * item.quantity)
   }, 0)
 
-  await db.cart.update({
+  await tx.cart.update({
     where: { id: cartId },
     data: { totalAmount }
   })

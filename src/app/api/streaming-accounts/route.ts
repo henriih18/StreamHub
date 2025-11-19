@@ -65,13 +65,21 @@ export async function GET(request: NextRequest) {
         const realProfileStock = Math.max(0, (account.profileStocks?.length || 0) - reservedQuantity)
 
         // Actualizar los arrays de stock con cantidades reales
-        const updatedAccountStocks = Array(realAccountStock).fill(null).map((_, index) => 
+        /* const updatedAccountStocks = Array(realAccountStock).fill(null).map((_, index) => 
           account.accountStocks[index] || { id: `temp-${index}`, isAvailable: true }
         )
         
         const updatedProfileStocks = Array(realProfileStock).fill(null).map((_, index) => 
           account.profileStocks[index] || { id: `temp-${index}`, isAvailable: true }
-        )
+        ) */
+
+        const updatedAccountStocks = account.accountStocks
+  .filter(stock => stock.isAvailable)
+  .slice(0, realAccountStock)
+
+const updatedProfileStocks = account.profileStocks
+  .filter(stock => stock.isAvailable)
+  .slice(0, realProfileStock)
 
         return {
           ...account,
