@@ -36,7 +36,7 @@ export function useRealTimeUpdates({
         rememberUpgrade: true,
         timeout: 20000,
         forceNew: true,
-         reconnection: true,
+        reconnection: true,
         reconnectionAttempts: 5,
         reconnectionDelay: 1000,
       });
@@ -44,40 +44,48 @@ export function useRealTimeUpdates({
       socketRef.current = socket;
 
       useEffect(() => {
-  if (!socket || !userId) return
+        if (!socket || !userId) return;
 
-  socket.on('cartItemExpired', (_data) => {
-    /* toast.error(data.message, {
-      duration: 5000,
-      description: 'El tiempo de reserva ha expirado'
-    }) */
-    
-    // Disparar evento para actualizar el carrito
-    window.dispatchEvent(new CustomEvent('cartUpdated'))
-  })
+        socket.on("cartItemExpired", (_data) => {
+          // Disparar evento para actualizar el carrito
+          window.dispatchEvent(new CustomEvent("cartUpdated"));
+        });
 
-  return () => {
-    socket.off('cartItemExpired')
-  }
-}, [socket, userId])
+        return () => {
+          socket.off("cartItemExpired");
+        };
+      }, [socket, userId]);
+
+      useEffect(() => {
+        if (!socket || !userId) return;
+
+        socket.on("cartItemExpired", (_data) => {
+          // Disparar evento para actualizar el carrito
+          window.dispatchEvent(new CustomEvent("cartUpdated"));
+        });
+
+        return () => {
+          socket.off("cartItemExpired");
+        };
+      }, [socket, userId]);
 
       socket.on("connect", () => {
-        console.log('WebSocket connected')
+        console.log("WebSocket connected");
         reconnectAttempts.current = 0;
 
         // Register for updates
         if (userId) {
-          console.log('👤 Registrando usuario:', userId);
+          console.log("👤 Registrando usuario:", userId);
           socket.emit("registerUser", userId);
         }
         if (isAdmin) {
-          console.log('👑 Registrando admin'); 
+          console.log("👑 Registrando admin");
           socket.emit("registerAdmin");
         }
       });
 
       socket.on("disconnect", (reason) => {
-        console.log('WebSocket disconnected:', reason)
+        console.log("WebSocket disconnected:", reason);
 
         // Attempt to reconnect
         if (reconnectAttempts.current < maxReconnectAttempts) {
@@ -100,8 +108,9 @@ export function useRealTimeUpdates({
       });
 
       socket.on("stockUpdated", (stockData: any) => {
-         console.log('Stock updated:', stockData)
+        console.log("Stock updated:", stockData);
         onStockUpdate?.(stockData);
+        window.dispatchEvent(new CustomEvent('stockUpdated', { detail: stockData }));
       });
 
       socket.on("accountUpdated", (accountData: any) => {
@@ -112,6 +121,12 @@ export function useRealTimeUpdates({
       socket.on("orderUpdated", (orderData: any) => {
         // console.log('Order updated:', orderData)
         onOrderUpdate?.(orderData);
+      });
+
+      socket.on("stockCleaned", (data: any) => {
+        console.log("🧹 Stock limpiado:", data);
+        // Forzar refresh de cuentas cuando se limpia una reserva
+        window.dispatchEvent(new CustomEvent("stockCleaned", { detail: data }));
       });
 
       socket.on("messageUpdate", (messageData: { unreadCount: number }) => {
@@ -133,6 +148,7 @@ export function useRealTimeUpdates({
 
   const disconnect = useCallback(() => {
     if (socketRef.current) {
+      socketRef.current.off("stockCleaned");
       socketRef.current.disconnect();
       socketRef.current = null;
     }

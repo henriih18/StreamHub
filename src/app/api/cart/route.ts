@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getIO, broadcastStockUpdate } from '@/lib/socket'
 
 export async function GET(request: NextRequest) {
   try {
@@ -421,6 +422,21 @@ export async function POST(request: NextRequest) {
 
         // Update cart total
         await updateCartTotal(cartToUse.id)
+
+        // Emitir actualización de stock en tiempo real
+const io = getIO()
+if (io) {
+  const currentStock = saleType === 'PROFILES' 
+    ? (streamingAccount.profileStocks?.filter(stock => stock.isAvailable).length || 0)
+    : (streamingAccount.accountStocks?.filter(stock => stock.isAvailable).length || 0)
+  
+  broadcastStockUpdate(io, {
+    accountId: streamingAccountId,
+    accountType: 'regular',
+    type: saleType,
+    newStock: Math.max(0, currentStock - (quantity || 1))
+  })
+}
 
         return NextResponse.json(cartItem, { status: 201 })
       }

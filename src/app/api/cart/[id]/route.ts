@@ -1,5 +1,7 @@
  import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getIO, broadcastStockUpdate } from '@/lib/socket'
+
 /*
 export async function PUT(
   request: NextRequest,
@@ -270,6 +272,31 @@ async function updateCartTotal(cartId: string) {
       // Update cart total
       await updateCartTotal(cartItem.cartId)
 
+      // Emitir actualización de stock en tiempo real
+const io = getIO()
+if (io && cartItem.streamingAccount) {
+  const currentStock = cartItem.saleType === 'PROFILES'
+    ? await tx.accountProfile.count({
+        where: {
+          streamingAccountId: cartItem.streamingAccountId,
+          isAvailable: true
+        }
+      })
+    : await tx.accountStock.count({
+        where: {
+          streamingAccountId: cartItem.streamingAccountId,
+          isAvailable: true
+        }
+      })
+  
+  broadcastStockUpdate(io, {
+    accountId: cartItem.streamingAccountId,
+    accountType: 'regular',
+    type: cartItem.saleType,
+    newStock: Math.max(0, currentStock - quantity)
+  })
+}
+
       return NextResponse.json(updatedCartItem)
     } catch (error) {
       console.error('Error updating cart item:', error)
@@ -465,6 +492,31 @@ export async function DELETE(
       if (cartItem.cartId) {
         await updateCartTotal(cartItem.cartId, tx)
       }
+
+      // Emitir actualización de stock en tiempo real
+const io = getIO()
+if (io && cartItem.streamingAccountId) {
+  const currentStock = cartItem.saleType === 'PROFILES'
+    ? await tx.accountProfile.count({
+        where: {
+          streamingAccountId: cartItem.streamingAccountId,
+          isAvailable: true
+        }
+      })
+    : await tx.accountStock.count({
+        where: {
+          streamingAccountId: cartItem.streamingAccountId,
+          isAvailable: true
+        }
+      })
+  
+  broadcastStockUpdate(io, {
+    accountId: cartItem.streamingAccountId,
+    accountType: 'regular',
+    type: cartItem.saleType,
+    newStock: currentStock
+  })
+}
     })
 
     return NextResponse.json({ 

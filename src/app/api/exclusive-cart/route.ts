@@ -192,6 +192,7 @@ async function updateCartTotal(cartId: string) {
 
   import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getIO, broadcastStockUpdate } from '@/lib/socket'
 
 export async function GET(request: NextRequest) {
   try {
@@ -386,6 +387,19 @@ export async function POST(request: NextRequest) {
 
       // Update cart total
       await updateCartTotal(cart.id)
+
+      // Emitir actualización de stock en tiempo real
+const io = getIO()
+if (io) {
+  const currentStock = exclusiveAccount.exclusiveStocks?.length || 0
+  
+  broadcastStockUpdate(io, {
+    accountId: exclusiveAccountId,
+    accountType: 'exclusive',
+    type: exclusiveAccount.saleType,
+    newStock: Math.max(0, currentStock - newQuantity)
+  })
+}
       
       return NextResponse.json(updatedItem)
     } else {
@@ -413,6 +427,19 @@ export async function POST(request: NextRequest) {
 
       // Update cart total
       await updateCartTotal(cart.id)
+
+      // Emitir actualización de stock en tiempo real
+const io = getIO()
+if (io) {
+  const currentStock = exclusiveAccount.exclusiveStocks?.length || 0
+  
+  broadcastStockUpdate(io, {
+    accountId: exclusiveAccountId,
+    accountType: 'exclusive',
+    type: exclusiveAccount.saleType,
+    newStock: Math.max(0, currentStock - quantity)
+  })
+}
 
       return NextResponse.json(cartItem, { status: 201 })
     }

@@ -10,6 +10,8 @@ interface QuantitySelectorProps {
   min?: number
   max?: number
   size?: "sm" | "md" | "lg"
+
+  disabled?: boolean
 }
 
 export function QuantitySelector({ 

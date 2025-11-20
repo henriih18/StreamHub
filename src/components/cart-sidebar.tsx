@@ -66,8 +66,8 @@ interface CartSidebarProps {
   userCredits?: number;
   userId?: string;
   onPaymentSuccess?: (newCredits: number) => void;
-  fetchCart?: () => void; // 🔥 AÑADIR ESTA FUNCIÓN
-  fetchStreamingAccounts?: () => void; // 🔥 AÑADIR ESTA FUNCIÓN
+  fetchCart?: () => void;
+  fetchStreamingAccounts?: () => void;
 }
 
 export function CartSidebar({
@@ -98,7 +98,7 @@ export function CartSidebar({
     0
   );
 
-  // 🔥 WEBSOCKET: Escuchar notificaciones de expiración
+  //  WEBSOCKET: Escuchar notificaciones de expiración
   useEffect(() => {
     const socket = io()
 
@@ -140,6 +140,21 @@ export function CartSidebar({
       socket.off('stockUpdated')
     }
   }, [fetchCart, fetchStreamingAccounts])
+
+  useEffect(() => {
+  const handleCartUpdate = () => {
+    if (userId) {
+      fetchCart?.();
+      fetchStreamingAccounts?.();
+    }
+  };
+
+  window.addEventListener('cartUpdated', handleCartUpdate);
+  
+  return () => {
+    window.removeEventListener('cartUpdated', handleCartUpdate);
+  };
+}, [userId, fetchCart, fetchStreamingAccounts]);
 
   const handleCheckout = async () => {
     if (!userId) {
@@ -444,12 +459,12 @@ export function CartSidebar({
                             { maximumFractionDigits: 0 }
                           )}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        {/* <p className="text-xs text-gray-500">
                           $                           {item.priceAtTime.toLocaleString("es-CO", {
                             maximumFractionDigits: 0,
                           })}{" "}
                           c/u
-                        </p>
+                        </p> */}
                       </div>
                     </div>
                   </div>

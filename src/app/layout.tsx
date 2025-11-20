@@ -28,8 +28,6 @@ export const metadata: Metadata = {
     "Disney+",
     "HBO Max",
     "Cuentas Premium",
-    "Next.js",
-    "TypeScript",
   ],
   authors: [{ name: "StreamHub Team" }],
   icons: {

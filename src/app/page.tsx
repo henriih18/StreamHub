@@ -91,7 +91,7 @@ export default function Home() {
       // Trigger navigation update when message count changes
       window.dispatchEvent(new CustomEvent("messagesUpdated"));
     },
-    onStockUpdate: (stockData) => {
+    /* onStockUpdate: (stockData) => {
       setStreamingAccounts((prev) =>
         prev.map((account) => {
           if (account.id === stockData.accountId) {
@@ -128,8 +128,56 @@ export default function Home() {
           return account;
         })
       );
-    },
+    }, */
+
+    onStockUpdate: (stockData) => {
+  console.log('📦 Stock update recibido:', stockData)
+  
+  setStreamingAccounts((prev) => {
+    const updated = prev.map((account) => {
+      if (account.id === stockData.accountId) {
+        const updatedAccount = { ...account };
+
+        if (stockData.accountType === "exclusive") {
+          // Update exclusive stock
+          updatedAccount.exclusiveStocks =
+            account.exclusiveStocks?.map((stock, index) =>
+              index < stockData.newStock
+                ? { ...stock, isAvailable: true }
+                : { ...stock, isAvailable: false }
+            ) || [];
+        } else if (stockData.type === "PROFILES") {
+          // Update regular profile stock
+          updatedAccount.profileStocks =
+            account.profileStocks?.map((stock, index) =>
+              index < stockData.newStock
+                ? { ...stock, isAvailable: true }
+                : { ...stock, isAvailable: false }
+            ) || [];
+        } else {
+          // Update regular account stock
+          updatedAccount.accountStocks =
+            account.accountStocks?.map((stock, index) =>
+              index < stockData.newStock
+                ? { ...stock, isAvailable: true }
+                : { ...stock, isAvailable: false }
+            ) || [];
+        }
+
+        return updatedAccount;
+      }
+      return account;
+    });
+    
+    // Forzar re-render creando nuevo array
+    return [...updated];
   });
+},
+  });
+
+  
+
+  
 
   // Check authentication on mount (optional)
   /* useEffect(() => {
@@ -179,24 +227,22 @@ export default function Home() {
   };
 }, []); */
 
-useEffect(() => {
-  const storedUser = localStorage.getItem("user");
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
 
-  if (storedUser) {
-    try {
-      const parsedUser = JSON.parse(storedUser);
-      if (parsedUser?.id) {
-        setUser(parsedUser);
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser?.id) {
+          setUser(parsedUser);
+        }
+      } catch (error) {
+        localStorage.removeItem("user");
       }
-    } catch (error) {
-      localStorage.removeItem("user");
     }
-  }
 
-  setIsLoading(false);
-}, []);
-
-
+    setIsLoading(false);
+  }, []);
 
   /* const fetchAccounts = async () => {
     try {
@@ -277,24 +323,24 @@ useEffect(() => {
     }
   }; */
 
-    const fetchAccounts = async () => {
-      try {
-        const userId = user?.id || null;
-        const url = userId
-          ? `/api/streaming-accounts?userId=${userId}`
-          : "/api/streaming-accounts";
-        const response = await fetch(url);
-        if (response.ok) {
-          const data = await response.json();
+  const fetchAccounts = async () => {
+    try {
+      const userId = user?.id || null;
+      const url = userId
+        ? `/api/streaming-accounts?userId=${userId}`
+        : "/api/streaming-accounts";
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
 
-          // Iniciar con todas las cuentas (ya vienen con precios ajustados por rol)
-          let allAccounts = [
-            ...(data.exclusiveAccounts || []),
-            ...(data.regularAccounts || []),
-          ];
+        // Iniciar con todas las cuentas (ya vienen con precios ajustados por rol)
+        let allAccounts = [
+          ...(data.exclusiveAccounts || []),
+          ...(data.regularAccounts || []),
+        ];
 
-          // Aplicar ofertas especiales (el backend ya aplicó precios de vendedor si corresponde)
-          /* if (data.specialOffers) {
+        // Aplicar ofertas especiales (el backend ya aplicó precios de vendedor si corresponde)
+        /* if (data.specialOffers) {
             data.specialOffers.forEach((offer: any) => {
               if (offer.streamingAccount) {
                 // Find if account already exists in our array
@@ -329,7 +375,7 @@ useEffect(() => {
             });
           } */
 
-            if (data.specialOffers) {
+        if (data.specialOffers) {
           data.specialOffers.forEach((offer: any) => {
             if (offer.streamingAccount) {
               // Find if account already exists in our array
@@ -342,7 +388,9 @@ useEffect(() => {
                 allAccounts[existingAccountIndex] = {
                   ...allAccounts[existingAccountIndex],
                   specialOffer: offer,
-                  originalPrice: offer.streamingAccount.originalPrice || offer.streamingAccount.price,
+                  originalPrice:
+                    offer.streamingAccount.originalPrice ||
+                    offer.streamingAccount.price,
                   // 🔥 ELIMINADO: No calcular precio aquí, el backend ya lo hizo
                 };
               } else {
@@ -350,7 +398,9 @@ useEffect(() => {
                 allAccounts.push({
                   ...offer.streamingAccount,
                   specialOffer: offer,
-                  originalPrice: offer.streamingAccount.originalPrice || offer.streamingAccount.price,
+                  originalPrice:
+                    offer.streamingAccount.originalPrice ||
+                    offer.streamingAccount.price,
                   // 🔥 ELIMINADO: No calcular precio aquí, el backend ya lo hizo
                 });
               }
@@ -358,38 +408,79 @@ useEffect(() => {
           });
         }
 
-          // Sort accounts: exclusive accounts first, then regular accounts
-          allAccounts = allAccounts.sort((a: any, b: any) => {
-            // Only priority: exclusive accounts first, regular accounts after
-            const aIsExclusive =
-              !a.streamingType && !a.accountStocks && !a.profileStocks;
-            const bIsExclusive =
-              !b.streamingType && !b.accountStocks && !b.profileStocks;
+        // Sort accounts: exclusive accounts first, then regular accounts
+        allAccounts = allAccounts.sort((a: any, b: any) => {
+          // Only priority: exclusive accounts first, regular accounts after
+          const aIsExclusive =
+            !a.streamingType && !a.accountStocks && !a.profileStocks;
+          const bIsExclusive =
+            !b.streamingType && !b.accountStocks && !b.profileStocks;
 
-            if (aIsExclusive && !bIsExclusive) return -1;
-            if (!aIsExclusive && bIsExclusive) return 1;
+          if (aIsExclusive && !bIsExclusive) return -1;
+          if (!aIsExclusive && bIsExclusive) return 1;
 
-            return 0; // Keep original order within each category
-          });
-          setStreamingAccounts(allAccounts);
-          setFilteredAccounts(allAccounts);
-        }
-      } catch (error) {
-        setStreamingAccounts([]);
-        setFilteredAccounts([]);
+          return 0; // Keep original order within each category
+        });
+        setStreamingAccounts(allAccounts);
+        setFilteredAccounts(allAccounts);
       }
-    };
+    } catch (error) {
+      setStreamingAccounts([]);
+      setFilteredAccounts([]);
+    }
+  };
 
+  // Forzar refresh cuando se limpia stock
+/* useEffect(() => {
+  const handleStockCleaned = () => {
+    console.log('🔄 Refrescando cuentas por limpieza');
+    fetchAccounts();
+  };
+
+  window.addEventListener('stockCleaned', handleStockCleaned);
+  
+  return () => {
+    window.removeEventListener('stockCleaned', handleStockCleaned);
+  };
+}, [fetchAccounts]); */
+
+  
   // Fetch streaming accounts from API
   /* useEffect(() => {
     fetchAccounts();
   }, [user?.id, user?.role]); */
+  /* useEffect(() => {
+    if (!user) return;
+    fetchAccounts();
+    console.log("👀 user en page.tsx:", user);
+  }, [user]); */
+
   useEffect(() => {
   if (!user) return;
   fetchAccounts();
   console.log("👀 user en page.tsx:", user);
-}, [user]);
+}, [user]); // Mantener este para el fetch inicial
 
+// 🔥 AGREGAR ESTE useEffect para actualizaciones de stock
+useEffect(() => {
+  const handleStockUpdate = () => {
+    console.log('🔄 Actualizando cuentas por cambio de stock');
+    fetchAccounts();
+  };
+
+  const handleStockCleaned = () => {
+    console.log('🔄 Actualizando cuentas por limpieza de stock');
+    fetchAccounts();
+  };
+
+  window.addEventListener('stockUpdated', handleStockUpdate);
+  window.addEventListener('stockCleaned', handleStockCleaned);
+  
+  return () => {
+    window.removeEventListener('stockUpdated', handleStockUpdate);
+    window.removeEventListener('stockCleaned', handleStockCleaned);
+  };
+}, [user]); // Depender de user para tener acceso a fetchAccounts
 
   // Fetch cart items if user is logged in
   useEffect(() => {
@@ -565,34 +656,38 @@ useEffect(() => {
   }; */
 
   const getAvailableStock = (account: StreamingAccount): number => {
-  // For exclusive accounts, check if they have any exclusiveStocks
-  const isExclusiveAccount =
-    !account.streamingType &&
-    !account.accountStocks &&
-    !account.profileStocks;
-  
-  if (isExclusiveAccount) {
-    // For exclusive accounts, we'd need to check reservations too
-    return 999; // Assume unlimited for exclusive accounts for now
-  }
+    // For exclusive accounts, check if they have any exclusiveStocks
+    const isExclusiveAccount =
+      !account.streamingType &&
+      !account.accountStocks &&
+      !account.profileStocks;
 
-  // 🔥 NUEVO: Considerar stock físico vs stock en carrito
-  const physicalStock = account.saleType === "PROFILES"
-    ? (account.profileStocks?.filter((stock) => stock.isAvailable).length || 0)
-    : (account.accountStocks?.filter((stock) => stock.isAvailable).length || 0);
+    if (isExclusiveAccount) {
+      // For exclusive accounts, we'd need to check reservations too
+      return 999; // Assume unlimited for exclusive accounts for now
+    }
 
-  // 🔥 NUEVO: Buscar si este item está en el carrito del usuario
-  const cartItem = cartItems.find(item => 
-    item.streamingAccount?.id === account.id && 
-    item.saleType === account.saleType
-  );
+    // 🔥 NUEVO: Considerar stock físico vs stock en carrito
+    const physicalStock =
+      account.saleType === "PROFILES"
+        ? account.profileStocks?.filter((stock) => stock.isAvailable).length ||
+          0
+        : account.accountStocks?.filter((stock) => stock.isAvailable).length ||
+          0;
 
-  // 🔥 NUEVO: Calcular stock real considerando lo que está en el carrito
-  const reservedInCart = cartItem ? cartItem.quantity : 0;
-  const realAvailableStock = physicalStock - reservedInCart;
+    // 🔥 NUEVO: Buscar si este item está en el carrito del usuario
+    const cartItem = cartItems.find(
+      (item) =>
+        item.streamingAccount?.id === account.id &&
+        item.saleType === account.saleType
+    );
 
-  return Math.max(0, realAvailableStock); // 🔥 NUEVO: Nunca negativo
-};
+    // 🔥 NUEVO: Calcular stock real considerando lo que está en el carrito
+    const reservedInCart = cartItem ? cartItem.quantity : 0;
+    const realAvailableStock = physicalStock - reservedInCart;
+
+    return Math.max(0, realAvailableStock); // 🔥 NUEVO: Nunca negativo
+  };
 
   const addToCart = async (account: StreamingAccount, quantity: number = 1) => {
     if (!user) {

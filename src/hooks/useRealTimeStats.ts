@@ -41,7 +41,7 @@ export function useRealTimeStats() {
 
     const socket = io(process.env.NEXT_PUBLIC_WS_URL!, {  
       path: "/api/socketio",
-      transports: ["websocket"],
+      transports: ["websocket", "polling"],
     });
 
     // Initialize socket connection

@@ -242,7 +242,7 @@ export function StreamingCard({
               <img
                 src={account.streamingType.imageUrl}
                 alt={account.type}
-                className="w-8 h-8 rounded-lg object-cover border-2 border-white/20 shadow-lg"
+                className="w-10 h-10 rounded-lg object-cover border-2 border-white/20 shadow-lg"
               />
             ) : account.streamingType?.color &&
               account.streamingType.color.startsWith("#") ? (
