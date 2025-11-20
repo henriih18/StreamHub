@@ -130,52 +130,81 @@ export default function Home() {
       );
     }, */
 
-    onStockUpdate: (stockData) => {
+   onStockUpdate: (stockData) => {
   console.log('📦 Stock update recibido:', stockData)
   
   setStreamingAccounts((prev) => {
-    const updated = prev.map((account) => {
+    const updatedAccounts = prev.map((account) => {
       if (account.id === stockData.accountId) {
-        const updatedAccount = { ...account };
-
-        if (stockData.accountType === "exclusive") {
-          // Update exclusive stock
-          updatedAccount.exclusiveStocks =
-            account.exclusiveStocks?.map((stock, index) =>
+        console.log('🔄 Actualizando cuenta:', account.name, 'newStock:', stockData.newStock);
+        
+        // 🔥 CLAVE: Crear nuevos arrays para forzar detección de cambios
+        const newAccountStocks = stockData.accountType === "exclusive" 
+          ? account.exclusiveStocks 
+          : stockData.type === "PROFILES"
+            ? account.profileStocks?.map((stock, index) =>
+                index < stockData.newStock
+                  ? { ...stock, isAvailable: true }
+                  : { ...stock, isAvailable: false }
+              ) || []
+            : account.accountStocks?.map((stock, index) =>
+                index < stockData.newStock
+                  ? { ...stock, isAvailable: true }
+                  : { ...stock, isAvailable: false }
+              ) || [];
+        
+        const newProfileStocks = stockData.type === "PROFILES"
+          ? account.profileStocks?.map((stock, index) =>
               index < stockData.newStock
                 ? { ...stock, isAvailable: true }
                 : { ...stock, isAvailable: false }
-            ) || [];
-        } else if (stockData.type === "PROFILES") {
-          // Update regular profile stock
-          updatedAccount.profileStocks =
-            account.profileStocks?.map((stock, index) =>
+            ) || []
+          : account.profileStocks;
+        
+        const newExclusiveStocks = stockData.accountType === "exclusive"
+          ? account.exclusiveStocks?.map((stock, index) =>
               index < stockData.newStock
                 ? { ...stock, isAvailable: true }
                 : { ...stock, isAvailable: false }
-            ) || [];
-        } else {
-          // Update regular account stock
-          updatedAccount.accountStocks =
-            account.accountStocks?.map((stock, index) =>
-              index < stockData.newStock
-                ? { ...stock, isAvailable: true }
-                : { ...stock, isAvailable: false }
-            ) || [];
-        }
-
-        return updatedAccount;
+            ) || []
+          : account.exclusiveStocks;
+        
+        // 🔥 CLAVE: Devolver completamente nueva cuenta con arrays nuevos
+        return {
+          ...account,
+          accountStocks: newAccountStocks,
+          profileStocks: newProfileStocks,
+          exclusiveStocks: newExclusiveStocks
+        };
       }
       return account;
     });
     
-    // Forzar re-render creando nuevo array
-    return [...updated];
+    // 🔥 CLAVE: Forzar completamente nuevo array
+    return [...updatedAccounts];
   });
 },
   });
 
+  useEffect(() => {
+  const handleStockUpdate = () => {
+    console.log('🔄 Evento de stock recibido, refrescando...');
+    fetchAccounts();
+  };
+
+  const handleStockCleaned = () => {
+    console.log('🧹 Limpieza de stock recibida, refrescando...');
+    fetchAccounts();
+  };
+
+  window.addEventListener('stockUpdated', handleStockUpdate);
+  window.addEventListener('stockCleaned', handleStockCleaned);
   
+  return () => {
+    window.removeEventListener('stockUpdated', handleStockUpdate);
+    window.removeEventListener('stockCleaned', handleStockCleaned);
+  };
+}, [user]); // Depender de user para tener fetchAccounts disponible
 
   
 
@@ -329,9 +358,15 @@ export default function Home() {
       const url = userId
         ? `/api/streaming-accounts?userId=${userId}`
         : "/api/streaming-accounts";
+
+        console.log("🌐 URL:", url);
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
+
+        console.log("🌐 Datos recibidos:", data);
+      console.log("🌐 Regular accounts:", data.regularAccounts?.length);
+      console.log("🌐 Exclusive accounts:", data.exclusiveAccounts?.length);
 
         // Iniciar con todas las cuentas (ya vienen con precios ajustados por rol)
         let allAccounts = [
@@ -427,6 +462,7 @@ export default function Home() {
     } catch (error) {
       setStreamingAccounts([]);
       setFilteredAccounts([]);
+      console.error("🌐 Error en fetchAccounts:", error);
     }
   };
 
@@ -455,32 +491,14 @@ export default function Home() {
     console.log("👀 user en page.tsx:", user);
   }, [user]); */
 
-  useEffect(() => {
+useEffect(() => {
   if (!user) return;
   fetchAccounts();
   console.log("👀 user en page.tsx:", user);
-}, [user]); // Mantener este para el fetch inicial
+}, [user]);
 
-// 🔥 AGREGAR ESTE useEffect para actualizaciones de stock
-useEffect(() => {
-  const handleStockUpdate = () => {
-    console.log('🔄 Actualizando cuentas por cambio de stock');
-    fetchAccounts();
-  };
+// 🔥 AGREGAR ESTE useEffect para escuchar eventos de stock
 
-  const handleStockCleaned = () => {
-    console.log('🔄 Actualizando cuentas por limpieza de stock');
-    fetchAccounts();
-  };
-
-  window.addEventListener('stockUpdated', handleStockUpdate);
-  window.addEventListener('stockCleaned', handleStockCleaned);
-  
-  return () => {
-    window.removeEventListener('stockUpdated', handleStockUpdate);
-    window.removeEventListener('stockCleaned', handleStockCleaned);
-  };
-}, [user]); // Depender de user para tener acceso a fetchAccounts
 
   // Fetch cart items if user is logged in
   useEffect(() => {

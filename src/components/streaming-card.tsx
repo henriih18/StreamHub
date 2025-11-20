@@ -113,6 +113,8 @@ export function StreamingCard({
   // Calculate max quantity based on account type
   const maxQuantity = isExclusiveAccount ? exclusiveStock : availableStock;
 
+  
+
   const getGradientColor = (type: string, customColor?: string) => {
     // Si hay un color personalizado, crear un gradiente con ese color
     if (customColor) {
