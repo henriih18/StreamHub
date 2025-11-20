@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // 🔥 NUEVO: Calcular stock real considerando reservas
+    //Calcular stock real considerando reservas
     const accountsWithRealStock = await Promise.all(
       accounts.map(async (account) => {
         // Verificar reservas activas para esta cuenta
@@ -115,7 +115,6 @@ export async function GET(request: NextRequest) {
     // Get exclusive accounts
     let exclusiveAccounts: any[] = [];
 
-    // Build where condition based on whether user is logged in
     const whereCondition: any = {
       isActive: true,
       OR: [{ isPublic: true }],
@@ -157,7 +156,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // 🔥 NUEVO: Calcular stock real para cuentas exclusivas
+    //Calcular stock real para cuentas exclusivas
     const exclusiveAccountsWithRealStock = await Promise.all(
       exclusiveAccounts.map(async (account) => {
         // Verificar reservas activas para esta cuenta exclusiva
@@ -226,7 +225,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 🔥 NUEVO: Aplicar ofertas especiales a las cuentas con stock real
+    //Aplicar ofertas especiales a las cuentas con stock real
     const finalAccounts = processedAccounts.map((account) => {
       // Buscar si hay oferta especial para esta cuenta
       const matchingOffer = specialOffers.find(

@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       user: user,
     });
   } catch (error) {
-    //console.error('Error al obtener usuario:', error)
+    console.error('Error al obtener usuario:', error)
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }

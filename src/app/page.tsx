@@ -88,79 +88,78 @@ export default function Home() {
   useRealTimeUpdates({
     userId: user?.id,
     onMessageUpdate: (messageData) => {
-      // Trigger navigation update when message count changes
       window.dispatchEvent(new CustomEvent("messagesUpdated"));
     },
 
-    onStockUpdate: async (stockData) => {
-      console.log("📦 Stock update recibido:", stockData);
+    onStockUpdate: (stockData) => {
+      /* console.log("Stock update recibido:", stockData); */
 
-      // 🔥 NUEVO: Forzar recarga completa desde API para mantener consistencia
-      try {
-        const userId = user?.id || null;
-        const url = userId
-          ? `/api/streaming-accounts?userId=${userId}`
-          : "/api/streaming-accounts";
-        const response = await fetch(url);
+      setStreamingAccounts((prev) => {
+        const updatedAccounts = prev.map((account) => {
+          if (account.id === stockData.accountId) {
+            /* console.log(
+              "Actualizando cuenta:",
+              account.name,
+              "newStock:",
+              stockData.newStock
+            ); */
 
-        if (response.ok) {
-          const data = await response.json();
-          let allAccounts = [
-            ...(data.exclusiveAccounts || []),
-            ...(data.regularAccounts || []),
-          ];
+            //Actualizar arrays basados en newStock del WebSocket
+            let newAccountStocks = account.accountStocks || [];
+            let newProfileStocks = account.profileStocks || [];
+            let newExclusiveStocks = account.exclusiveStocks || [];
 
-          // Aplicar ofertas especiales
-          if (data.specialOffers) {
-            data.specialOffers.forEach((offer: any) => {
-              if (offer.streamingAccount) {
-                const existingAccountIndex = allAccounts.findIndex(
-                  (account) => account.id === offer.streamingAccount.id
-                );
+            if (stockData.accountType === "exclusive") {
+              // Para cuentas exclusivas
+              newExclusiveStocks =
+                account.exclusiveStocks?.map((stock, index) =>
+                  index < stockData.newStock
+                    ? { ...stock, isAvailable: true }
+                    : { ...stock, isAvailable: false }
+                ) || [];
+            } else if (stockData.type === "PROFILES") {
+              // Para perfiles
+              newProfileStocks =
+                account.profileStocks?.map((stock, index) =>
+                  index < stockData.newStock
+                    ? { ...stock, isAvailable: true }
+                    : { ...stock, isAvailable: false }
+                ) || [];
+            } else {
+              // Para cuentas completas
+              newAccountStocks =
+                account.accountStocks?.map((stock, index) =>
+                  index < stockData.newStock
+                    ? { ...stock, isAvailable: true }
+                    : { ...stock, isAvailable: false }
+                ) || [];
+            }
 
-                if (existingAccountIndex !== -1) {
-                  allAccounts[existingAccountIndex] = {
-                    ...allAccounts[existingAccountIndex],
-                    specialOffer: offer,
-                    originalPrice:
-                      offer.streamingAccount.originalPrice ||
-                      allAccounts[existingAccountIndex].price,
-                  };
-                }
-              }
-            });
+            // Devolver completamente nueva cuenta con arrays nuevos
+            return {
+              ...account,
+              accountStocks: newAccountStocks,
+              profileStocks: newProfileStocks,
+              exclusiveStocks: newExclusiveStocks,
+            };
           }
+          return account;
+        });
 
-          // Ordenar cuentas
-          allAccounts = allAccounts.sort((a: any, b: any) => {
-            const aIsExclusive =
-              !a.streamingType && !a.accountStocks && !a.profileStocks;
-            const bIsExclusive =
-              !b.streamingType && !b.accountStocks && !b.profileStocks;
-
-            if (aIsExclusive && !bIsExclusive) return -1;
-            if (!aIsExclusive && bIsExclusive) return 1;
-            return 0;
-          });
-
-          setStreamingAccounts(allAccounts);
-          setFilteredAccounts(allAccounts);
-          console.log("✅ Stock actualizado desde API");
-        }
-      } catch (error) {
-        console.error("❌ Error recargando stock:", error);
-      }
+        //Forzar completamente nuevo array
+        return [...updatedAccounts];
+      });
     },
   });
 
   useEffect(() => {
     const handleStockUpdate = () => {
-      console.log("🔄 Evento de stock recibido, refrescando...");
+      /* console.log("Evento de stock recibido, refrescando..."); */
       fetchAccounts();
     };
 
     const handleStockCleaned = () => {
-      console.log("🧹 Limpieza de stock recibida, refrescando...");
+      /* console.log("Limpieza de stock recibida, refrescando..."); */
       fetchAccounts();
     };
 
@@ -172,54 +171,6 @@ export default function Home() {
       window.removeEventListener("stockCleaned", handleStockCleaned);
     };
   }, [user]); // Depender de user para tener fetchAccounts disponible
-
-  // Check authentication on mount (optional)
-  /* useEffect(() => {
-    const checkAuth = () => {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        try {
-          const parsedUser = JSON.parse(storedUser);
-          if (parsedUser && parsedUser.id) {
-            setUser(parsedUser);
-          }
-        } catch (error) {
-          localStorage.removeItem("user");
-        }
-      }
-      setIsLoading(false);
-    };
-
-    checkAuth();
-  }, []); */
-
-  /* useEffect(() => {
-  const checkAuth = () => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        if (parsedUser && parsedUser.id) {
-          setUser(parsedUser);
-        }
-      } catch (error) {
-        localStorage.removeItem("user");
-      }
-    }
-    setIsLoading(false);
-  };
-
-  const handleUserLogin = (event: any) => {
-    setUser(event.detail);
-  };
-
-  checkAuth();
-  window.addEventListener('userLoggedIn', handleUserLogin);
-  
-  return () => {
-    window.removeEventListener('userLoggedIn', handleUserLogin);
-  };
-}, []); */
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -238,85 +189,6 @@ export default function Home() {
     setIsLoading(false);
   }, []);
 
-  /* const fetchAccounts = async () => {
-    try {
-      const userId = user?.id || null;
-      // console.log('Fetching accounts for userId:', userId)
-      const url = userId
-        ? `/api/streaming-accounts?userId=${userId}`
-        : "/api/streaming-accounts";
-      // console.log('API URL:', url)
-      const response = await fetch(url);
-      if (response.ok) {
-        const data = await response.json();
-        // console.log('API Response:', data)
-
-        // Start with all regular and exclusive accounts
-        let allAccounts = [
-          ...(data.exclusiveAccounts || []),
-          ...(data.regularAccounts || []),
-        ];
-
-        // console.log('All accounts before special offers:', allAccounts.length)
-
-        // Apply special offers to existing accounts instead of creating duplicates
-        if (data.specialOffers) {
-          data.specialOffers.forEach((offer: any) => {
-            if (offer.streamingAccount) {
-              // Find if the account already exists in our array
-              const existingAccountIndex = allAccounts.findIndex(
-                (account) => account.id === offer.streamingAccount.id
-              );
-
-              if (existingAccountIndex !== -1) {
-                // Update existing account with special offer
-                allAccounts[existingAccountIndex] = {
-                  ...allAccounts[existingAccountIndex],
-                  specialOffer: offer,
-                  originalPrice: offer.streamingAccount.price,
-                  price: offer.discountPercentage
-                    ? offer.streamingAccount.price *
-                      (1 - offer.discountPercentage / 100)
-                    : offer.specialPrice || offer.streamingAccount.price,
-                };
-              } else {
-                // If account doesn't exist (shouldn't happen), add it
-                allAccounts.push({
-                  ...offer.streamingAccount,
-                  specialOffer: offer,
-                  originalPrice: offer.streamingAccount.price,
-                  price: offer.discountPercentage
-                    ? offer.streamingAccount.price *
-                      (1 - offer.discountPercentage / 100)
-                    : offer.specialPrice || offer.streamingAccount.price,
-                });
-              }
-            }
-          });
-        }
-
-        // Sort accounts: exclusive accounts first, then regular accounts
-        allAccounts = allAccounts.sort((a: any, b: any) => {
-          // Only priority: exclusive accounts first, regular accounts after
-          const aIsExclusive =
-            !a.streamingType && !a.accountStocks && !a.profileStocks;
-          const bIsExclusive =
-            !b.streamingType && !b.accountStocks && !b.profileStocks;
-
-          if (aIsExclusive && !bIsExclusive) return -1;
-          if (!aIsExclusive && bIsExclusive) return 1;
-
-          return 0; // Keep original order within each category
-        });
-        setStreamingAccounts(allAccounts);
-        setFilteredAccounts(allAccounts);
-      }
-    } catch (error) {
-      setStreamingAccounts([]);
-      setFilteredAccounts([]);
-    }
-  }; */
-
   const fetchAccounts = async () => {
     try {
       const userId = user?.id || null;
@@ -324,14 +196,14 @@ export default function Home() {
         ? `/api/streaming-accounts?userId=${userId}`
         : "/api/streaming-accounts";
 
-      console.log("🌐 URL:", url);
+      /* console.log("URL:", url); */
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
 
-        console.log("🌐 Datos recibidos:", data);
-        console.log("🌐 Regular accounts:", data.regularAccounts?.length);
-        console.log("🌐 Exclusive accounts:", data.exclusiveAccounts?.length);
+        /* console.log("Datos recibidos:", data);
+        console.log("Regular accounts:", data.regularAccounts?.length);
+        console.log("Exclusive accounts:", data.exclusiveAccounts?.length); */
 
         // Iniciar con todas las cuentas (ya vienen con precios ajustados por rol)
         let allAccounts = [
@@ -342,39 +214,32 @@ export default function Home() {
         if (data.specialOffers) {
           data.specialOffers.forEach((offer: any) => {
             if (offer.streamingAccount) {
-              // Find if account already exists in our array
               const existingAccountIndex = allAccounts.findIndex(
                 (account) => account.id === offer.streamingAccount.id
               );
 
               if (existingAccountIndex !== -1) {
-                // Update existing account with special offer (solo para mostrar)
                 allAccounts[existingAccountIndex] = {
                   ...allAccounts[existingAccountIndex],
                   specialOffer: offer,
                   originalPrice:
                     offer.streamingAccount.originalPrice ||
                     offer.streamingAccount.price,
-                  // 🔥 ELIMINADO: No calcular precio aquí, el backend ya lo hizo
                 };
               } else {
-                // If account doesn't exist (shouldn't happen), add it
                 allAccounts.push({
                   ...offer.streamingAccount,
                   specialOffer: offer,
                   originalPrice:
                     offer.streamingAccount.originalPrice ||
                     offer.streamingAccount.price,
-                  // 🔥 ELIMINADO: No calcular precio aquí, el backend ya lo hizo
                 });
               }
             }
           });
         }
 
-        // Sort accounts: exclusive accounts first, then regular accounts
         allAccounts = allAccounts.sort((a: any, b: any) => {
-          // Only priority: exclusive accounts first, regular accounts after
           const aIsExclusive =
             !a.streamingType && !a.accountStocks && !a.profileStocks;
           const bIsExclusive =
@@ -383,7 +248,7 @@ export default function Home() {
           if (aIsExclusive && !bIsExclusive) return -1;
           if (!aIsExclusive && bIsExclusive) return 1;
 
-          return 0; // Keep original order within each category
+          return 0;
         });
         setStreamingAccounts(allAccounts);
         setFilteredAccounts(allAccounts);
@@ -395,37 +260,11 @@ export default function Home() {
     }
   };
 
-  // Forzar refresh cuando se limpia stock
-  /* useEffect(() => {
-  const handleStockCleaned = () => {
-    console.log('🔄 Refrescando cuentas por limpieza');
-    fetchAccounts();
-  };
-
-  window.addEventListener('stockCleaned', handleStockCleaned);
-  
-  return () => {
-    window.removeEventListener('stockCleaned', handleStockCleaned);
-  };
-}, [fetchAccounts]); */
-
-  // Fetch streaming accounts from API
-  /* useEffect(() => {
-    fetchAccounts();
-  }, [user?.id, user?.role]); */
-  /* useEffect(() => {
-    if (!user) return;
-    fetchAccounts();
-    console.log("👀 user en page.tsx:", user);
-  }, [user]); */
-
   useEffect(() => {
     if (!user) return;
     fetchAccounts();
-    console.log("👀 user en page.tsx:", user);
+    /* console.log("user en page.tsx:", user); */
   }, [user]);
-
-  // 🔥 AGREGAR ESTE useEffect para escuchar eventos de stock
 
   // Fetch cart items if user is logged in
   useEffect(() => {
@@ -453,8 +292,7 @@ export default function Home() {
       if (response.ok) {
         const cartData = await response.json();
         const formattedItems = cartData.items.map((item: any) => {
-          // Calculate available stock for this item
-          let availableStock = 99; // Default high value
+          let availableStock = 99;
 
           if (item.streamingAccount) {
             if (item.saleType === "PROFILES") {
@@ -469,7 +307,6 @@ export default function Home() {
                 ).length || 0;
             }
           } else if (item.exclusiveAccount) {
-            // For exclusive accounts, use exclusiveStocks
             availableStock =
               item.exclusiveAccount.exclusiveStocks?.filter(
                 (stock: any) => stock.isAvailable
@@ -489,18 +326,15 @@ export default function Home() {
   };
 
   const updateQuantity = async (itemId: string, quantity: number) => {
-    // Find the cart item to get account info
     const cartItem = cartItems.find((item) => item.id === itemId);
     if (!cartItem) {
       return;
     }
 
-    // Check stock availability
     if (
       cartItem.availableStock !== undefined &&
       cartItem.availableStock < quantity
     ) {
-      // You could show a toast here if needed
       return;
     }
 
@@ -563,56 +397,25 @@ export default function Home() {
     }
   }, [searchQuery, streamingAccounts]);
 
-  // Reset to page 1 when search changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
 
-  // Pagination logic
   const totalPages = Math.ceil((filteredAccounts || []).length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentAccounts = (filteredAccounts || []).slice(startIndex, endIndex);
 
-  /* const getAvailableStock = (account: StreamingAccount): number => {
-    // For exclusive accounts, check if they have any exclusiveStocks
-    const isExclusiveAccount =
-      !account.streamingType &&
-      !account.accountStocks &&
-      !account.profileStocks;
-    if (isExclusiveAccount) {
-      // Use actual exclusive stock count
-      return (
-        account.exclusiveStocks?.filter((stock) => stock.isAvailable).length ||
-        0
-      );
-    }
-
-    // For regular accounts
-    if (account.saleType === "PROFILES") {
-      return (
-        account.profileStocks?.filter((stock) => stock.isAvailable).length || 0
-      );
-    } else {
-      return (
-        account.accountStocks?.filter((stock) => stock.isAvailable).length || 0
-      );
-    }
-  }; */
-
   const getAvailableStock = (account: StreamingAccount): number => {
-    // For exclusive accounts, check if they have any exclusiveStocks
     const isExclusiveAccount =
       !account.streamingType &&
       !account.accountStocks &&
       !account.profileStocks;
 
     if (isExclusiveAccount) {
-      // For exclusive accounts, we'd need to check reservations too
-      return 999; // Assume unlimited for exclusive accounts for now
+      return 999;
     }
 
-    // 🔥 NUEVO: Considerar stock físico vs stock en carrito
     const physicalStock =
       account.saleType === "PROFILES"
         ? account.profileStocks?.filter((stock) => stock.isAvailable).length ||
@@ -620,18 +423,16 @@ export default function Home() {
         : account.accountStocks?.filter((stock) => stock.isAvailable).length ||
           0;
 
-    // 🔥 NUEVO: Buscar si este item está en el carrito del usuario
     const cartItem = cartItems.find(
       (item) =>
         item.streamingAccount?.id === account.id &&
         item.saleType === account.saleType
     );
 
-    // 🔥 NUEVO: Calcular stock real considerando lo que está en el carrito
     const reservedInCart = cartItem ? cartItem.quantity : 0;
     const realAvailableStock = physicalStock - reservedInCart;
 
-    return Math.max(0, realAvailableStock); // 🔥 NUEVO: Nunca negativo
+    return Math.max(0, realAvailableStock);
   };
 
   const addToCart = async (account: StreamingAccount, quantity: number = 1) => {
@@ -653,7 +454,6 @@ export default function Home() {
     }
 
     try {
-      // Check if it's an exclusive account
       const isExclusiveAccount =
         !account.streamingType &&
         !account.accountStocks &&
@@ -661,7 +461,6 @@ export default function Home() {
 
       let response;
       if (isExclusiveAccount) {
-        // Use exclusive cart API for exclusive accounts
         response = await fetch("/api/exclusive-cart", {
           method: "POST",
           headers: {
@@ -674,7 +473,6 @@ export default function Home() {
           }),
         });
       } else {
-        // Use regular cart API for streaming accounts
         response = await fetch("/api/cart", {
           method: "POST",
           headers: {
@@ -693,15 +491,10 @@ export default function Home() {
         // Refresh cart items
         await fetchCartItems();
 
-        // Show success notification
         const accountType =
           account.saleType === "PROFILES" ? "Perfil" : "Cuenta Completa";
         const quantityText = quantity > 1 ? `${quantity} unidades` : "1 unidad";
 
-        /* toast.success(`${accountType} "${account.name}" agregado al carrito`, {
-          description: `${quantityText} • $${account.price.toLocaleString('es-CO')} c/u`,
-          duration: 3000,
-        }) */
         toast.success(
           `${accountType} "${
             account.name
@@ -735,13 +528,11 @@ export default function Home() {
     setCartItems([]);
     localStorage.removeItem("user");
 
-    // Emit custom event to notify other components
     window.dispatchEvent(new CustomEvent("userLogout"));
 
     toast.success("Sesión cerrada correctamente");
   };
 
-  // Show loading screen while checking authentication
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 flex items-center justify-center">

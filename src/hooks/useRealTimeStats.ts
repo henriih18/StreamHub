@@ -38,18 +38,10 @@ export function useRealTimeStats() {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-
-    const socket = io(process.env.NEXT_PUBLIC_WS_URL!, {  
+    const socket = io(process.env.NEXT_PUBLIC_WS_URL!, {
       path: "/api/socketio",
       transports: ["websocket", "polling"],
     });
-
-    // Initialize socket connection
-    /* const socket = io("/api/socketio", {
-      transports: ["websocket", "polling"],
-      upgrade: true,
-      rememberUpgrade: true,
-    }); */
 
     socketRef.current = socket;
 

@@ -39,7 +39,7 @@ export async function PUT(
           },
         });
 
-        // 🔥 VERIFICACIONES DE SEGURIDAD
+        // VERIFICACIONES DE SEGURIDAD
         if (!cartItem) {
           return NextResponse.json(
             { error: "Artículo del carrito no encontrado" },
@@ -92,7 +92,7 @@ export async function PUT(
             _sum: { quantity: true },
           });
 
-          // 🔥 BUSCAR LA RESERVA ACTUAL DEL USUARIO
+          // BUSCAR LA RESERVA ACTUAL DEL USUARIO
           const currentReservation = await tx.stockReservation.findFirst({
             where: {
               userId: cartItem.cart.userId, //AHORA SÍ EXISTE
@@ -152,36 +152,9 @@ export async function PUT(
         await updateCartTotal(cartItem.cartId);
 
         // Emitir actualización de stock en tiempo real
-        /* const io = getIO();
-        if (io && cartItem.streamingAccount) {
-          const currentStock =
-            cartItem.saleType === "PROFILES"
-              ? await tx.accountProfile.count({
-                  where: {
-                    streamingAccountId: cartItem.streamingAccountId,
-                    isAvailable: true,
-                  },
-                })
-              : await tx.accountStock.count({
-                  where: {
-                    streamingAccountId: cartItem.streamingAccountId,
-                    isAvailable: true,
-                  },
-                });
-
-          broadcastStockUpdate(io, {
-            accountId: cartItem.streamingAccountId,
-            accountType: "regular",
-            type: cartItem.saleType,
-            newStock: Math.max(0, currentStock - quantity),
-          });
-        } */
-
-                  // Emitir actualización de stock en tiempo real
-                // Emitir actualización de stock en tiempo real
         const io = getIO();
         if (io && cartItem.streamingAccount) {
-          // 🔥 CORREGIR: Calcular stock real considerando reservas
+          // Calcular stock real considerando reservas
           const totalStock =
             cartItem.saleType === "PROFILES"
               ? await tx.accountProfile.count({
@@ -207,17 +180,19 @@ export async function PUT(
             _sum: { quantity: true },
           });
 
-          // 🔥 CORREGIR: Obtener la reserva actual del usuario DENTRO del contexto del WebSocket
-          const currentReservationForWebSocket = await tx.stockReservation.findFirst({
-            where: {
-              userId: cartItem.cart.userId,
-              accountId: cartItem.streamingAccountId,
-              accountType: "STREAMING",
-            },
-          });
+          //Obtener la reserva actual del usuario DENTRO del contexto del WebSocket
+          const currentReservationForWebSocket =
+            await tx.stockReservation.findFirst({
+              where: {
+                userId: cartItem.cart.userId,
+                accountId: cartItem.streamingAccountId,
+                accountType: "STREAMING",
+              },
+            });
 
           const reservedStock =
-            (existingReservations._sum.quantity || 0) - (currentReservationForWebSocket?.quantity || 0);
+            (existingReservations._sum.quantity || 0) -
+            (currentReservationForWebSocket?.quantity || 0);
           const realAvailableStock = Math.max(0, totalStock - reservedStock);
 
           broadcastStockUpdate(io, {
@@ -253,7 +228,7 @@ export async function DELETE(
   try {
     const resolvedParams = await params;
 
-    // 🔥 VERIFICAR PRIMERO SI EL ITEM EXISTE
+    // VERIFICAR PRIMERO SI EL ITEM EXISTE
     const cartItem = await db.cartItem.findUnique({
       where: { id: resolvedParams.id },
       include: {
@@ -261,7 +236,7 @@ export async function DELETE(
       },
     });
 
-    // 🎯 CASO 1: Item ya no existe (eliminado por limpieza)
+    //  Item ya no existe (eliminado por limpieza)
     if (!cartItem) {
       return NextResponse.json({
         success: true,
@@ -271,7 +246,7 @@ export async function DELETE(
       });
     }
 
-    // 🎯 CASO 2: Item existe, eliminar manualmente
+    //  Item existe, eliminar manualmente
     await db.$transaction(async (tx) => {
       // Eliminar reserva
       if (cartItem.streamingAccountId && cartItem.cart) {
@@ -295,35 +270,9 @@ export async function DELETE(
       }
 
       // Emitir actualización de stock en tiempo real
-      /* const io = getIO();
-      if (io && cartItem.streamingAccountId) {
-        const currentStock =
-          cartItem.saleType === "PROFILES"
-            ? await tx.accountProfile.count({
-                where: {
-                  streamingAccountId: cartItem.streamingAccountId,
-                  isAvailable: true,
-                },
-              })
-            : await tx.accountStock.count({
-                where: {
-                  streamingAccountId: cartItem.streamingAccountId,
-                  isAvailable: true,
-                },
-              });
-
-        broadcastStockUpdate(io, {
-          accountId: cartItem.streamingAccountId,
-          accountType: "regular",
-          type: cartItem.saleType,
-          newStock: currentStock,
-        });
-      } */
-
-              // Emitir actualización de stock en tiempo real
       const io = getIO();
       if (io && cartItem.streamingAccountId) {
-        // 🔥 CORREGIR: Calcular stock real considerando reservas
+        // Calcular stock real considerando reservas
         const totalStock =
           cartItem.saleType === "PROFILES"
             ? await tx.accountProfile.count({

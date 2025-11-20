@@ -105,8 +105,7 @@ export function StreamingCard({
   const isExclusiveAccount =
     !account.streamingType && !account.accountStocks && !account.profileStocks;
 
-  
-  /* const availableStock = isExclusiveAccount
+  const availableStock = isExclusiveAccount
     ? account._stockInfo?.realExclusiveStock ??
       (account.exclusiveStocks?.filter((stock) => stock.isAvailable).length ||
         0)
@@ -121,26 +120,7 @@ export function StreamingCard({
     ? account._stockInfo?.realExclusiveStock ??
       (account.exclusiveStocks?.filter((stock) => stock.isAvailable).length ||
         0)
-    : 0; */
-
-    // 🔥 CORREGIDO: Usar _stockInfo si existe, sin importar si es 0
-const availableStock = isExclusiveAccount
-  ? (account._stockInfo?.realExclusiveStock !== undefined 
-      ? account._stockInfo.realExclusiveStock 
-      : (account.exclusiveStocks?.filter((stock) => stock.isAvailable).length || 0))
-  : account.saleType === "FULL"
-    ? (account._stockInfo?.realAccountStock !== undefined 
-        ? account._stockInfo.realAccountStock 
-        : (account.accountStocks?.filter((stock) => stock.isAvailable).length || 0))
-    : (account._stockInfo?.realProfileStock !== undefined 
-        ? account._stockInfo.realProfileStock 
-        : (account.profileStocks?.filter((profile) => profile.isAvailable).length || 0));
-
-const exclusiveStock = isExclusiveAccount
-  ? (account._stockInfo?.realExclusiveStock !== undefined 
-      ? account._stockInfo.realExclusiveStock 
-      : (account.exclusiveStocks?.filter((stock) => stock.isAvailable).length || 0))
-  : 0;
+    : 0;
 
   const isSpecialOffer = !!account.specialOffer;
   const isVendor = userRole === "VENDEDOR";

@@ -1035,31 +1035,6 @@ export default function AdminPage() {
     return filteredOrders;
   };
 
-  /* const loadVendorPricing = async () => {
-    try {
-      const response = await fetch("/api/admin/vendor-pricing");
-      if (response.ok) {
-        const accounts = await response.json();
-        const pricingData: { [key: string]: { vendorPrice: number; discountPercentage: number; } } = {};
-
-        accounts.forEach((account: any) => {
-          if (account.vendorPricing) {
-            pricingData[account.id] = {
-              vendorPrice: account.vendorPricing.vendorPrice,
-              discountPercentage: 0
-            };
-          } else {
-            pricingData[account.id] = { vendorPrice: 0, discountPercentage: 0 };
-          }
-        });
-
-        setVendorPricing(pricingData);
-      }
-    } catch (error) {
-      console.error("Error al cargar precios de vendedor:", error);
-    }
-  }; */
-
   const loadVendorPricing = async () => {
     try {
       const response = await fetch("/api/admin/vendor-pricing");
@@ -1082,30 +1057,6 @@ export default function AdminPage() {
       console.error("Error al cargar precios de vendedor:", error);
     }
   };
-
-  /* const saveVendorPricing = async () => {
-    setLoadingVendorPricing(true);
-    try {
-      const response = await fetch("/api/admin/vendor-pricing", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ pricing: vendorPricing }),
-      });
-
-      if (response.ok) {
-        toast.success("Precios de vendedor actualizados correctamente");
-        setShowVendorPricingModal(false);
-      } else {
-        toast.error("Error al actualizar precios de vendedor");
-      }
-    } catch (error) {
-      toast.error("Error de conexión");
-    } finally {
-      setLoadingVendorPricing(false);
-    }
-  }; */
 
   const saveVendorPricing = async () => {
     setLoadingVendorPricing(true);
@@ -8784,16 +8735,16 @@ export default function AdminPage() {
       > */}
 
       <AlertDialog
-  open={showVendorPricingModal}
-  onOpenChange={(open) => {
-    setShowVendorPricingModal(open);
-    
-    // Si se está cerrando el modal, deshabilitar todos los inputs
-    if (!open) {
-      setEnabledVendorInputs(new Set());
-    }
-  }}
->
+        open={showVendorPricingModal}
+        onOpenChange={(open) => {
+          setShowVendorPricingModal(open);
+
+          // Si se está cerrando el modal, deshabilitar todos los inputs
+          if (!open) {
+            setEnabledVendorInputs(new Set());
+          }
+        }}
+      >
         <AlertDialogContent
           className="
       w-[95vw] 

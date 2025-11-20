@@ -14,7 +14,7 @@ export const setupSocket = (io: Server) => {
     // Handle admin registration for real-time updates
     socket.on("registerAdmin", () => {
       socket.join("admins");
-      console.log("👑 Admin registered for real-time updates");
+      console.log("Admin registered for real-time updates");
     });
 
     // Handle messages
@@ -64,13 +64,13 @@ export const setupSocket = (io: Server) => {
 // Function to broadcast stock updates to all connected clients
 export const broadcastStockUpdate = (io: Server, stockData: any) => {
   io.emit("stockUpdated", stockData);
-  console.log("📦 Broadcasting stock update:", stockData);
+  console.log("Broadcasting stock update:", stockData);
 };
 
 // Function to broadcast account updates to all connected clients
 export const broadcastAccountUpdate = (io: Server, accountData: any) => {
   io.emit("accountUpdated", accountData);
-  console.log("🔄 Broadcasting account update:", accountData);
+  console.log("Broadcasting account update:", accountData);
 };
 
 // Function to broadcast order updates to all connected clients
@@ -129,27 +129,6 @@ async function getRealTimeStats() {
     const conversionRate =
       totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0;
 
-    /*  const onlineUsersResponse = await fetch(
-      `${
-        process.env.NEXTAUTH_URL || "http://localhost:3000"
-      }/api/admin/online-users`
-    );
-    let onlineUsers = {
-      current: 0,
-      peakToday: 0,
-      averageToday: 0,
-    };
-
-    if (onlineUsersResponse.ok) {
-      const onlineData = await onlineUsersResponse.json();
-      onlineUsers = {
-        current: onlineData.current || 0,
-       
-        peakToday: onlineData.peakToday || 0,
-        averageToday: onlineData.averageToday || 0,
-      };
-    } */
-
     // Get online users from real tracking system
     let onlineUsers = {
       current: 0,
@@ -180,61 +159,12 @@ async function getRealTimeStats() {
       // Usar valores por defecto si hay error
     }
 
-    // Get performance metrics (simulated for now)
-    /* const pagePerformance = {
-      loadTime: Math.random() * 500 + 200,
-      responseTime: Math.random() * 100 + 50,
-      uptime: 99.5 + Math.random() * 0.5,
-      performanceScore: 85 + Math.floor(Math.random() * 15),
-    }; */
     const pagePerformance = {
       loadTime: 0,
       responseTime: 0,
       uptime: 100,
       performanceScore: 100,
     };
-
-    // Get inventory stats
-    /* const [regularAccounts, exclusiveAccounts] = await Promise.all([
-      db.streamingAccount.findMany({
-        include: {
-          _count: {
-            select: {
-              accountStocks: true,
-              profileStocks: true,
-              orders: true,
-            },
-          },
-        },
-      }),
-      db.exclusiveAccount.findMany({
-        include: {
-          exclusiveStocks: true,
-          _count: {
-            select: {
-              orders: true,
-            },
-          },
-        },
-      }),
-    ]);
-
-    // Calculate stock totals
-    const totalRegularStock = regularAccounts.reduce(
-      (sum, account) =>
-        sum +
-        (account._count.accountStocks || 0) +
-        (account._count.profileStocks || 0),
-      0
-    );
-
-    const totalExclusiveStock = exclusiveAccounts.reduce(
-      (sum, account) =>
-        sum +
-        (account.exclusiveStocks?.filter((stock) => stock.isAvailable).length ||
-          0),
-      0
-    ); */
 
     // Get inventory stats
     const [regularAccounts, exclusiveAccounts] = await Promise.all([
@@ -327,23 +257,29 @@ function getRelativeTime(dateString: string) {
   return `Hace ${diffDays} d`;
 }
 
-
 setInterval(async () => {
   try {
-    const response = await fetch(`${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/cleanup/reservations`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
+    const response = await fetch(
+      `${
+        process.env.NEXTAUTH_URL || "http://localhost:3000"
+      }/api/cleanup/reservations`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     if (response.ok) {
-      const data = await response.json()
+      const data = await response.json();
       if (data.deletedCount > 0) {
-        console.log(`Limpieza automática: ${data.deletedCount} reservas expiradas eliminadas`)
+        console.log(
+          `Limpieza automática: ${data.deletedCount} reservas expiradas eliminadas`
+        );
       }
     }
   } catch (error) {
-    console.error('Error en limpieza automática de reservas:', error)
+    console.error("Error en limpieza automática de reservas:", error);
   }
-}, 5 * 60 * 1000) // Cada 5 minutos
+}, 5 * 60 * 1000); // Cada 5 minutos

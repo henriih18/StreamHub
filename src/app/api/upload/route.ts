@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
       filename: filename,
     });
   } catch (error) {
-    //console.error('Error uploading file:', error)
+    console.error("Error uploading file:", error);
     return NextResponse.json(
       { error: "Error al cargar el archivo" },
       { status: 500 }

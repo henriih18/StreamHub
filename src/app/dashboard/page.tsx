@@ -87,7 +87,6 @@ export default function Dashboard() {
   const [isError, setIsError] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
 
-  // Track online users - always call this hook
   useOnlineTracking({
     userId: user?.id,
     enabled: !!user?.id,
@@ -123,7 +122,7 @@ export default function Dashboard() {
 
   // Fetch streaming accounts from API
   useEffect(() => {
-    if (!user) return; // Early return is fine here since we're already inside useEffect
+    if (!user) return;
 
     const fetchAccounts = async () => {
       try {
@@ -138,7 +137,6 @@ export default function Dashboard() {
           const data = await response.json();
           //console.log('API Response:', data) // Debug log
 
-          // Start with all regular and exclusive accounts
           let allAccounts = [
             ...(data.exclusiveAccounts || []),
             ...(data.regularAccounts || []),
@@ -146,7 +144,6 @@ export default function Dashboard() {
 
           //console.log('Special offers for user:', data.specialOffers) // Debug log
 
-          // Apply special offers to existing accounts instead of creating duplicates
           if (data.specialOffers) {
             data.specialOffers.forEach((offer: any) => {
               if (offer.streamingAccount) {
@@ -156,7 +153,6 @@ export default function Dashboard() {
                 );
 
                 if (existingAccountIndex !== -1) {
-                  // Update existing account with special offer
                   allAccounts[existingAccountIndex] = {
                     ...allAccounts[existingAccountIndex],
                     specialOffer: offer,
@@ -167,7 +163,6 @@ export default function Dashboard() {
                       : offer.specialPrice || offer.streamingAccount.price,
                   };
                 } else {
-                  // If account doesn't exist (shouldn't happen), add it
                   allAccounts.push({
                     ...offer.streamingAccount,
                     specialOffer: offer,
@@ -184,7 +179,6 @@ export default function Dashboard() {
 
           // Sort accounts: exclusive accounts first, then regular accounts
           allAccounts = allAccounts.sort((a: any, b: any) => {
-            // Only priority: exclusive accounts first, regular accounts after
             const aIsExclusive =
               !a.streamingType && !a.accountStocks && !a.profileStocks;
             const bIsExclusive =
@@ -227,7 +221,6 @@ export default function Dashboard() {
     }
   }, [searchQuery, streamingAccounts]);
 
-  // Reset to page 1 when search changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
@@ -244,14 +237,12 @@ export default function Dashboard() {
   };
 
   const getAvailableStock = (account: StreamingAccount): number => {
-    // For exclusive accounts, check if they have any exclusiveStocks
     const isExclusiveAccount =
       !account.streamingType &&
       !account.accountStocks &&
       !account.profileStocks;
     if (isExclusiveAccount) {
-      // Exclusive accounts logic would go here if needed
-      return 999; // Assume unlimited for exclusive accounts for now
+      return 999;
     }
 
     // For regular accounts
@@ -355,8 +346,7 @@ export default function Dashboard() {
       if (response.ok) {
         const cartData = await response.json();
         const formattedItems = cartData.items.map((item: any) => {
-          // Calculate available stock for this item
-          let availableStock = 99; // Default high value
+          let availableStock = 99;
 
           if (item.streamingAccount) {
             if (item.saleType === "PROFILES") {
@@ -592,36 +582,6 @@ export default function Dashboard() {
     setIsCartOpen(true);
   };
 
-  // Mock login functions for demo
-  /* const handleAdminLogin = () => {
-    handleLogin({
-      id: 'admin-1',
-      email: 'admin@streamhub.com',
-      name: 'Administrador',
-      role: 'ADMIN'
-    })
-  }
-
-  const handleUserLogin = () => {
-    handleLogin({
-      id: 'cmgzu66vt0000rnso2mvvs2n1', // Real user ID from database
-      email: 'user@example.com',
-      name: 'Usuario Demo',
-      role: 'USER',
-      credits: 1000
-    })
-  }
-
-  const handleRealUserLogin = () => {
-    handleLogin({
-      id: 'cmgzu66vt0000rnso2mvvs2n1', // Real user ID with existing orders
-      email: 'test@example.com',
-      name: 'Test User',
-      role: 'USER',
-      credits: 50000
-    })
-  } */
-
   // Check for existing user session on mount
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -697,15 +657,12 @@ export default function Dashboard() {
   );
 
   // Check if user is admin (check role field first, then fallback to email)
-  const isAdmin = user && user.role === "ADMIN"; /* || 
-    user.email === 'admin@streamhub.com' || 
-    user.email === 'admin@example.com' */
+  const isAdmin = user && user.role === "ADMIN";
 
   const userProps = {
     id: user?.id,
     email: user?.email,
     name: user?.name,
-    // ... otras propiedades que necesites
   };
 
   return (

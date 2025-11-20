@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
                 modifiedAt: stats.mtime.toISOString(),
               };
             } catch (error) {
-              //console.error(`Error reading file stats for ${file}:`, error);
+              console.error(`Error reading file stats for ${file}:`, error);
               return null;
             }
           })
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
         total: validFiles.length,
       });
     } catch (dirError) {
-      //console.error("Error reading uploads directory:", dirError);
+      console.error("Error reading uploads directory:", dirError);
       return NextResponse.json({
         success: true,
         images: [],
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch (error) {
-    //console.error("Error fetching uploaded images:", error);
+    console.error("Error fetching uploaded images:", error);
     return NextResponse.json(
       { error: "Error al cargar las imágenes subidas" },
       { status: 500 }

@@ -1,34 +1,41 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { AlertCircle, Lock, Mail, MessageSquare } from 'lucide-react'
-import Link from 'next/link'
+import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { AlertCircle, Lock, Mail, MessageSquare } from "lucide-react";
+import Link from "next/link";
 
 export default function BlockedPage() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const [reason, setReason] = useState('')
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [reason, setReason] = useState("");
 
   useEffect(() => {
-    const reasonParam = searchParams.get('reason')
+    const reasonParam = searchParams.get("reason");
     if (reasonParam) {
-      setReason(decodeURIComponent(reasonParam))
+      setReason(decodeURIComponent(reasonParam));
     }
-  }, [searchParams])
+  }, [searchParams]);
 
   const handleLogout = async () => {
     try {
       // Limpiar cookie de autenticación
-      document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
-      router.push('/login')
+      document.cookie =
+        "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+      router.push("/login");
     } catch (error) {
       //console.error('Error al cerrar sesión:', error)
-      router.push('/login')
+      router.push("/login");
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
@@ -51,9 +58,12 @@ export default function BlockedPage() {
             <div className="flex items-start space-x-3">
               <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
               <div>
-                <h4 className="text-red-400 font-medium mb-1">Motivo del bloqueo:</h4>
+                <h4 className="text-red-400 font-medium mb-1">
+                  Motivo del bloqueo:
+                </h4>
                 <p className="text-gray-300 text-sm">
-                  {reason || 'Tu cuenta está temporalmente restringida. Contacta con soporte para más información.'}
+                  {reason ||
+                    "Tu cuenta está temporalmente restringida. Contacta con soporte para más información."}
                 </p>
               </div>
             </div>
@@ -63,7 +73,9 @@ export default function BlockedPage() {
           <div className="space-y-3 text-sm text-gray-300">
             <div className="flex items-center space-x-3">
               <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-              <span>No puedes realizar compras mientras tu cuenta esté bloqueada</span>
+              <span>
+                No puedes realizar compras mientras tu cuenta esté bloqueada
+              </span>
             </div>
             <div className="flex items-center space-x-3">
               <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
@@ -77,25 +89,29 @@ export default function BlockedPage() {
 
           {/* Botones de acción */}
           <div className="space-y-3">
-            <Button 
+            <Button
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              onClick={() => window.location.href = 'mailto:soporte@streamhub.com'}
+              onClick={() =>
+                (window.location.href = "mailto:soporte@streamhub.com")
+              }
             >
               <Mail className="w-4 h-4 mr-2" />
               Contactar Soporte
             </Button>
 
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
-              onClick={() => window.location.href = 'https://wa.me/1234567890'}
+              onClick={() =>
+                (window.location.href = "https://wa.me/1234567890")
+              }
             >
               <MessageSquare className="w-4 h-4 mr-2" />
               WhatsApp
             </Button>
 
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               className="w-full text-gray-400 hover:text-white hover:bg-gray-700"
               onClick={handleLogout}
             >
@@ -108,8 +124,11 @@ export default function BlockedPage() {
             <p>
               Al contactar soporte, ten a mano tu información de cuenta.
               <br />
-              Revisa nuestros{' '}
-              <Link href="/terms" className="text-blue-400 hover:text-blue-300 underline">
+              Revisa nuestros{" "}
+              <Link
+                href="/terms"
+                className="text-blue-400 hover:text-blue-300 underline"
+              >
                 Términos y Condiciones
               </Link>
             </p>
@@ -117,5 +136,5 @@ export default function BlockedPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

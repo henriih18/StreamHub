@@ -11,6 +11,7 @@ interface UseRealTimeUpdatesProps {
   onAccountUpdate?: (accountData: any) => void;
   onOrderUpdate?: (orderData: any) => void;
   onMessageUpdate?: (messageData: { unreadCount: number }) => void;
+  onConnect?: (isConnected: boolean) => void;
 }
 
 export function useRealTimeUpdates({
@@ -21,6 +22,7 @@ export function useRealTimeUpdates({
   onAccountUpdate,
   onOrderUpdate,
   onMessageUpdate,
+  onConnect,
 }: UseRealTimeUpdatesProps) {
   const socketRef = useRef<Socket | null>(null);
   const reconnectAttempts = useRef(0);
@@ -29,113 +31,88 @@ export function useRealTimeUpdates({
   const connect = useCallback(() => {
     if (socketRef.current?.connected) return;
 
-    try {
-      const socket = io("/api/socketio", {
-        transports: ["websocket", "polling"],
-        upgrade: true,
-        rememberUpgrade: true,
-        timeout: 20000,
-        forceNew: true,
-        reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000,
-      });
+    /* console.log("Intentando conectar socket..."); */
 
-      socketRef.current = socket;
+    const socket = io(process.env.NEXT_PUBLIC_WS_URL!, {
+      path: "/api/socketio",
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 800,
+      forceNew: true,
+    });
 
-      useEffect(() => {
-        if (!socket || !userId) return;
+    socketRef.current = socket;
 
-        socket.on("cartItemExpired", (_data) => {
-          // Disparar evento para actualizar el carrito
-          window.dispatchEvent(new CustomEvent("cartUpdated"));
-        });
+    // -----------------------------
+    // EVENTO: Conexión establecida
+    // -----------------------------
+    socket.on("connect", () => {
+      /* console.log("WebSocket connected"); */
 
-        return () => {
-          socket.off("cartItemExpired");
-        };
-      }, [socket, userId]);
+      reconnectAttempts.current = 0;
+      onConnect?.(true);
 
-      useEffect(() => {
-        if (!socket || !userId) return;
+      if (userId) {
+        console.log("Registrando usuario:", userId);
+        socket.emit("registerUser", userId);
+      }
 
-        socket.on("cartItemExpired", (_data) => {
-          // Disparar evento para actualizar el carrito
-          window.dispatchEvent(new CustomEvent("cartUpdated"));
-        });
+      if (isAdmin) {
+        /* console.log("Registrando admin"); */
+        socket.emit("registerAdmin");
+      }
+    });
 
-        return () => {
-          socket.off("cartItemExpired");
-        };
-      }, [socket, userId]);
+    // -----------------------------
+    // EVENTO: Desconexión
+    // -----------------------------
+    socket.on("disconnect", (reason) => {
+      /* console.log("WebSocket disconnected:", reason); */
+      onConnect?.(false);
 
-      socket.on("connect", () => {
-        console.log("WebSocket connected");
-        reconnectAttempts.current = 0;
+      if (reconnectAttempts.current < maxReconnectAttempts) {
+        reconnectAttempts.current++;
+        setTimeout(connect, 1000 * reconnectAttempts.current);
+      }
+    });
 
-        // Register for updates
-        if (userId) {
-          console.log("👤 Registrando usuario:", userId);
-          socket.emit("registerUser", userId);
-        }
-        if (isAdmin) {
-          console.log("👑 Registrando admin");
-          socket.emit("registerAdmin");
-        }
-      });
+    // -----------------------------
+    // ERROR DE CONEXIÓN
+    // -----------------------------
+    socket.on("connect_error", (error) => {
+      /* console.error("Error conectando WebSocket:", error); */
+    });
 
-      socket.on("disconnect", (reason) => {
-        console.log("WebSocket disconnected:", reason);
+    // -----------------------------
+    // EVENTOS DE ACTUALIZACIONES
+    // -----------------------------
+    socket.on("userUpdated", (data) => {
+      onUserUpdate?.(data);
+    });
 
-        // Attempt to reconnect
-        if (reconnectAttempts.current < maxReconnectAttempts) {
-          reconnectAttempts.current++;
-          setTimeout(() => {
-            // console.log(`Attempting to reconnect (${reconnectAttempts.current}/${maxReconnectAttempts})`)
-            connect();
-          }, 1000 * reconnectAttempts.current);
-        }
-      });
+    socket.on("stockUpdated", (data) => {
+      /* console.log("Stock updated:", data); */
+      onStockUpdate?.(data);
+      window.dispatchEvent(new CustomEvent("stockUpdated", { detail: data }));
+    });
 
-      socket.on("connect_error", (error) => {
-        console.error("WebSocket connection error:", error);
-      });
+    socket.on("accountUpdated", (data) => {
+      onAccountUpdate?.(data);
+    });
 
-      // Listen for real-time updates
-      socket.on("userUpdated", (userData: any) => {
-        // console.log('User updated:', userData)
-        onUserUpdate?.(userData);
-      });
+    socket.on("orderUpdated", (data) => {
+      onOrderUpdate?.(data);
+    });
 
-      socket.on("stockUpdated", (stockData: any) => {
-        console.log("Stock updated:", stockData);
-        onStockUpdate?.(stockData);
-        window.dispatchEvent(new CustomEvent('stockUpdated', { detail: stockData }));
-      });
+    socket.on("stockCleaned", (data) => {
+      /* console.log("Stock limpiado:", data); */
+      window.dispatchEvent(new CustomEvent("stockCleaned", { detail: data }));
+    });
 
-      socket.on("accountUpdated", (accountData: any) => {
-        // console.log('Account updated:', accountData)
-        onAccountUpdate?.(accountData);
-      });
-
-      socket.on("orderUpdated", (orderData: any) => {
-        // console.log('Order updated:', orderData)
-        onOrderUpdate?.(orderData);
-      });
-
-      socket.on("stockCleaned", (data: any) => {
-        console.log("🧹 Stock limpiado:", data);
-        // Forzar refresh de cuentas cuando se limpia una reserva
-        window.dispatchEvent(new CustomEvent("stockCleaned", { detail: data }));
-      });
-
-      socket.on("messageUpdate", (messageData: { unreadCount: number }) => {
-        // console.log('Message count updated:', messageData)
-        onMessageUpdate?.(messageData);
-      });
-    } catch (error) {
-      console.error("Failed to create WebSocket connection:", error);
-    }
+    socket.on("messageUpdate", (data) => {
+      onMessageUpdate?.(data);
+    });
   }, [
     userId,
     isAdmin,
@@ -144,25 +121,34 @@ export function useRealTimeUpdates({
     onAccountUpdate,
     onOrderUpdate,
     onMessageUpdate,
+    onConnect,
   ]);
 
+  // -----------------------------
+  // DESCONECTAR
+  // -----------------------------
   const disconnect = useCallback(() => {
     if (socketRef.current) {
-      socketRef.current.off("stockCleaned");
+      /* console.log("Socket desconectado manualmente"); */
       socketRef.current.disconnect();
       socketRef.current = null;
     }
   }, []);
 
+  // -----------------------------
+  // Conectar al montar
+  // -----------------------------
   useEffect(() => {
     connect();
 
     return () => {
       disconnect();
     };
-  }, [connect, disconnect, userId, isAdmin]);
+  }, [connect, disconnect]);
 
-  // Reconnect when userId or isAdmin changes
+  // -----------------------------
+  // Reconectar si userId o admin cambian
+  // -----------------------------
   useEffect(() => {
     if (socketRef.current?.connected) {
       disconnect();

@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(cart);
   } catch (error) {
-    //console.error('Error fetching cart:', error)
+    console.error("Error fetching cart:", error);
     return NextResponse.json(
       { error: "Error al recuperar el carrito" },
       { status: 500 }
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
           where: { id: streamingAccountId },
           include: {
             vendorPricing: true,
-            profileStocks: true, //Verificar que esté incluido
+            profileStocks: true,
             accountStocks: true,
           },
         }),
@@ -152,11 +152,11 @@ export async function POST(request: NextRequest) {
         : specialOffer.specialPrice || streamingAccount.price;
     }
 
-    console.log(
-      `🛒 Carrito Add - User: ${userId}, Account: ${streamingAccountId}, Role: ${user.role}, Final Price: ${finalPrice}, Original: ${originalPrice}`
-    );
+    /* console.log(
+      `Carrito Add - User: ${userId}, Account: ${streamingAccountId}, Role: ${user.role}, Final Price: ${finalPrice}, Original: ${originalPrice}`
+    ); */
 
-    //ENFOQUE SIN TRANSACCIÓN - Operaciones atómicas individuales
+    // Operaciones atómicas individuales
     try {
       // Create or get cart
       let cartToUse = cart;
@@ -182,8 +182,8 @@ export async function POST(request: NextRequest) {
         // Update existing item
         const newQuantity = existingItem.quantity + (quantity || 1);
 
-        // 🔥 VERIFICACIÓN ATÓMICA DEL STOCK
-        /* const currentStock = await db.stockReservation.aggregate({
+        // VERIFICACIÓN ATÓMICA DEL STOCK
+        const currentStock = await db.stockReservation.aggregate({
           where: {
             accountId: streamingAccountId,
             accountType: "STREAMING",
@@ -194,26 +194,17 @@ export async function POST(request: NextRequest) {
 
         const currentReserved = currentStock._sum.quantity || 0;
 
-        const realAvailable = availableStock - currentReserved; */
+        // Recalcular availableStock considerando reservas
+        const totalStock =
+          saleType === "PROFILES"
+            ? streamingAccount.profileStocks?.filter(
+                (stock) => stock.isAvailable
+              ).length || 0
+            : streamingAccount.accountStocks?.filter(
+                (stock) => stock.isAvailable
+              ).length || 0;
 
-                // 🔥 VERIFICACIÓN ATÓMICA DEL STOCK
-        const currentStock = await db.stockReservation.aggregate({
-          where: {
-            accountId: streamingAccountId,
-            accountType: 'STREAMING',
-            expiresAt: { gt: new Date() }
-          },
-          _sum: { quantity: true }
-        })
-
-        const currentReserved = currentStock._sum.quantity || 0
-
-        // 🔥 CORREGIR: Recalcular availableStock considerando reservas
-        const totalStock = saleType === 'PROFILES' 
-          ? (streamingAccount.profileStocks?.filter(stock => stock.isAvailable).length || 0)
-          : (streamingAccount.accountStocks?.filter(stock => stock.isAvailable).length || 0)
-
-        const realAvailable = Math.max(0, totalStock - currentReserved)
+        const realAvailable = Math.max(0, totalStock - currentReserved);
 
         if (realAvailable < newQuantity) {
           return NextResponse.json(
@@ -303,9 +294,10 @@ export async function POST(request: NextRequest) {
         await updateCartTotal(cartToUse.id);
 
         // Emitir actualización de stock en tiempo real
-        /* const io = getIO();
+        const io = getIO();
         if (io) {
-          const currentStock =
+          // Calcular stock real considerando reservas existentes
+          const totalStock =
             saleType === "PROFILES"
               ? streamingAccount.profileStocks?.filter(
                   (stock) => stock.isAvailable
@@ -314,42 +306,26 @@ export async function POST(request: NextRequest) {
                   (stock) => stock.isAvailable
                 ).length || 0;
 
+          // Obtener reservas existentes
+          const existingReservations = await db.stockReservation.aggregate({
+            where: {
+              accountId: streamingAccountId,
+              accountType: "STREAMING",
+              expiresAt: { gt: new Date() },
+            },
+            _sum: { quantity: true },
+          });
+
+          const reservedStock = existingReservations._sum.quantity || 0;
+          const realAvailableStock = Math.max(0, totalStock - reservedStock);
+
           broadcastStockUpdate(io, {
             accountId: streamingAccountId,
             accountType: "regular",
             type: saleType,
-            newStock: Math.max(0, currentStock - (quantity || 1)),
+            newStock: Math.max(0, realAvailableStock - (quantity || 1)),
           });
-        } */
-
-          // Emitir actualización de stock en tiempo real
-const io = getIO()
-if (io) {
-  // 🔥 CORREGIR: Calcular stock real considerando reservas existentes
-  const totalStock = saleType === 'PROFILES' 
-    ? (streamingAccount.profileStocks?.filter(stock => stock.isAvailable).length || 0)
-    : (streamingAccount.accountStocks?.filter(stock => stock.isAvailable).length || 0)
-
-  // Obtener reservas existentes
-  const existingReservations = await db.stockReservation.aggregate({
-    where: {
-      accountId: streamingAccountId,
-      accountType: 'STREAMING',
-      expiresAt: { gt: new Date() }
-    },
-    _sum: { quantity: true }
-  })
-
-  const reservedStock = existingReservations._sum.quantity || 0
-  const realAvailableStock = Math.max(0, totalStock - reservedStock)
-
-  broadcastStockUpdate(io, {
-    accountId: streamingAccountId,
-    accountType: 'regular',
-    type: saleType,
-    newStock: Math.max(0, realAvailableStock - (quantity || 1))
-  })
-}
+        }
 
         return NextResponse.json(cartItem, { status: 201 });
       }

@@ -65,15 +65,7 @@ export default function MessagesPage() {
     if (storedUser) {
       const userData = JSON.parse(storedUser);
       setUser(userData);
-    } /* else {
-      // Set a default user for testing
-      setUser({
-        id: "cmgzu66vt0000rnso2mvvs2n1",
-        name: "Admin",
-        email: "hernandezhenry58@gmail.com",
-        role: "ADMIN",
-      });
-    } */
+    }
   }, []);
 
   useEffect(() => {
@@ -199,7 +191,6 @@ export default function MessagesPage() {
             const errorText = await response.text();
             errorMessage = errorText || errorMessage;
           } catch (textError) {
-            // If both fail, use default message
             //console.error("Could not parse error response");
           }
         }
@@ -315,8 +306,7 @@ export default function MessagesPage() {
 
   const unreadCount = messages.filter((msg) => !msg.isRead).length;
 
-  // Debug information
-  /* console.log('🔍 Debug Info:', {
+  /* console.log('Debug Info:', {
     loading,
     messagesCount: messages.length,
     unreadCount,
