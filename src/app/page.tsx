@@ -91,122 +91,87 @@ export default function Home() {
       // Trigger navigation update when message count changes
       window.dispatchEvent(new CustomEvent("messagesUpdated"));
     },
-    /* onStockUpdate: (stockData) => {
-      setStreamingAccounts((prev) =>
-        prev.map((account) => {
-          if (account.id === stockData.accountId) {
-            const updatedAccount = { ...account };
 
-            if (stockData.accountType === "exclusive") {
-              // Update exclusive stock
-              updatedAccount.exclusiveStocks =
-                account.exclusiveStocks?.map((stock, index) =>
-                  index < stockData.newStock
-                    ? { ...stock, isAvailable: true }
-                    : { ...stock, isAvailable: false }
-                ) || [];
-            } else if (stockData.type === "PROFILES") {
-              // Update regular profile stock
-              updatedAccount.profileStocks =
-                account.profileStocks?.map((stock, index) =>
-                  index < stockData.newStock
-                    ? { ...stock, isAvailable: true }
-                    : { ...stock, isAvailable: false }
-                ) || [];
-            } else {
-              // Update regular account stock
-              updatedAccount.accountStocks =
-                account.accountStocks?.map((stock, index) =>
-                  index < stockData.newStock
-                    ? { ...stock, isAvailable: true }
-                    : { ...stock, isAvailable: false }
-                ) || [];
-            }
+    onStockUpdate: async (stockData) => {
+      console.log("📦 Stock update recibido:", stockData);
 
-            return updatedAccount;
+      // 🔥 NUEVO: Forzar recarga completa desde API para mantener consistencia
+      try {
+        const userId = user?.id || null;
+        const url = userId
+          ? `/api/streaming-accounts?userId=${userId}`
+          : "/api/streaming-accounts";
+        const response = await fetch(url);
+
+        if (response.ok) {
+          const data = await response.json();
+          let allAccounts = [
+            ...(data.exclusiveAccounts || []),
+            ...(data.regularAccounts || []),
+          ];
+
+          // Aplicar ofertas especiales
+          if (data.specialOffers) {
+            data.specialOffers.forEach((offer: any) => {
+              if (offer.streamingAccount) {
+                const existingAccountIndex = allAccounts.findIndex(
+                  (account) => account.id === offer.streamingAccount.id
+                );
+
+                if (existingAccountIndex !== -1) {
+                  allAccounts[existingAccountIndex] = {
+                    ...allAccounts[existingAccountIndex],
+                    specialOffer: offer,
+                    originalPrice:
+                      offer.streamingAccount.originalPrice ||
+                      allAccounts[existingAccountIndex].price,
+                  };
+                }
+              }
+            });
           }
-          return account;
-        })
-      );
-    }, */
 
-   onStockUpdate: (stockData) => {
-  console.log('📦 Stock update recibido:', stockData)
-  
-  setStreamingAccounts((prev) => {
-    const updatedAccounts = prev.map((account) => {
-      if (account.id === stockData.accountId) {
-        console.log('🔄 Actualizando cuenta:', account.name, 'newStock:', stockData.newStock);
-        
-        // 🔥 CLAVE: Crear nuevos arrays para forzar detección de cambios
-        const newAccountStocks = stockData.accountType === "exclusive" 
-          ? account.exclusiveStocks 
-          : stockData.type === "PROFILES"
-            ? account.profileStocks?.map((stock, index) =>
-                index < stockData.newStock
-                  ? { ...stock, isAvailable: true }
-                  : { ...stock, isAvailable: false }
-              ) || []
-            : account.accountStocks?.map((stock, index) =>
-                index < stockData.newStock
-                  ? { ...stock, isAvailable: true }
-                  : { ...stock, isAvailable: false }
-              ) || [];
-        
-        const newProfileStocks = stockData.type === "PROFILES"
-          ? account.profileStocks?.map((stock, index) =>
-              index < stockData.newStock
-                ? { ...stock, isAvailable: true }
-                : { ...stock, isAvailable: false }
-            ) || []
-          : account.profileStocks;
-        
-        const newExclusiveStocks = stockData.accountType === "exclusive"
-          ? account.exclusiveStocks?.map((stock, index) =>
-              index < stockData.newStock
-                ? { ...stock, isAvailable: true }
-                : { ...stock, isAvailable: false }
-            ) || []
-          : account.exclusiveStocks;
-        
-        // 🔥 CLAVE: Devolver completamente nueva cuenta con arrays nuevos
-        return {
-          ...account,
-          accountStocks: newAccountStocks,
-          profileStocks: newProfileStocks,
-          exclusiveStocks: newExclusiveStocks
-        };
+          // Ordenar cuentas
+          allAccounts = allAccounts.sort((a: any, b: any) => {
+            const aIsExclusive =
+              !a.streamingType && !a.accountStocks && !a.profileStocks;
+            const bIsExclusive =
+              !b.streamingType && !b.accountStocks && !b.profileStocks;
+
+            if (aIsExclusive && !bIsExclusive) return -1;
+            if (!aIsExclusive && bIsExclusive) return 1;
+            return 0;
+          });
+
+          setStreamingAccounts(allAccounts);
+          setFilteredAccounts(allAccounts);
+          console.log("✅ Stock actualizado desde API");
+        }
+      } catch (error) {
+        console.error("❌ Error recargando stock:", error);
       }
-      return account;
-    });
-    
-    // 🔥 CLAVE: Forzar completamente nuevo array
-    return [...updatedAccounts];
-  });
-},
+    },
   });
 
   useEffect(() => {
-  const handleStockUpdate = () => {
-    console.log('🔄 Evento de stock recibido, refrescando...');
-    fetchAccounts();
-  };
+    const handleStockUpdate = () => {
+      console.log("🔄 Evento de stock recibido, refrescando...");
+      fetchAccounts();
+    };
 
-  const handleStockCleaned = () => {
-    console.log('🧹 Limpieza de stock recibida, refrescando...');
-    fetchAccounts();
-  };
+    const handleStockCleaned = () => {
+      console.log("🧹 Limpieza de stock recibida, refrescando...");
+      fetchAccounts();
+    };
 
-  window.addEventListener('stockUpdated', handleStockUpdate);
-  window.addEventListener('stockCleaned', handleStockCleaned);
-  
-  return () => {
-    window.removeEventListener('stockUpdated', handleStockUpdate);
-    window.removeEventListener('stockCleaned', handleStockCleaned);
-  };
-}, [user]); // Depender de user para tener fetchAccounts disponible
+    window.addEventListener("stockUpdated", handleStockUpdate);
+    window.addEventListener("stockCleaned", handleStockCleaned);
 
-  
+    return () => {
+      window.removeEventListener("stockUpdated", handleStockUpdate);
+      window.removeEventListener("stockCleaned", handleStockCleaned);
+    };
+  }, [user]); // Depender de user para tener fetchAccounts disponible
 
   // Check authentication on mount (optional)
   /* useEffect(() => {
@@ -359,56 +324,20 @@ export default function Home() {
         ? `/api/streaming-accounts?userId=${userId}`
         : "/api/streaming-accounts";
 
-        console.log("🌐 URL:", url);
+      console.log("🌐 URL:", url);
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
 
         console.log("🌐 Datos recibidos:", data);
-      console.log("🌐 Regular accounts:", data.regularAccounts?.length);
-      console.log("🌐 Exclusive accounts:", data.exclusiveAccounts?.length);
+        console.log("🌐 Regular accounts:", data.regularAccounts?.length);
+        console.log("🌐 Exclusive accounts:", data.exclusiveAccounts?.length);
 
         // Iniciar con todas las cuentas (ya vienen con precios ajustados por rol)
         let allAccounts = [
           ...(data.exclusiveAccounts || []),
           ...(data.regularAccounts || []),
         ];
-
-        // Aplicar ofertas especiales (el backend ya aplicó precios de vendedor si corresponde)
-        /* if (data.specialOffers) {
-            data.specialOffers.forEach((offer: any) => {
-              if (offer.streamingAccount) {
-                // Find if account already exists in our array
-                const existingAccountIndex = allAccounts.findIndex(
-                  (account) => account.id === offer.streamingAccount.id
-                );
-
-                if (existingAccountIndex !== -1) {
-                  // Update existing account with special offer
-                  allAccounts[existingAccountIndex] = {
-                    ...allAccounts[existingAccountIndex],
-                    specialOffer: offer,
-                    originalPrice: offer.streamingAccount.originalPrice || allAccounts[existingAccountIndex].price,
-                    price: offer.discountPercentage
-                      ? offer.streamingAccount.price *
-                        (1 - offer.discountPercentage / 100)
-                      : offer.specialPrice || offer.streamingAccount.price,
-                  };
-                } else {
-                  // If account doesn't exist (shouldn't happen), add it
-                  allAccounts.push({
-                    ...offer.streamingAccount,
-                    specialOffer: offer,
-                    originalPrice: offer.streamingAccount.originalPrice || offer.streamingAccount.price,
-                    price: offer.discountPercentage
-                      ? offer.streamingAccount.price *
-                        (1 - offer.discountPercentage / 100)
-                      : offer.specialPrice || offer.streamingAccount.price,
-                  });
-                }
-              }
-            });
-          } */
 
         if (data.specialOffers) {
           data.specialOffers.forEach((offer: any) => {
@@ -467,7 +396,7 @@ export default function Home() {
   };
 
   // Forzar refresh cuando se limpia stock
-/* useEffect(() => {
+  /* useEffect(() => {
   const handleStockCleaned = () => {
     console.log('🔄 Refrescando cuentas por limpieza');
     fetchAccounts();
@@ -480,7 +409,6 @@ export default function Home() {
   };
 }, [fetchAccounts]); */
 
-  
   // Fetch streaming accounts from API
   /* useEffect(() => {
     fetchAccounts();
@@ -491,14 +419,13 @@ export default function Home() {
     console.log("👀 user en page.tsx:", user);
   }, [user]); */
 
-useEffect(() => {
-  if (!user) return;
-  fetchAccounts();
-  console.log("👀 user en page.tsx:", user);
-}, [user]);
+  useEffect(() => {
+    if (!user) return;
+    fetchAccounts();
+    console.log("👀 user en page.tsx:", user);
+  }, [user]);
 
-// 🔥 AGREGAR ESTE useEffect para escuchar eventos de stock
-
+  // 🔥 AGREGAR ESTE useEffect para escuchar eventos de stock
 
   // Fetch cart items if user is logged in
   useEffect(() => {

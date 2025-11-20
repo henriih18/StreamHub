@@ -1,49 +1,49 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId')
-    
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
+
     let userRole = "USER";
     if (userId) {
       const user = await db.user.findUnique({
         where: { id: userId },
-        select: { role: true }
+        select: { role: true },
       });
       userRole = user?.role || "USER";
     }
-    
+
     // Get regular streaming accounts
     const accounts = await db.streamingAccount.findMany({
       where: {
-        isActive: true
+        isActive: true,
       },
       include: {
         streamingType: {
           select: {
             icon: true,
             color: true,
-            imageUrl: true
-          }
+            imageUrl: true,
+          },
         },
         accountStocks: {
           where: {
-            isAvailable: true
-          }
+            isAvailable: true,
+          },
         },
         profileStocks: {
           where: {
-            isAvailable: true
-          }
+            isAvailable: true,
+          },
         },
-        vendorPricing: true
+        vendorPricing: true,
       },
       orderBy: {
-        createdAt: 'desc'
-      }
-    })
+        createdAt: "desc",
+      },
+    });
 
     // 🔥 NUEVO: Calcular stock real considerando reservas
     const accountsWithRealStock = await Promise.all(
@@ -52,49 +52,55 @@ export async function GET(request: NextRequest) {
         const reservations = await db.stockReservation.aggregate({
           where: {
             accountId: account.id,
-            accountType: 'STREAMING',
-            expiresAt: { gt: new Date() }
+            accountType: "STREAMING",
+            expiresAt: { gt: new Date() },
           },
-          _sum: { quantity: true }
-        })
+          _sum: { quantity: true },
+        });
 
-        const reservedQuantity = reservations._sum.quantity || 0
-        
+        const reservedQuantity = reservations._sum.quantity || 0;
+
         // Calcular stock real considerando reservas
-        const realAccountStock = Math.max(0, (account.accountStocks?.length || 0) - reservedQuantity)
-        const realProfileStock = Math.max(0, (account.profileStocks?.length || 0) - reservedQuantity)
-
-        // Actualizar los arrays de stock con cantidades reales
-        /* const updatedAccountStocks = Array(realAccountStock).fill(null).map((_, index) => 
-          account.accountStocks[index] || { id: `temp-${index}`, isAvailable: true }
-        )
-        
-        const updatedProfileStocks = Array(realProfileStock).fill(null).map((_, index) => 
-          account.profileStocks[index] || { id: `temp-${index}`, isAvailable: true }
-        ) */
+        const realAccountStock = Math.max(
+          0,
+          (account.accountStocks?.length || 0) - reservedQuantity
+        );
+        const realProfileStock = Math.max(
+          0,
+          (account.profileStocks?.length || 0) - reservedQuantity
+        );
 
         const updatedAccountStocks = account.accountStocks
-  .filter(stock => stock.isAvailable)
-  .slice(0, realAccountStock)
+          .filter((stock) => stock.isAvailable)
+          .slice(0, realAccountStock);
 
-const updatedProfileStocks = account.profileStocks
-  .filter(stock => stock.isAvailable)
-  .slice(0, realProfileStock)
+        const updatedProfileStocks = account.profileStocks
+          .filter((stock) => stock.isAvailable)
+          .slice(0, realProfileStock);
 
         return {
           ...account,
           accountStocks: updatedAccountStocks,
-          profileStocks: updatedProfileStocks
-        }
+          profileStocks: updatedProfileStocks,
+          _stockInfo: {
+            realAccountStock,
+            realProfileStock,
+            reservedQuantity,
+          },
+        };
       })
-    )
+    );
 
-    const processedAccounts = accountsWithRealStock.map(account => {
+    const processedAccounts = accountsWithRealStock.map((account) => {
       let finalPrice = account.price;
       let originalPrice: number | undefined = undefined;
 
       // Si es VENDEDOR y tiene configuración de precios, aplicar descuento
-      if (userRole === 'VENDEDOR' && account.vendorPricing && account.vendorPricing.isActive) {
+      if (
+        userRole === "VENDEDOR" &&
+        account.vendorPricing &&
+        account.vendorPricing.isActive
+      ) {
         originalPrice = account.price;
         finalPrice = account.vendorPricing.vendorPrice;
       }
@@ -102,54 +108,54 @@ const updatedProfileStocks = account.profileStocks
       return {
         ...account,
         price: finalPrice,
-        originalPrice: originalPrice
+        originalPrice: originalPrice,
       };
     });
 
     // Get exclusive accounts
-    let exclusiveAccounts: any[] = []
-    
+    let exclusiveAccounts: any[] = [];
+
     // Build where condition based on whether user is logged in
     const whereCondition: any = {
       isActive: true,
-      OR: [
-        { isPublic: true }
-      ]
-    }
-    
+      OR: [{ isPublic: true }],
+    };
+
     if (userId) {
       whereCondition.OR.push({
         allowedUsers: {
           some: {
-            id: userId
-          }
-        }
-      })
+            id: userId,
+          },
+        },
+      });
     }
-    
+
     exclusiveAccounts = await db.exclusiveAccount.findMany({
       where: whereCondition,
       include: {
-        allowedUsers: userId ? {
-          where: {
-            id: userId
-          }
-        } : undefined,
+        allowedUsers: userId
+          ? {
+              where: {
+                id: userId,
+              },
+            }
+          : undefined,
         exclusiveStocks: {
           where: {
-            isAvailable: true
-          }
+            isAvailable: true,
+          },
         },
         orders: {
           select: {
-            id: true
-          }
-        }
+            id: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
-    })
+        createdAt: "desc",
+      },
+    });
 
     // 🔥 NUEVO: Calcular stock real para cuentas exclusivas
     const exclusiveAccountsWithRealStock = await Promise.all(
@@ -158,38 +164,48 @@ const updatedProfileStocks = account.profileStocks
         const reservations = await db.stockReservation.aggregate({
           where: {
             accountId: account.id,
-            accountType: 'EXCLUSIVE',
-            expiresAt: { gt: new Date() }
+            accountType: "EXCLUSIVE",
+            expiresAt: { gt: new Date() },
           },
-          _sum: { quantity: true }
-        })
+          _sum: { quantity: true },
+        });
 
-        const reservedQuantity = reservations._sum.quantity || 0
-        const realAvailableStock = Math.max(0, (account.exclusiveStocks?.length || 0) - reservedQuantity)
+        const reservedQuantity = reservations._sum.quantity || 0;
+        const realAvailableStock = Math.max(
+          0,
+          (account.exclusiveStocks?.length || 0) - reservedQuantity
+        );
 
         // Actualizar los stocks con cantidades reales
-        const updatedExclusiveStocks = Array(realAvailableStock).fill(null).map((_, index) => 
-          account.exclusiveStocks[index] || { id: `temp-${index}`, isAvailable: true }
-        )
+        const updatedExclusiveStocks = Array(realAvailableStock)
+          .fill(null)
+          .map(
+            (_, index) =>
+              account.exclusiveStocks[index] || {
+                id: `temp-${index}`,
+                isAvailable: true,
+              }
+          );
 
         return {
           ...account,
-          exclusiveStocks: updatedExclusiveStocks
-        }
+          exclusiveStocks: updatedExclusiveStocks,
+          _stockInfo: {
+            realExclusiveStock: realAvailableStock,
+            reservedQuantity,
+          },
+        };
       })
-    )
+    );
 
     // Get special offers for user
-    let specialOffers: any[] = []
+    let specialOffers: any[] = [];
     if (userId) {
       specialOffers = await db.specialOffer.findMany({
         where: {
           userId: userId,
           isActive: true,
-          OR: [
-            { expiresAt: null },
-            { expiresAt: { gt: new Date() } }
-          ]
+          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
         },
         include: {
           streamingAccount: {
@@ -198,23 +214,24 @@ const updatedProfileStocks = account.profileStocks
                 select: {
                   icon: true,
                   color: true,
-                  imageUrl: true
-                }
+                  imageUrl: true,
+                },
               },
               accountStocks: true,
               profileStocks: true,
-              vendorPricing: true
-            }
-          }
-        }
-      })
+              vendorPricing: true,
+            },
+          },
+        },
+      });
     }
-    
+
     // 🔥 NUEVO: Aplicar ofertas especiales a las cuentas con stock real
-    const finalAccounts = processedAccounts.map(account => {
+    const finalAccounts = processedAccounts.map((account) => {
       // Buscar si hay oferta especial para esta cuenta
-      const matchingOffer = specialOffers.find(offer => 
-        offer.streamingAccount && offer.streamingAccount.id === account.id
+      const matchingOffer = specialOffers.find(
+        (offer) =>
+          offer.streamingAccount && offer.streamingAccount.id === account.id
       );
 
       if (matchingOffer) {
@@ -226,7 +243,7 @@ const updatedProfileStocks = account.profileStocks
           ...account,
           specialOffer: matchingOffer,
           originalPrice: account.originalPrice || account.price,
-          price: offerPrice
+          price: offerPrice,
         };
       }
 
@@ -236,20 +253,20 @@ const updatedProfileStocks = account.profileStocks
     return NextResponse.json({
       regularAccounts: finalAccounts,
       exclusiveAccounts: exclusiveAccountsWithRealStock,
-      specialOffers
-    })
+      specialOffers,
+    });
   } catch (error) {
-    console.error('Error fetching streaming accounts:', error)
+    console.error("Error fetching streaming accounts:", error);
     return NextResponse.json(
-      { error: 'Error al obtener las cuentas de streaming' },
+      { error: "Error al obtener las cuentas de streaming" },
       { status: 500 }
-    )
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const body = await request.json();
     const {
       name,
       description,
@@ -264,29 +281,37 @@ export async function POST(request: NextRequest) {
       email,
       password,
       stock,
-      profilesStock
-    } = body
+      profilesStock,
+    } = body;
 
     // Validate required fields
-    if (!name || !description || !price || !type || !duration || !quality || !screens) {
+    if (
+      !name ||
+      !description ||
+      !price ||
+      !type ||
+      !duration ||
+      !quality ||
+      !screens
+    ) {
       return NextResponse.json(
-        { error: 'Faltan campos obligatorios' },
+        { error: "Faltan campos obligatorios" },
         { status: 400 }
-      )
+      );
     }
 
     // Create or get streaming type
     let streamingType = await db.streamingType.findUnique({
-      where: { name: type }
-    })
+      where: { name: type },
+    });
 
     if (!streamingType) {
       streamingType = await db.streamingType.create({
         data: {
           name: type,
           description: `${type} streaming service`,
-        }
-      })
+        },
+      });
     }
 
     const account = await db.streamingAccount.create({
@@ -298,23 +323,23 @@ export async function POST(request: NextRequest) {
         duration,
         quality,
         screens: parseInt(screens),
-        saleType: saleType || 'FULL',
+        saleType: saleType || "FULL",
         maxProfiles: maxProfiles ? parseInt(maxProfiles) : null,
-        pricePerProfile: pricePerProfile ? parseFloat(pricePerProfile) : null
+        pricePerProfile: pricePerProfile ? parseFloat(pricePerProfile) : null,
       },
       include: {
         streamingType: true,
         accountStocks: true,
-        profileStocks: true
-      }
-    })
+        profileStocks: true,
+      },
+    });
 
-    return NextResponse.json(account, { status: 201 })
+    return NextResponse.json(account, { status: 201 });
   } catch (error) {
-    console.error('Error creating streaming account:', error)
+    console.error("Error creating streaming account:", error);
     return NextResponse.json(
-      { error: 'Error al crear una cuenta de streaming' },
+      { error: "Error al crear una cuenta de streaming" },
       { status: 500 }
-    )
+    );
   }
 }

@@ -1,7 +1,5 @@
 "use client";
-import {
-  Percent,
-} from "lucide-react";
+import { Percent } from "lucide-react";
 import { useState } from "react";
 import {
   Card,
@@ -73,6 +71,13 @@ interface StreamingAccount {
     color?: string;
     imageUrl?: string;
   };
+
+  _stockInfo?: {
+    realAccountStock?: number;
+    realProfileStock?: number;
+    realExclusiveStock?: number;
+    reservedQuantity?: number;
+  };
 }
 
 interface StreamingCardProps {
@@ -81,7 +86,7 @@ interface StreamingCardProps {
   onAddToCart: (account: StreamingAccount, quantity: number) => void;
   isMostPopular?: boolean;
 
-  userRole?: string; 
+  userRole?: string;
 }
 
 export function StreamingCard({
@@ -97,23 +102,51 @@ export function StreamingCard({
       ? account.pricePerProfile || account.price
       : account.price;
 
-  const availableStock =
-    account.saleType === "FULL"
-      ? account.accountStocks?.filter((stock) => stock.isAvailable).length || 0
-      : account.profileStocks?.filter((profile) => profile.isAvailable)
-          .length || 0;
-
-  const exclusiveStock =
-    account.exclusiveStocks?.filter((stock) => stock.isAvailable).length || 0;
   const isExclusiveAccount =
     !account.streamingType && !account.accountStocks && !account.profileStocks;
+
+  
+  /* const availableStock = isExclusiveAccount
+    ? account._stockInfo?.realExclusiveStock ??
+      (account.exclusiveStocks?.filter((stock) => stock.isAvailable).length ||
+        0)
+    : account.saleType === "FULL"
+    ? account._stockInfo?.realAccountStock ??
+      (account.accountStocks?.filter((stock) => stock.isAvailable).length || 0)
+    : account._stockInfo?.realProfileStock ??
+      (account.profileStocks?.filter((profile) => profile.isAvailable).length ||
+        0);
+
+  const exclusiveStock = isExclusiveAccount
+    ? account._stockInfo?.realExclusiveStock ??
+      (account.exclusiveStocks?.filter((stock) => stock.isAvailable).length ||
+        0)
+    : 0; */
+
+    // 🔥 CORREGIDO: Usar _stockInfo si existe, sin importar si es 0
+const availableStock = isExclusiveAccount
+  ? (account._stockInfo?.realExclusiveStock !== undefined 
+      ? account._stockInfo.realExclusiveStock 
+      : (account.exclusiveStocks?.filter((stock) => stock.isAvailable).length || 0))
+  : account.saleType === "FULL"
+    ? (account._stockInfo?.realAccountStock !== undefined 
+        ? account._stockInfo.realAccountStock 
+        : (account.accountStocks?.filter((stock) => stock.isAvailable).length || 0))
+    : (account._stockInfo?.realProfileStock !== undefined 
+        ? account._stockInfo.realProfileStock 
+        : (account.profileStocks?.filter((profile) => profile.isAvailable).length || 0));
+
+const exclusiveStock = isExclusiveAccount
+  ? (account._stockInfo?.realExclusiveStock !== undefined 
+      ? account._stockInfo.realExclusiveStock 
+      : (account.exclusiveStocks?.filter((stock) => stock.isAvailable).length || 0))
+  : 0;
+
   const isSpecialOffer = !!account.specialOffer;
-  const isVendor = userRole === 'VENDEDOR'; 
+  const isVendor = userRole === "VENDEDOR";
 
   // Calculate max quantity based on account type
   const maxQuantity = isExclusiveAccount ? exclusiveStock : availableStock;
-
-  
 
   const getGradientColor = (type: string, customColor?: string) => {
     // Si hay un color personalizado, crear un gradiente con ese color
@@ -184,35 +217,14 @@ export function StreamingCard({
       )}
 
       {/* Special badges - Enhanced for Exclusive */}
-      {/* <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
-        {isExclusiveAccount && (
-          <Badge className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white border-0 px-3 py-1 text-xs font-bold shadow-lg shadow-amber-500/30">
-            <Crown className="w-3 h-3 mr-1" />
-            EXCLUSIVO
-          </Badge>
-        )}
-        {isMostPopular && !isExclusiveAccount && (
-          <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 px-3 py-1 text-xs font-bold">
-            <TrendingUp className="w-3 h-3 mr-1" />
-            MÁS POPULAR
-          </Badge>
-        )}
-        {isSpecialOffer && !isExclusiveAccount && (
-          <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 px-3 py-1 text-xs font-bold">
-            <Gift className="w-3 h-3 mr-1" />
-            {account.specialOffer?.discountPercentage}% OFF
-          </Badge>
-        )}
-      </div> */}
-
-            {/* Special badges - Enhanced for Exclusive */}
       <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
-        {isVendor && account.originalPrice && (  // <-- AGREGAR ESTE BLOQUE
-          <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0 px-3 py-1 text-xs font-bold shadow-lg shadow-blue-500/30">
-            <Percent className="w-3 h-3 mr-1" />
-            PRECIO VENDEDOR
-          </Badge>
-        )}
+        {isVendor &&
+          account.originalPrice && ( // <-- AGREGAR ESTE BLOQUE
+            <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0 px-3 py-1 text-xs font-bold shadow-lg shadow-blue-500/30">
+              <Percent className="w-3 h-3 mr-1" />
+              PRECIO VENDEDOR
+            </Badge>
+          )}
         {isExclusiveAccount && (
           <Badge className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white border-0 px-3 py-1 text-xs font-bold shadow-lg shadow-amber-500/30">
             <Crown className="w-3 h-3 mr-1" />
@@ -384,42 +396,27 @@ export function StreamingCard({
             <div className="flex items-baseline justify-between">
               <div>
                 <div className="flex items-baseline space-x-1">
-                  {/* {account.originalPrice && (
-                    <span
-                      className={`text-lg line-through ${
-                        isExclusiveAccount
-                          ? "text-amber-300/50"
-                          : "text-gray-400"
-                      }`}
-                    >
-                      $
+                  {/* Mostrar precio tachado solo para VENDEDORES */}
+                  {isVendor && account.originalPrice && (
+                    <span className={`text-lg line-through text-gray-400`}>
+                      ${" "}
                       {account.originalPrice.toLocaleString("es-CO", {
                         maximumFractionDigits: 0,
                       })}
                     </span>
-                  )} */}
+                  )}
 
-                  {/* Mostrar precio tachado solo para VENDEDORES */}
-{isVendor && account.originalPrice && (
-  <span
-    className={`text-lg line-through text-gray-400`}
-  >
-    $     {account.originalPrice.toLocaleString("es-CO", {
-      maximumFractionDigits: 0,
-    })}
-  </span>
-)}
-
-{/* Mostrar precio tachado solo para OFERTAS ESPECIALES */}
-{!isVendor && account.originalPrice && account.specialOffer && (
-  <span
-    className={`text-lg line-through text-gray-400`}
-  >
-    $     {account.originalPrice.toLocaleString("es-CO", {
-      maximumFractionDigits: 0,
-    })}
-  </span>
-)}
+                  {/* Mostrar precio tachado solo para OFERTAS ESPECIALES */}
+                  {!isVendor &&
+                    account.originalPrice &&
+                    account.specialOffer && (
+                      <span className={`text-lg line-through text-gray-400`}>
+                        ${" "}
+                        {account.originalPrice.toLocaleString("es-CO", {
+                          maximumFractionDigits: 0,
+                        })}
+                      </span>
+                    )}
                   <span
                     className={`text-3xl font-bold ${
                       isExclusiveAccount
@@ -440,26 +437,18 @@ export function StreamingCard({
                     /{account.saleType === "PROFILES" ? "perfil" : "mes"}
                   </span>
                 </div>
-                {/* {account.originalPrice && (  
-                  <p
-                    className={`text-xs mt-1 ${
-                      isVendor ? "text-blue-400" : "text-green-400"
-                    }`}
-                  >
-                    {isVendor ? "Precio para vendedores" : "Precio con descuento"}
-                  </p>
-                )} */}
-                {isVendor && account.originalPrice && (
-  <p className="text-xs mt-1 text-blue-400">
-    Precio para vendedores
-  </p>
-)}
 
-{!isVendor && account.originalPrice && account.specialOffer && (
-  <p className="text-xs mt-1 text-orange-400">
-    Precio con descuento
-  </p>
-)}
+                {isVendor && account.originalPrice && (
+                  <p className="text-xs mt-1 text-blue-400">
+                    Precio para vendedores
+                  </p>
+                )}
+
+                {!isVendor && account.originalPrice && account.specialOffer && (
+                  <p className="text-xs mt-1 text-orange-400">
+                    Precio con descuento
+                  </p>
+                )}
                 <p
                   className={`text-xs mt-1 ${
                     isExclusiveAccount ? "text-amber-300/60" : "text-gray-400"
