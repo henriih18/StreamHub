@@ -49,7 +49,7 @@ interface CartItem {
   quantity: number;
   saleType: "FULL" | "PROFILES";
   priceAtTime: number;
-  availableStock?: number; // Add available stock info
+  availableStock?: number;
 }
 
 interface CartSidebarProps {

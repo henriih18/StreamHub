@@ -250,7 +250,7 @@ model ExclusiveAccount {
   description           String
   type                  String   // Netflix, Disney+, etc.
   price                 Float
-  duration              Int      // Duration in days
+  duration              String     // Duration in days
   quality               String?  // HD, Full HD, 4K, etc.
   screens               String?  // Number of screens
   saleType              String   @default("FULL") // FULL or PROFILES

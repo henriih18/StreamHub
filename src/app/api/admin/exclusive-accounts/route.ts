@@ -4,25 +4,12 @@ import { userCache } from "@/lib/cache";
 import { getIO, broadcastAccountUpdate } from "@/lib/socket";
 import { withAdminAuth } from "@/lib/admin-auth";
 
-// Temporarily disable authentication for development
-// TODO: Implement proper authentication with NextAuth
-
 export async function GET() {
   try {
     const cacheKey = "admin:exclusive-accounts:list";
     let accounts = userCache.get(cacheKey);
 
     if (!accounts) {
-      // For development, we'll skip authentication check
-      // In production, uncomment the following:
-      /*
-      const session = await getServerSession(authOptions)
-      
-      if (!session?.user || session.user.role !== 'ADMIN') {
-        return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-      }
-      */
-
       const dbAccounts = await db.exclusiveAccount.findMany({
         include: {
           allowedUsers: {
@@ -89,20 +76,8 @@ export async function GET() {
   }
 }
 
-/* export async function POST(request: NextRequest) {
+export const POST = withAdminAuth(async (request: NextRequest) => {
   try {
-    // For development, we'll skip authentication check
-    // In production, uncomment the following:
-    
-    //const session = await getServerSession(authOptions)
-    
-    //if (!session?.user || session.user.role !== 'ADMIN') {
-    //  return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    //}
-   
-
-    const data = await request.json();
-
     const {
       name,
       description,
@@ -116,57 +91,40 @@ export async function GET() {
       pricePerProfile,
       isPublic,
       allowedUsers,
+      maxSlots,
       expiresAt,
-    } = data;
-
-    // Validate and parse numeric fields
-    const parsedPrice = parseFloat(price);
-    const parsedDuration = parseInt(duration);
-    const parsedMaxProfiles = maxProfiles ? parseInt(maxProfiles) : null;
-    const parsedPricePerProfile = pricePerProfile
-      ? parseFloat(pricePerProfile)
-      : null;
+    } = await request.json();
 
     // Validate required fields
     if (
       !name ||
       !description ||
       !type ||
-      isNaN(parsedPrice) ||
-      parsedPrice < 0 ||
-      !parsedDuration ||
-      parsedDuration <= 0
+      !price ||
+      !duration ||
+      !quality ||
+      !screens
     ) {
-      console.log('Validation failed. Missing/invalid fields:', {
-        name: !!name,
-        description: !!description,
-        type: !!type,
-        price: parsedPrice,
-        duration: parsedDuration
-      })
       return NextResponse.json(
-        {
-          error:
-            "Todos los campos requeridos deben ser completados con valores válidos",
-        },
+        { error: "Faltan campos obligatorios" },
         { status: 400 }
       );
     }
 
-    // Create exclusive account
-    const account = await db.exclusiveAccount.create({
+    // Create exclusive account (NOT streaming account)
+    const exclusiveAccount = await db.exclusiveAccount.create({
       data: {
         name,
         description,
         type,
-        price: parsedPrice,
-        duration: parsedDuration,
+        price: parseFloat(price),
+        duration: duration,
         quality,
         screens,
-        saleType,
-        maxProfiles: parsedMaxProfiles,
-        pricePerProfile: parsedPricePerProfile,
-        maxSlots: 1, // Default to 1 since we removed this from the form
+        saleType: saleType || "FULL",
+        maxProfiles: maxProfiles ? parseInt(maxProfiles) : null,
+        pricePerProfile: pricePerProfile ? parseFloat(pricePerProfile) : null,
+        maxSlots: maxSlots || allowedUsers?.length || 1,
         isPublic: Boolean(isPublic),
         expiresAt: expiresAt ? new Date(expiresAt + "T23:59:59.999Z") : null,
         allowedUsers:
@@ -187,10 +145,10 @@ export async function GET() {
       },
     });
 
-    // Transform the data to match expected interface
+    // Transform data to match expected interface
     const transformedAccount = {
-      ...account,
-      allowedUsers: account.allowedUsers.map((user) => ({
+      ...exclusiveAccount,
+      allowedUsers: exclusiveAccount.allowedUsers.map((user) => ({
         ...user,
         name: user.fullName,
       })),
@@ -201,77 +159,9 @@ export async function GET() {
 
     return NextResponse.json(transformedAccount);
   } catch (error) {
-    //console.error('Error creating exclusive account:', error)
+    console.error("Error creating exclusive account:", error);
     return NextResponse.json(
       { error: "Error al crear cuenta exclusiva" },
-      { status: 500 }
-    );
-  }
-} */
-
-  export const POST = withAdminAuth(async (request: NextRequest) => {
-  try {
-    const {
-      name,
-      description,
-      type,
-      price,
-      duration,
-      quality,
-      screens,
-      saleType,
-      maxProfiles,
-      pricePerProfile,
-    } = await request.json();
-
-    // Validate required fields
-    if (
-      !name ||
-      !description ||
-      !type ||
-      !price ||
-      !duration ||
-      !quality ||
-      !screens
-    ) {
-      return NextResponse.json(
-        { error: "Faltan campos obligatorios" },
-        { status: 400 }
-      );
-    }
-
-    const streamingAccount = await db.streamingAccount.create({
-      data: {
-        name,
-        description,
-        type,
-        price: parseFloat(price),
-        duration,
-        quality,
-        screens: parseInt(screens),
-        saleType: saleType || "FULL",
-        maxProfiles: maxProfiles ? parseInt(maxProfiles) : null,
-        pricePerProfile: pricePerProfile ? parseFloat(pricePerProfile) : null,
-      },
-    });
-
-    // Invalidate cache when new account is created
-    userCache.delete("admin:streaming-accounts:list");
-
-    // Emit real-time account update
-    const io = getIO();
-    if (io) {
-      broadcastAccountUpdate(io, {
-        action: "created",
-        account: streamingAccount
-      });
-    }
-
-    return NextResponse.json(streamingAccount);
-  } catch (error) {
-    //console.error('Error creating streaming account:', error)
-    return NextResponse.json(
-      { error: "Error al crear una cuenta de streaming" },
       { status: 500 }
     );
   }

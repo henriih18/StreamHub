@@ -594,14 +594,6 @@ export default function AdminPage() {
   });
   const [loadingBanner, setLoadingBanner] = useState(false);
 
-  // Estado para modal de precios de vendedor
-  /* const [showVendorPricingModal, setShowVendorPricingModal] = useState(false);
-  const [vendorPricing, setVendorPricing] = useState<{
-    [key: string]: {
-      vendorPrice: number
-    };}>({});
-  const [loadingVendorPricing, setLoadingVendorPricing] = useState(false); */
-  // Reemplaza el estado actual con esto:
   const [vendorPricing, setVendorPricing] = useState<{
     [key: string]: { vendorPrice: number; discountPercentage: number };
   }>({});
@@ -612,95 +604,7 @@ export default function AdminPage() {
     new Set()
   );
 
-  /*
-  console.log("🚀 AdminPage mounted");
-  console.log("👤 User state:", user);
-  console.log("🆔 User ID:", user?.id);
-  console.log("👑 User role:", user?.role);
-
-   useRealTimeUpdates({
-    userId: user?.id,
-    isAdmin: true,
-    onMessageUpdate: (messageData) => {},
-
-    onStockUpdate: async (stockData) => {
-      console.log("📦 Admin recibió actualización de stock:", stockData);
-
-      try {
-        if (stockData.accountType === "regular") {
-          console.log("🔄 Procesando cuenta regular:", stockData.type);
-
-          // Para cuentas regulares, refrescar desde la API para obtener datos consistentes
-          const response = await fetch("/api/admin/streaming-accounts");
-          if (response.ok) {
-            const updatedAccounts = await response.json();
-            setAccounts(updatedAccounts);
-            console.log(
-              "✅ Cuentas regulares actualizadas:",
-              updatedAccounts.length
-            );
-          }
-        } else if (stockData.accountType === "exclusive") {
-          console.log("🔄 Procesando cuenta exclusiva");
-
-          // Para cuentas exclusivas, refrescar desde la API
-          const response = await fetch("/api/admin/exclusive-accounts");
-          if (response.ok) {
-            const updatedAccounts = await response.json();
-            setExclusiveAccounts(updatedAccounts);
-            console.log(
-              "✅ Cuentas exclusivas actualizadas:",
-              updatedAccounts.length
-            );
-          }
-        }
-      } catch (error) {
-        console.error("❌ Error refrescando cuentas:", error);
-        // Fallback: usar tu lógica existente
-        if (stockData.accountType === "regular") {
-          setAccounts((prev) =>
-            prev.map((account) => {
-              if (account.id === stockData.accountId) {
-                const updatedAccount = { ...account };
-                if (stockData.type === "PROFILES") {
-                  updatedAccount._count = {
-                    ...updatedAccount._count,
-                    profileStocks: stockData.newStock,
-                  };
-                } else {
-                  updatedAccount._count = {
-                    ...updatedAccount._count,
-                    accountStocks: stockData.newStock,
-                  };
-                }
-                return updatedAccount;
-              }
-              return account;
-            })
-          );
-        } else if (stockData.accountType === "exclusive") {
-          setExclusiveAccounts((prev) =>
-            prev.map((account) => {
-              if (account.id === stockData.accountId) {
-                const updatedAccount = { ...account };
-                if (updatedAccount.exclusiveStocks) {
-                  updatedAccount.exclusiveStocks =
-                    updatedAccount.exclusiveStocks.map((stock, index) =>
-                      index < stockData.newStock
-                        ? { ...stock, isAvailable: true }
-                        : { ...stock, isAvailable: false }
-                    );
-                }
-                return updatedAccount;
-              }
-              return account;
-            })
-          );
-        }
-      }
-    },
-    
-  }); */
+  const [applyToAllUsers, setApplyToAllUsers] = useState(false);
 
   // Función para actualizar el inventario manualmente
   const refreshInventory = async () => {
@@ -721,23 +625,20 @@ export default function AdminPage() {
       if (accountsRes.ok) {
         const accountsData = await accountsRes.json();
         setAccounts(accountsData);
-        console.log("✅ Cuentas regulares actualizadas:", accountsData.length);
+        //console.log("Cuentas regulares actualizadas:", accountsData.length);
         loadVendorPricing();
       }
 
       if (exclusiveRes.ok) {
         const exclusiveData = await exclusiveRes.json();
         setExclusiveAccounts(exclusiveData);
-        console.log(
-          "✅ Cuentas exclusivas actualizadas:",
-          exclusiveData.length
-        );
+        //console.log("Cuentas exclusivas actualizadas:",exclusiveData.length);
         loadVendorPricing();
       }
 
       toast.success("Inventario actualizado");
     } catch (error) {
-      console.error("❌ Error actualizando inventario:", error);
+      //console.error("Error actualizando inventario:", error);
       toast.error("No se pudo actualizar el inventario");
     }
   };
@@ -745,7 +646,7 @@ export default function AdminPage() {
   // Función para actualizar métricas de negocio
   const refreshBusinessMetrics = async () => {
     try {
-      console.log("🔄 Actualizando métricas de negocio...");
+      //console.log("Actualizando métricas de negocio...");
 
       if (!user?.id) {
         toast.error("Usuario no autenticado");
@@ -802,7 +703,7 @@ export default function AdminPage() {
         );
       }
     } catch (error) {
-      console.error("❌ Error actualizando métricas:", error);
+      //console.error("Error actualizando métricas:", error);
       toast.error("No se pudieron actualizar las métricas");
     }
   };
@@ -873,7 +774,6 @@ export default function AdminPage() {
       try {
         const parsedUser = JSON.parse(storedUser);
 
-        // Check if user has admin permissions
         const isAdmin = parsedUser?.role === "ADMIN";
 
         if (!isAdmin) {
@@ -884,16 +784,15 @@ export default function AdminPage() {
         }
 
         setUser(parsedUser);
-        // Pass user data directly to avoid timing issues
+
         fetchData(parsedUser);
       } catch (error) {
         //console.error("Error parsing user from localStorage:", error);
         localStorage.removeItem("user");
-        // Redirect if user data is corrupted
+
         window.location.href = "/login";
       }
     } else {
-      // Redirect if no user is logged in
       window.location.href = "/login";
     }
   }, []);
@@ -1035,31 +934,6 @@ export default function AdminPage() {
     return filteredOrders;
   };
 
-  /* const loadVendorPricing = async () => {
-    try {
-      const response = await fetch("/api/admin/vendor-pricing");
-      if (response.ok) {
-        const accounts = await response.json();
-        const pricingData: { [key: string]: { vendorPrice: number; discountPercentage: number; } } = {};
-
-        accounts.forEach((account: any) => {
-          if (account.vendorPricing) {
-            pricingData[account.id] = {
-              vendorPrice: account.vendorPricing.vendorPrice,
-              discountPercentage: 0
-            };
-          } else {
-            pricingData[account.id] = { vendorPrice: 0, discountPercentage: 0 };
-          }
-        });
-
-        setVendorPricing(pricingData);
-      }
-    } catch (error) {
-      console.error("Error al cargar precios de vendedor:", error);
-    }
-  }; */
-
   const loadVendorPricing = async () => {
     try {
       const response = await fetch("/api/admin/vendor-pricing");
@@ -1082,30 +956,6 @@ export default function AdminPage() {
       console.error("Error al cargar precios de vendedor:", error);
     }
   };
-
-  /* const saveVendorPricing = async () => {
-    setLoadingVendorPricing(true);
-    try {
-      const response = await fetch("/api/admin/vendor-pricing", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ pricing: vendorPricing }),
-      });
-
-      if (response.ok) {
-        toast.success("Precios de vendedor actualizados correctamente");
-        setShowVendorPricingModal(false);
-      } else {
-        toast.error("Error al actualizar precios de vendedor");
-      }
-    } catch (error) {
-      toast.error("Error de conexión");
-    } finally {
-      setLoadingVendorPricing(false);
-    }
-  }; */
 
   const saveVendorPricing = async () => {
     setLoadingVendorPricing(true);
@@ -1176,8 +1026,6 @@ export default function AdminPage() {
       })
     );
 
-    // Revenue by month (last 6 months)
-    /* const revenueByMonth = [] */
     const revenueByMonth: Array<{
       month: string;
       revenue: number;
@@ -1359,7 +1207,7 @@ export default function AdminPage() {
           isActive: true,
           order: 0,
         });
-        fetchSupportContacts(); // Refresh list
+        fetchSupportContacts();
       } else {
         const errorData = await response.json();
         toast.error(errorData.error || "Error al agregar contacto");
@@ -1380,7 +1228,7 @@ export default function AdminPage() {
       if (response.ok) {
         const data = await response.json();
         toast.success(data.message);
-        fetchSupportContacts(); // Refresh list
+        fetchSupportContacts();
       } else {
         const errorData = await response.json();
         toast.error(errorData.error || "Error al eliminar contacto");
@@ -1401,7 +1249,7 @@ export default function AdminPage() {
       if (response.ok) {
         const data = await response.json();
         toast.success(data.message);
-        fetchSupportContacts(); // Refresh list
+        fetchSupportContacts();
       } else {
         const errorData = await response.json();
         toast.error(errorData.error || "Error al actualizar contacto");
@@ -1414,10 +1262,8 @@ export default function AdminPage() {
 
   const fetchStockData = async (userOverride?: any) => {
     try {
-      // Use provided user or fall back to state
       const currentUser = userOverride || user;
 
-      // Create a temporary adminFetch that uses the provided user
       const tempAdminFetch = async (url: string, options: RequestInit = {}) => {
         if (!currentUser?.id) {
           throw new Error("Usuario no autenticado");
@@ -1467,10 +1313,10 @@ export default function AdminPage() {
 
       // Prefetch commonly accessed data
       const prefetchPromises = [
-        adminFetch("/api/admin/streaming-types"), // Static data, rarely changes
-        adminFetch("/api/admin/performance"), // Performance metrics
-        adminFetch("/api/admin/online-users"), // Online status
-        adminFetch("/api/admin/support-contacts"), // Support info
+        adminFetch("/api/admin/streaming-types"),
+        adminFetch("/api/admin/performance"),
+        adminFetch("/api/admin/online-users"),
+        adminFetch("/api/admin/support-contacts"),
       ];
 
       // Execute prefetches in background without blocking
@@ -1501,10 +1347,6 @@ export default function AdminPage() {
           ...options.headers,
         },
       });
-
-      /* if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      } */
 
       return response;
     } catch (error) {
@@ -1579,12 +1421,10 @@ export default function AdminPage() {
       const performanceData = await performanceRes.json();
       const onlineUsersData = await onlineUsersRes.json();
 
-      // Set users and action counts from the optimized endpoint
       if (usersWithCountsData.success) {
         setUsers(usersWithCountsData.data.users);
         setUserActionCounts(usersWithCountsData.data.actionCounts);
       } else {
-        // Fallback to original method if optimized endpoint fails
         const usersData = await tempAdminFetch("/api/admin/users").then((res) =>
           res.json()
         );
@@ -1620,18 +1460,23 @@ export default function AdminPage() {
       );
       setStats(advancedStats);
 
-      // Calculate top users by sales count
-      const usersWithOrderCount = usersData.map((user: User) => ({
+      // Calculate top VENDEDORS by sales count
+      const vendorUsers = usersData.filter(
+        (user: User) => user.role === "USER"
+      );
+
+      const vendorsWithOrderCount = vendorUsers.map((user: User) => ({
         ...user,
         orderCount: ordersData.filter(
           (order: Order) => order.user.email === user.email
         ).length,
       }));
-      const topBySales = usersWithOrderCount
+
+      const topVendorsBySales = vendorsWithOrderCount
         .sort((a: any, b: any) => b.orderCount - a.orderCount)
         .slice(0, 10);
 
-      setTopUsersBySales(topBySales);
+      setTopUsersBySales(topVendorsBySales);
     } catch (error) {
       //console.error("Error in fetchData:", error);
       toast.error("Error al cargar datos");
@@ -1661,10 +1506,6 @@ export default function AdminPage() {
 
         // Si estamos editando, actualizar el editingType
         if (editingType) {
-          /* setEditingType(prev => ({
-            ...prev,
-            imageUrl: data.url
-          })) */
           setEditingType((prev) => {
             if (!prev) return prev;
             return {
@@ -1845,10 +1686,10 @@ export default function AdminPage() {
 
   const handleCreateSpecialOffer = async () => {
     try {
-      // Validate that users are selected
-      if (selectedUsersForOffer.length === 0) {
+      // Validate that users are selected (si no se aplica a todos)
+      if (!applyToAllUsers && selectedUsersForOffer.length === 0) {
         toast.error(
-          "Por favor selecciona al menos un usuario de las estadísticas"
+          "Por favor selecciona al menos un usuario de las estadísticas o marca la opción de aplicar a todos"
         );
         return;
       }
@@ -1869,10 +1710,12 @@ export default function AdminPage() {
 
       // Convert selected users to array for API
       const offerData = {
-        userIds: selectedUsersForOffer,
+        /* userIds: selectedUsersForOffer, */
+        userIds: applyToAllUsers ? [] : selectedUsersForOffer,
         streamingAccountId: newSpecialOffer.streamingAccountId,
         discountPercentage: newSpecialOffer.discountPercentage,
         expiresAt: newSpecialOffer.expiresAt,
+        applyToAllUsers: applyToAllUsers,
       };
 
       const response = await adminFetch("/api/admin/special-offers", {
@@ -1974,7 +1817,7 @@ export default function AdminPage() {
           description: newExclusiveAccount.description,
           type: newExclusiveAccount.type,
           price: parseFloat(newExclusiveAccount.price),
-          duration: parseInt(newExclusiveAccount.duration),
+          duration: newExclusiveAccount.duration,
           quality: newExclusiveAccount.quality,
           screens: newExclusiveAccount.screens,
           saleType: newExclusiveAccount.saleType,
@@ -1982,6 +1825,7 @@ export default function AdminPage() {
           pricePerProfile: newExclusiveAccount.pricePerProfile || undefined,
           isPublic: newExclusiveAccount.isPublic === "true",
           expiresAt: newExclusiveAccount.expiresAt || undefined,
+          maxSlots: selectedUsersForExclusive.length || 1,
           allowedUsers:
             selectedUsersForExclusive.length > 0
               ? selectedUsersForExclusive
@@ -4008,13 +3852,13 @@ export default function AdminPage() {
                         </SelectTrigger>
                         <SelectContent className="bg-slate-800 border-slate-700">
                           <SelectItem value="1 mes" className="text-white">
-                            1 mes
+                            1 Mes
                           </SelectItem>
                           <SelectItem value="3 meses" className="text-white">
-                            3 meses
+                            3 Meses
                           </SelectItem>
                           <SelectItem value="6 meses" className="text-white">
-                            6 meses
+                            6 Meses
                           </SelectItem>
                         </SelectContent>
                       </Select>
@@ -4180,7 +4024,7 @@ export default function AdminPage() {
                       <Button
                         onClick={async () => {
                           setShowVendorPricingModal(true);
-                          await loadVendorPricing(); // Cargar precios al abrir
+                          await loadVendorPricing();
                         }}
                         variant="outline"
                         className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 border-none font-bold text-white"
@@ -4188,10 +4032,6 @@ export default function AdminPage() {
                         <Percent className="w-4 h-4 font-bold text-white" />
                         Precios Vendedores
                       </Button>
-                      {/* <Button onClick={() => setShowEditAccountDialog(true)}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Agregar Cuenta
-                      </Button> */}
                     </div>
                   </div>
                 </CardHeader>
@@ -6048,12 +5888,31 @@ export default function AdminPage() {
                       <Button
                         onClick={handleCreateSpecialOffer}
                         className="w-full bg-emerald-600 hover:bg-emerald-700"
-                        disabled={selectedUsersForOffer.length === 0}
+                        /* disabled={selectedUsersForOffer.length === 0} */
+                        disabled={
+                          !applyToAllUsers && selectedUsersForOffer.length === 0
+                        }
                       >
                         <Gift className="w-4 h-4 mr-2" />
-                        Crear Oferta para {selectedUsersForOffer.length}{" "}
-                        usuarios
+                        {/*  Crear Oferta para {selectedUsersForOffer.length}{" "}
+                        usuarios */}
+                        {applyToAllUsers
+                          ? "Crear Oferta para Todos los Usuarios"
+                          : `Crear Oferta para ${selectedUsersForOffer.length} usuarios`}
                       </Button>
+                    </div>
+                    <div className="mt-4">
+                      <label className="flex items-center space-x-3 text-sm text-gray-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={applyToAllUsers}
+                          onChange={(e) => setApplyToAllUsers(e.target.checked)}
+                          className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+                        />
+                        <span>
+                          Aplicar oferta a todos los usuarios (no vendedores)
+                        </span>
+                      </label>
                     </div>
                   </CardContent>
                 </Card>
@@ -6309,12 +6168,12 @@ export default function AdminPage() {
                 </Card>
               </div>
 
-              {/* Estadísticas de Usuarios con Mayores Ventas */}
+              {/* Estadísticas de Usuarios con Mayores compras */}
               <Card className="bg-slate-800 border-slate-700">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center gap-2">
                     <TrendingUp className="w-5 h-5 text-emerald-400" />
-                    Usuarios con Mayores Ventas - Candidatos para Ofertas
+                    Usuarios con Mayores Compras - Candidatos para Ofertas
                   </CardTitle>
                   <CardDescription className="text-slate-400">
                     Top 10 usuarios por número de pedidos - Selecciona los más
@@ -6515,21 +6374,32 @@ export default function AdminPage() {
                           htmlFor="exclusiveDuration"
                           className="text-slate-300"
                         >
-                          Duración (días)
+                          Duración
                         </Label>
-                        <Input
-                          id="exclusiveDuration"
-                          type="number"
+                        <Select
                           value={newExclusiveAccount.duration}
-                          onChange={(e) =>
+                          onValueChange={(value) =>
                             setNewExclusiveAccount({
                               ...newExclusiveAccount,
-                              duration: e.target.value,
+                              duration: value,
                             })
                           }
-                          placeholder="30"
-                          className="bg-slate-700 border-slate-600 text-white"
-                        />
+                        >
+                          <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                            <SelectValue placeholder="Selecciona la duración" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-800 border-slate-700">
+                            <SelectItem value="1 mes" className="text-white">
+                              1 Mes
+                            </SelectItem>
+                            <SelectItem value="2 meses" className="text-white">
+                              2 Meses
+                            </SelectItem>
+                            <SelectItem value="3 meses" className="text-white">
+                              3 Meses
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <Label
@@ -8784,16 +8654,16 @@ export default function AdminPage() {
       > */}
 
       <AlertDialog
-  open={showVendorPricingModal}
-  onOpenChange={(open) => {
-    setShowVendorPricingModal(open);
-    
-    // Si se está cerrando el modal, deshabilitar todos los inputs
-    if (!open) {
-      setEnabledVendorInputs(new Set());
-    }
-  }}
->
+        open={showVendorPricingModal}
+        onOpenChange={(open) => {
+          setShowVendorPricingModal(open);
+
+          // Si se está cerrando el modal, deshabilitar todos los inputs
+          if (!open) {
+            setEnabledVendorInputs(new Set());
+          }
+        }}
+      >
         <AlertDialogContent
           className="
       w-[95vw] 

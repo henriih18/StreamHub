@@ -68,53 +68,106 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { userIds, streamingAccountId, discountPercentage, expiresAt } =
-      await request.json();
+    const {
+      userIds,
+      streamingAccountId,
+      discountPercentage,
+      expiresAt,
+      applyToAllUsers,
+    } = await request.json();
 
-    // Validate required fields
-    if (
-      !userIds ||
-      !Array.isArray(userIds) ||
-      userIds.length === 0 ||
-      !streamingAccountId ||
-      !discountPercentage
-    ) {
+    if (!streamingAccountId || !discountPercentage) {
       return NextResponse.json(
         { error: "Faltan campos obligatorios" },
         { status: 400 }
       );
     }
 
-    // Create special offers for each selected user
-    const specialOffers = await Promise.all(
-      userIds.map((userId: string) =>
-        db.specialOffer.create({
-          data: {
-            userId,
-            streamingAccountId,
-            discountPercentage: parseFloat(discountPercentage),
-            targetSpent: 0, // Default value since we removed this field from frontend
-            expiresAt: expiresAt
-              ? new Date(expiresAt + "T23:59:59.999Z")
-              : null,
-          },
-          include: {
-            user: {
-              select: {
-                email: true,
-                fullName: true,
+    // Validate that either applyToAllUsers is true or userIds is provided
+    if (
+      !applyToAllUsers &&
+      (!userIds || !Array.isArray(userIds) || userIds.length === 0)
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Debes seleccionar usuarios o aplicar a todos los usuarios normales",
+        },
+        { status: 400 }
+      );
+    }
+
+    let specialOffers;
+
+    if (applyToAllUsers) {
+      // Get all normal users (not vendors)
+      const normalUsers = await db.user.findMany({
+        where: { role: "USER" },
+        select: { id: true },
+      });
+
+      // Create special offers for all normal users
+      specialOffers = await Promise.all(
+        normalUsers.map((user) =>
+          db.specialOffer.create({
+            data: {
+              userId: user.id,
+              streamingAccountId,
+              discountPercentage: parseFloat(discountPercentage),
+              targetSpent: 0,
+              expiresAt: expiresAt
+                ? new Date(expiresAt + "T23:59:59.999Z")
+                : null,
+            },
+            include: {
+              user: {
+                select: {
+                  email: true,
+                  fullName: true,
+                },
+              },
+              streamingAccount: {
+                select: {
+                  name: true,
+                  type: true,
+                },
               },
             },
-            streamingAccount: {
-              select: {
-                name: true,
-                type: true,
+          })
+        )
+      );
+    } else {
+      // Create special offers for selected users (original logic)
+      specialOffers = await Promise.all(
+        userIds.map((userId: string) =>
+          db.specialOffer.create({
+            data: {
+              userId,
+              streamingAccountId,
+              discountPercentage: parseFloat(discountPercentage),
+              targetSpent: 0,
+              expiresAt: expiresAt
+                ? new Date(expiresAt + "T23:59:59.999Z")
+                : null,
+            },
+            include: {
+              user: {
+                select: {
+                  email: true,
+                  fullName: true,
+                },
+              },
+              streamingAccount: {
+                select: {
+                  name: true,
+                  type: true,
+                },
               },
             },
-          },
-        })
-      )
-    );
+          })
+        )
+      );
+    }
 
     // Transform the data to match the expected interface
     const transformedOffers = specialOffers.map((offer) => ({

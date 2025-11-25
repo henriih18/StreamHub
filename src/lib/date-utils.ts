@@ -103,3 +103,13 @@ export function getDaysUntilExpiration(expirationDate: Date): number {
   const diffMs = expirationDate.getTime() - now.getTime();
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 }
+
+/* export function calculateExpirationDateFromDays(
+  days: number,
+  startDate?: Date
+): Date {
+  const date = startDate || new Date();
+  const expirationDate = new Date(date);
+  expirationDate.setDate(expirationDate.getDate() + days);
+  return expirationDate;
+} */

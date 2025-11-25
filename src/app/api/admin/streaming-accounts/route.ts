@@ -8,49 +8,29 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
     const cacheKey = "admin:streaming-accounts:list";
     let cachedData = userCache.get(cacheKey);
 
-    /* if (!accounts) {
-      accounts = await db.streamingAccount.findMany({
-        include: {
-          _count: {
-            select: {
-              accountStocks: true,
-              profileStocks: true,
-              orders: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
-
-      // Cache for 7 minutes - accounts change moderately
-      userCache.set(cacheKey, accounts, 7 * 60 * 1000);
-    } */
-
-     if (!cachedData) {
+    if (!cachedData) {
       // Get accounts with real available stock
       const rawAccounts = await db.streamingAccount.findMany({
         where: {
-          isActive: true
+          isActive: true,
         },
         include: {
           streamingType: {
             select: {
               icon: true,
               color: true,
-              imageUrl: true
-            }
+              imageUrl: true,
+            },
           },
           accountStocks: {
             where: {
-              isAvailable: true  // Solo contar disponibles
-            }
+              isAvailable: true,
+            },
           },
           profileStocks: {
             where: {
-              isAvailable: true  // Solo contar disponibles
-            }
+              isAvailable: true,
+            },
           },
           orders: true,
         },
@@ -60,13 +40,13 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
       });
 
       // Transform to match frontend expectations
-      const accounts = rawAccounts.map(account => ({
+      const accounts = rawAccounts.map((account) => ({
         ...account,
         _count: {
           accountStocks: account.accountStocks.length,
-          profileStocks: account.profileStocks.length,   
+          profileStocks: account.profileStocks.length,
           orders: account.orders.length,
-        }
+        },
       }));
 
       // Cache for 7 minutes

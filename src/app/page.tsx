@@ -131,99 +131,44 @@ export default function Home() {
     },
   });
 
-  // Check authentication on mount (optional)
-  /* useEffect(() => {
-    const checkAuth = () => {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        try {
-          const parsedUser = JSON.parse(storedUser);
-          if (parsedUser && parsedUser.id) {
-            setUser(parsedUser);
-          }
-        } catch (error) {
-          localStorage.removeItem("user");
-        }
-      }
-      setIsLoading(false);
-    };
-
-    checkAuth();
-  }, []); */
-
-  /* useEffect(() => {
-  const checkAuth = () => {
+  useEffect(() => {
     const storedUser = localStorage.getItem("user");
+
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
-        if (parsedUser && parsedUser.id) {
+        if (parsedUser?.id) {
           setUser(parsedUser);
         }
       } catch (error) {
         localStorage.removeItem("user");
       }
     }
+
     setIsLoading(false);
-  };
+  }, []);
 
-  const handleUserLogin = (event: any) => {
-    setUser(event.detail);
-  };
-
-  checkAuth();
-  window.addEventListener('userLoggedIn', handleUserLogin);
-  
-  return () => {
-    window.removeEventListener('userLoggedIn', handleUserLogin);
-  };
-}, []); */
-
-useEffect(() => {
-  const storedUser = localStorage.getItem("user");
-
-  if (storedUser) {
-    try {
-      const parsedUser = JSON.parse(storedUser);
-      if (parsedUser?.id) {
-        setUser(parsedUser);
-      }
-    } catch (error) {
-      localStorage.removeItem("user");
-    }
-  }
-
-  setIsLoading(false);
-}, []);
-
-
-
-  /* const fetchAccounts = async () => {
+  const fetchAccounts = async () => {
     try {
       const userId = user?.id || null;
-      // console.log('Fetching accounts for userId:', userId)
       const url = userId
         ? `/api/streaming-accounts?userId=${userId}`
         : "/api/streaming-accounts";
-      // console.log('API URL:', url)
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
-        // console.log('API Response:', data)
 
-        // Start with all regular and exclusive accounts
+        // Iniciar con todas las cuentas (ya vienen con precios ajustados por rol)
         let allAccounts = [
           ...(data.exclusiveAccounts || []),
           ...(data.regularAccounts || []),
         ];
 
-        // console.log('All accounts before special offers:', allAccounts.length)
-
-        // Apply special offers to existing accounts instead of creating duplicates
+        // Aplicar ofertas especiales (el backend ya aplicó precios de vendedor si corresponde)
         if (data.specialOffers) {
           data.specialOffers.forEach((offer: any) => {
             if (offer.streamingAccount) {
-              // Find if the account already exists in our array
+              // Find if account already exists in our array
               const existingAccountIndex = allAccounts.findIndex(
                 (account) => account.id === offer.streamingAccount.id
               );
@@ -233,7 +178,9 @@ useEffect(() => {
                 allAccounts[existingAccountIndex] = {
                   ...allAccounts[existingAccountIndex],
                   specialOffer: offer,
-                  originalPrice: offer.streamingAccount.price,
+                  originalPrice:
+                    offer.streamingAccount.originalPrice ||
+                    allAccounts[existingAccountIndex].price,
                   price: offer.discountPercentage
                     ? offer.streamingAccount.price *
                       (1 - offer.discountPercentage / 100)
@@ -244,7 +191,9 @@ useEffect(() => {
                 allAccounts.push({
                   ...offer.streamingAccount,
                   specialOffer: offer,
-                  originalPrice: offer.streamingAccount.price,
+                  originalPrice:
+                    offer.streamingAccount.originalPrice ||
+                    offer.streamingAccount.price,
                   price: offer.discountPercentage
                     ? offer.streamingAccount.price *
                       (1 - offer.discountPercentage / 100)
@@ -275,92 +224,13 @@ useEffect(() => {
       setStreamingAccounts([]);
       setFilteredAccounts([]);
     }
-  }; */
+  };
 
-    const fetchAccounts = async () => {
-      try {
-        const userId = user?.id || null;
-        const url = userId
-          ? `/api/streaming-accounts?userId=${userId}`
-          : "/api/streaming-accounts";
-        const response = await fetch(url);
-        if (response.ok) {
-          const data = await response.json();
-
-          // Iniciar con todas las cuentas (ya vienen con precios ajustados por rol)
-          let allAccounts = [
-            ...(data.exclusiveAccounts || []),
-            ...(data.regularAccounts || []),
-          ];
-
-          // Aplicar ofertas especiales (el backend ya aplicó precios de vendedor si corresponde)
-          if (data.specialOffers) {
-            data.specialOffers.forEach((offer: any) => {
-              if (offer.streamingAccount) {
-                // Find if account already exists in our array
-                const existingAccountIndex = allAccounts.findIndex(
-                  (account) => account.id === offer.streamingAccount.id
-                );
-
-                if (existingAccountIndex !== -1) {
-                  // Update existing account with special offer
-                  allAccounts[existingAccountIndex] = {
-                    ...allAccounts[existingAccountIndex],
-                    specialOffer: offer,
-                    originalPrice: offer.streamingAccount.originalPrice || allAccounts[existingAccountIndex].price,
-                    price: offer.discountPercentage
-                      ? offer.streamingAccount.price *
-                        (1 - offer.discountPercentage / 100)
-                      : offer.specialPrice || offer.streamingAccount.price,
-                  };
-                } else {
-                  // If account doesn't exist (shouldn't happen), add it
-                  allAccounts.push({
-                    ...offer.streamingAccount,
-                    specialOffer: offer,
-                    originalPrice: offer.streamingAccount.originalPrice || offer.streamingAccount.price,
-                    price: offer.discountPercentage
-                      ? offer.streamingAccount.price *
-                        (1 - offer.discountPercentage / 100)
-                      : offer.specialPrice || offer.streamingAccount.price,
-                  });
-                }
-              }
-            });
-          }
-
-          // Sort accounts: exclusive accounts first, then regular accounts
-          allAccounts = allAccounts.sort((a: any, b: any) => {
-            // Only priority: exclusive accounts first, regular accounts after
-            const aIsExclusive =
-              !a.streamingType && !a.accountStocks && !a.profileStocks;
-            const bIsExclusive =
-              !b.streamingType && !b.accountStocks && !b.profileStocks;
-
-            if (aIsExclusive && !bIsExclusive) return -1;
-            if (!aIsExclusive && bIsExclusive) return 1;
-
-            return 0; // Keep original order within each category
-          });
-          setStreamingAccounts(allAccounts);
-          setFilteredAccounts(allAccounts);
-        }
-      } catch (error) {
-        setStreamingAccounts([]);
-        setFilteredAccounts([]);
-      }
-    };
-
-  // Fetch streaming accounts from API
-  /* useEffect(() => {
-    fetchAccounts();
-  }, [user?.id, user?.role]); */
   useEffect(() => {
-  if (!user) return;
-  fetchAccounts();
-  console.log("👀 user en page.tsx:", user);
-}, [user]);
-
+    if (!user) return;
+    fetchAccounts();
+    //console.log("user en page.tsx:", user);
+  }, [user]);
 
   // Fetch cart items if user is logged in
   useEffect(() => {
@@ -599,10 +469,6 @@ useEffect(() => {
           account.saleType === "PROFILES" ? "Perfil" : "Cuenta Completa";
         const quantityText = quantity > 1 ? `${quantity} unidades` : "1 unidad";
 
-        /* toast.success(`${accountType} "${account.name}" agregado al carrito`, {
-          description: `${quantityText} • $${account.price.toLocaleString('es-CO')} c/u`,
-          duration: 3000,
-        }) */
         toast.success(
           `${accountType} "${
             account.name
