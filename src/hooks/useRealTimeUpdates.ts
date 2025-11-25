@@ -11,6 +11,7 @@ interface UseRealTimeUpdatesProps {
   onAccountUpdate?: (accountData: any) => void;
   onOrderUpdate?: (orderData: any) => void;
   onMessageUpdate?: (messageData: { unreadCount: number }) => void;
+  onReservationExpired?: (data: any) => void;
   onConnect?: (isConnected: boolean) => void;
 }
 
@@ -22,6 +23,7 @@ export function useRealTimeUpdates({
   onAccountUpdate,
   onOrderUpdate,
   onMessageUpdate,
+  onReservationExpired,
   onConnect,
 }: UseRealTimeUpdatesProps) {
   const socketRef = useRef<Socket | null>(null);
@@ -110,6 +112,22 @@ export function useRealTimeUpdates({
       window.dispatchEvent(new CustomEvent("stockCleaned", { detail: data }));
     });
 
+    socket.on("reservationExpired", (data) => {
+  console.log("Reserva expirada:", data);
+  
+  // Eliminar item del carrito localmente
+  if (onReservationExpired) {
+    onReservationExpired(data);
+  }
+  
+  // Disparar evento para actualizar carrito
+  window.dispatchEvent(new CustomEvent("reservationExpired", {
+    detail: data
+  }));
+});
+
+    
+
     socket.on("messageUpdate", (data) => {
       onMessageUpdate?.(data);
     });
@@ -121,6 +139,7 @@ export function useRealTimeUpdates({
     onAccountUpdate,
     onOrderUpdate,
     onMessageUpdate,
+    onReservationExpired,
     onConnect,
   ]);
 

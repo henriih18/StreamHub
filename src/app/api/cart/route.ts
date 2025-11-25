@@ -227,7 +227,7 @@ const availableStockIds =
         .slice(0, newQuantity)
         .map((stock) => stock.id) || [];
         // ACTUALIZAR RESERVA PRIMERO
-        await db.stockReservation.upsert({
+        /* await db.stockReservation.upsert({
           where: {
             userId_accountId_accountType: {
               userId,
@@ -250,7 +250,75 @@ saleType: saleType,
             quantity: newQuantity,
             expiresAt: new Date(Date.now() + 5 * 60 * 1000),
           },
+        }); */
+
+        // REEMPLAZAR el bloque upsert (líneas ~242-253):
+const reservationResult = await db.stockReservation.upsert({
+  where: {
+    userId_accountId_accountType: {
+      userId,
+      accountId: streamingAccountId,
+      accountType: "STREAMING",
+    },
+  },
+  update: {
+    quantity: newQuantity,
+    stockIds: availableStockIds,
+    saleType: saleType,
+    expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+  },
+  create: {
+    userId,
+    accountId: streamingAccountId,
+    stockIds: availableStockIds,
+    saleType: saleType,
+    accountType: "STREAMING",
+    quantity: newQuantity,
+    expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+  },
+});
+
+// AGREGAR DESPUÉS: Programar notificación de expiración
+const scheduleExpirationNotification = (reservation: any) => {
+  setTimeout(async () => {
+    try {
+      // Verificar si la reserva todavía existe
+      const stillExists = await db.stockReservation.findFirst({
+        where: { id: reservation.id },
+      });
+      
+      if (stillExists) {
+        // Eliminar reserva
+        await db.stockReservation.delete({
+          where: { id: reservation.id },
         });
+        
+        // Notificar al usuario
+        const io = getIO();
+        if (io) {
+          io.to(`user:${userId}`).emit("reservationExpired", {
+            accountId: streamingAccountId,
+            accountType: "STREAMING",
+            message: "Tu reserva ha expirado",
+          });
+          
+          // Emitir actualización de stock
+          io.emit("stockUpdated", {
+            accountId: streamingAccountId,
+            accountType: "regular",
+            type: saleType,
+            newStock: 0, // Forzar recálculo
+            expired: true,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error en notificación de expiración:", error);
+    }
+  }, 5 * 60 * 1000); // 5 minutos
+};
+
+scheduleExpirationNotification(reservationResult);
 
         //ACTUALIZAR CART ITEM DESPUÉS
         const updatedItem = await db.cartItem.update({

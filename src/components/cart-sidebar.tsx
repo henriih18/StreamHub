@@ -197,7 +197,7 @@ export function CartSidebar({
   };
 
   // Componente para el contador
-  const CountdownTimer = ({ expiresAt, onExpire }: { expiresAt?: string; onExpire: () => void }) => {
+  /* const CountdownTimer = ({ expiresAt, onExpire }: { expiresAt?: string; onExpire: () => void }) => {
     const { minutes, seconds, formatted, isExpired } = useCountdown(
       expiresAt as string | Date | null,
       {
@@ -220,10 +220,38 @@ export function CartSidebar({
         {isWarning && <AlertCircle className="w-3 h-3 text-orange-400" />}
       </div>
     )
+  } */
+
+    // REEMPLAZAR el componente CountdownTimer:
+const CountdownTimer = ({ expiresAt }: { expiresAt?: string }) => {
+  const { minutes, seconds, formatted, isExpired } = useCountdown(
+    expiresAt as string | Date | null
+  );
+
+  if (!expiresAt || isExpired) {
+    return (
+      <div className="flex items-center space-x-1 text-xs text-red-400">
+        <AlertCircle className="w-3 h-3" />
+        <span>Expirado</span>
+      </div>
+    );
   }
 
-  // 🔥 MANEJAR EXPIRACIÓN DEL ITEM
-  const handleItemExpire = async (itemId: string) => {
+  const isWarning = minutes < 2;
+
+  return (
+    <div className={`flex items-center space-x-1 text-xs ${
+      isWarning ? 'text-orange-400' : 'text-gray-400'
+    }`}>
+      <Clock className="w-3 h-3" />
+      <span>{formatted}</span>
+      {isWarning && <AlertCircle className="w-3 h-3 text-orange-400" />}
+    </div>
+  );
+};
+
+  // MANEJAR EXPIRACIÓN DEL ITEM
+  /* const handleItemExpire = async (itemId: string) => {
     // EVITAR PROCESAMIENTO DUPLICADO
     if (expiringItems.has(itemId)) {
       console.log('Item ya se está eliminando:', itemId)
@@ -233,7 +261,7 @@ export function CartSidebar({
     setExpiringItems(prev => new Set(prev).add(itemId))
 
     try {
-      console.log('🗑️ Eliminando item expirado:', itemId)
+      console.log('Eliminando item expirado:', itemId)
       
       const response = await fetch(`/api/cart/${itemId}`, {
         method: 'DELETE'
@@ -241,7 +269,7 @@ export function CartSidebar({
       
       if (response.ok) {
         const data = await response.json()
-        console.log('✅ Item eliminado exitosamente:', data)
+        console.log('Item eliminado exitosamente:', data)
         
         // MOSTRAR NOTIFICACIÓN CLARA
         toast.error(`${data.itemName || 'Producto'} eliminado del carrito por tiempo expirado`)
@@ -249,7 +277,7 @@ export function CartSidebar({
         // ACTUALIZAR ESTADO LOCAL INMEDIATAMENTE (CRÍTICO)
         setCartItems(prev => {
           const updatedItems = prev.filter(item => item.id !== itemId)
-          console.log('🔄 Carrito actualizado:', updatedItems.length, 'items')
+          console.log(' Carrito actualizado:', updatedItems.length, 'items')
           return updatedItems
         })
         
@@ -267,11 +295,11 @@ export function CartSidebar({
         
       } else {
         const errorData = await response.json()
-        console.error('❌ Error al eliminar item:', errorData.error)
+        console.error(' Error al eliminar item:', errorData.error)
         toast.error(errorData.error || 'Error al eliminar el artículo del carrito')
       }
     } catch (error) {
-      console.error('❌ Error en handleItemExpire:', error)
+      console.error('Error en handleItemExpire:', error)
       toast.error('Error de conexión al eliminar el artículo')
     } finally {
       // LIMPIAR ESTADO DESPUÉS DE UN TIEMPO PRUDENTE
@@ -283,7 +311,7 @@ export function CartSidebar({
         })
       }, 3000) // 3 segundos para asegurar sincronización
     }
-  }
+  } */
 
   return (
     <>
@@ -427,7 +455,7 @@ export function CartSidebar({
                     <div className="mb-3">
                       <CountdownTimer 
                         expiresAt={item.reservationExpiresAt} 
-                        onExpire={() => handleItemExpire(item.id)}
+                        /* onExpire={() => handleItemExpire(item.id)} */
                       />
                     </div>
 

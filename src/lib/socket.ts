@@ -61,6 +61,56 @@ export const setupSocket = (io: Server) => {
   }, 5000);
 };
 
+// AGREGAR después de la línea 51 (después del setupSocket):
+
+// Función para programar notificaciones de expiración
+export const scheduleExpirationNotification = (
+  io: Server, 
+  reservationId: string, 
+  userId: string, 
+  accountId: string, 
+  accountType: string,
+  delay: number = 5 * 60 * 1000 // 5 minutos por defecto
+) => {
+  setTimeout(async () => {
+    try {
+      // Importar db aquí para evitar problemas de importación circular
+      const { db } = await import("@/lib/db");
+      
+      // Verificar si la reserva todavía existe
+      const stillExists = await db.stockReservation.findFirst({
+        where: { id: reservationId },
+      });
+      
+      if (stillExists) {
+        // Eliminar reserva
+        await db.stockReservation.delete({
+          where: { id: reservationId },
+        });
+        
+        // Notificar al usuario específico
+        io.to(`user:${userId}`).emit("reservationExpired", {
+          accountId,
+          accountType,
+          message: "Tu reserva ha expirado",
+        });
+        
+        // Emitir actualización general de stock
+        io.emit("stockUpdated", {
+          accountId,
+          accountType: accountType === "STREAMING" ? "regular" : "exclusive",
+          newStock: 0, // Forzar recálculo en frontend
+          expired: true,
+        });
+        
+        console.log(`Reserva ${reservationId} expirada y eliminada automáticamente`);
+      }
+    } catch (error) {
+      console.error("Error en notificación automática de expiración:", error);
+    }
+  }, delay);
+};
+
 // Function to broadcast stock updates to all connected clients
 export const broadcastStockUpdate = (io: Server, stockData: any) => {
   io.emit("stockUpdated", stockData);
@@ -273,7 +323,8 @@ setInterval(async () => {
 
     if (response.ok) {
       const data = await response.json();
-      if (data.deletedCount > 0) {
+      /* if (data.deletedCount > 0) { */
+      if (data.deletedReservations > 0) {
         console.log(
           `Limpieza automática: ${data.deletedCount} reservas expiradas eliminadas`
         );

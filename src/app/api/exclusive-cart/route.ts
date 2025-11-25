@@ -364,7 +364,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Actualizar reserva
-      await db.stockReservation.upsert({
+      /* await db.stockReservation.upsert({
         where: {
           userId_accountId_accountType: {
             userId,
@@ -383,12 +383,85 @@ export async function POST(request: NextRequest) {
           quantity: newQuantity,
           expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutos
         },
+      }); */
+
+      const reservationResult = await db.stockReservation.upsert({
+  where: {
+    userId_accountId_accountType: {
+      userId,
+      accountId: exclusiveAccountId,
+      accountType: "EXCLUSIVE",
+    },
+  },
+  update: {
+    quantity: newQuantity,
+    saleType: exclusiveAccount.saleType, // AGREGAR ESTA LÍNEA
+    stockIds: [],
+    expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutos
+  },
+  create: {
+    userId,
+    accountId: exclusiveAccountId,
+    accountType: "EXCLUSIVE",
+    saleType: exclusiveAccount.saleType, // AGREGAR ESTA LÍNEA
+    stockIds: [],
+    quantity: newQuantity,
+    expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutos
+  },
+});
+
+      const io = getIO();
+if (io && reservationResult) {
+  setTimeout(async () => {
+    try {
+      // Verificar si la reserva todavía existe
+      const stillExists = await db.stockReservation.findFirst({
+        where: {
+          userId,
+          accountId: exclusiveAccountId,
+          accountType: "EXCLUSIVE",
+        },
       });
+      
+      if (stillExists) {
+        // Eliminar reserva
+        await db.stockReservation.deleteMany({
+          where: {
+            userId,
+            accountId: exclusiveAccountId,
+            accountType: "EXCLUSIVE",
+          },
+        });
+        
+        // Notificar al usuario
+        io.to(`user:${userId}`).emit("reservationExpired", {
+          accountId: exclusiveAccountId,
+          accountType: "EXCLUSIVE",
+          message: "Tu reserva ha expirado",
+        });
+        
+        // Emitir actualización de stock
+        broadcastStockUpdate(io, {
+          accountId: exclusiveAccountId,
+          accountType: "exclusive",
+          type: exclusiveAccount.saleType,
+          newStock: exclusiveAccount.exclusiveStocks?.length || 0, // Stock completo disponible
+          expired: true,
+        });
+        
+        console.log(`Reserva exclusiva ${exclusiveAccountId} expirada y eliminada para usuario ${userId}`);
+      }
+    } catch (error) {
+      console.error("Error en notificación de expiración exclusiva:", error);
+    }
+  }, 5 * 60 * 1000); // 5 minutos
+}
 
       const updatedItem = await db.cartItem.update({
         where: { id: existingItem.id },
         data: {
           quantity: newQuantity,
+          reservationExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
         },
       });
 
@@ -396,7 +469,7 @@ export async function POST(request: NextRequest) {
       await updateCartTotal(cart.id);
 
       // Emitir actualización de stock en tiempo real
-      const io = getIO();
+      /* const io = getIO();
       if (io) {
         const currentStock = exclusiveAccount.exclusiveStocks?.length || 0;
 
@@ -406,12 +479,12 @@ export async function POST(request: NextRequest) {
           type: exclusiveAccount.saleType,
           newStock: Math.max(0, currentStock - newQuantity),
         });
-      }
+      } */
 
       return NextResponse.json(updatedItem);
     } else {
       // Crear reserva para nueva cuenta exclusiva
-      await db.stockReservation.create({
+      /* await db.stockReservation.create({
         data: {
           userId,
           accountId: exclusiveAccountId,
@@ -419,7 +492,66 @@ export async function POST(request: NextRequest) {
           quantity: quantity,
           expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutos
         },
+      }); */
+
+      // REEMPLAZAR el bloque existente:
+// Crear reserva para nueva cuenta exclusiva
+const reservationResult = await db.stockReservation.create({
+  data: {
+    userId,
+    accountId: exclusiveAccountId,
+    accountType: "EXCLUSIVE",
+    saleType: exclusiveAccount.saleType, // AGREGAR ESTA LÍNEA
+    stockIds: [],
+    quantity: quantity,
+    expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutos
+  },
+});
+
+// AGREGAR DESPUÉS de este bloque (línea ~423):
+// Programar notificación de expiración
+const io = getIO();
+if (io && reservationResult) {
+  setTimeout(async () => {
+    try {
+      // Verificar si la reserva todavía existe
+      const stillExists = await db.stockReservation.findFirst({
+        where: {
+          userId,
+          accountId: exclusiveAccountId,
+          accountType: "EXCLUSIVE",
+        },
       });
+      
+      if (stillExists) {
+        // Eliminar reserva
+        await db.stockReservation.delete({
+          where: { id: reservationResult.id },
+        });
+        
+        // Notificar al usuario
+        io.to(`user:${userId}`).emit("reservationExpired", {
+          accountId: exclusiveAccountId,
+          accountType: "EXCLUSIVE",
+          message: "Tu reserva ha expirado",
+        });
+        
+        // Emitir actualización de stock
+        broadcastStockUpdate(io, {
+          accountId: exclusiveAccountId,
+          accountType: "exclusive",
+          type: exclusiveAccount.saleType,
+          newStock: exclusiveAccount.exclusiveStocks?.length || 0, // Stock completo disponible
+          expired: true,
+        });
+        
+        console.log(`Reserva exclusiva ${reservationResult.id} expirada y eliminada para usuario ${userId}`);
+      }
+    } catch (error) {
+      console.error("Error en notificación de expiración exclusiva:", error);
+    }
+  }, 5 * 60 * 1000); // 5 minutos
+}
 
       // Create new cart item with exclusive account ID
       const cartItem = await db.cartItem.create({
@@ -429,6 +561,7 @@ export async function POST(request: NextRequest) {
           quantity: quantity,
           saleType: exclusiveAccount.saleType as "FULL" | "PROFILES",
           priceAtTime: exclusiveAccount.price,
+          reservationExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
         },
       });
 
@@ -436,7 +569,7 @@ export async function POST(request: NextRequest) {
       await updateCartTotal(cart.id);
 
       // Emitir actualización de stock en tiempo real
-      const io = getIO();
+      /* const io = getIO();
       if (io) {
         const currentStock = exclusiveAccount.exclusiveStocks?.length || 0;
 
@@ -446,7 +579,7 @@ export async function POST(request: NextRequest) {
           type: exclusiveAccount.saleType,
           newStock: Math.max(0, currentStock - quantity),
         });
-      }
+      } */
 
       return NextResponse.json(cartItem, { status: 201 });
     }

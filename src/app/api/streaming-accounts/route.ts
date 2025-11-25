@@ -1,5 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getIO } from "@/lib/socket";
+
+const cleanExpiredReservations = async (accountId: string, accountType: string) => {
+        const expiredReservations = await db.stockReservation.findMany({
+    where: {
+      accountId,
+      accountType,
+      expiresAt: { lt: new Date() },
+    },
+  });
+  
+  if (expiredReservations.length > 0) {
+    await db.stockReservation.deleteMany({
+      where: {
+        accountId,
+        accountType,
+        expiresAt: { lt: new Date() },
+      },
+    });
+    
+    // Notificar via WebSocket
+    const io = getIO();
+    if (io) {
+      expiredReservations.forEach(reservation => {
+        io.to(`user:${reservation.userId}`).emit("reservationExpired", {
+          accountId,
+          accountType,
+          message: "Tu reserva ha expirado",
+        });
+      });
+      
+      // Emitir actualización de stock
+      io.emit("stockUpdated", {
+        accountId,
+        accountType: accountType === "STREAMING" ? "regular" : "exclusive",
+        newStock: 0, // Forzar recálculo
+        expired: true,
+      });
+    }
+  }
+};
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,6 +89,8 @@ export async function GET(request: NextRequest) {
     //Calcular stock real considerando reservas
     const accountsWithRealStock = await Promise.all(
       accounts.map(async (account) => {
+await cleanExpiredReservations(account.id, "STREAMING");
+        
         // Verificar reservas activas para esta cuenta
         const reservations = await db.stockReservation.aggregate({
           where: {
@@ -57,6 +100,35 @@ export async function GET(request: NextRequest) {
           },
           _sum: { quantity: true },
         });
+
+        /* const accounts = await db.streamingAccount.findMany({
+  where: {
+    isActive: true,
+  },
+  include: {
+    streamingType: {
+      select: {
+        icon: true,
+        color: true,
+        imageUrl: true,
+      },
+    },
+    accountStocks: {
+      where: {
+        isAvailable: true,
+      },
+    },
+    profileStocks: {
+      where: {
+        isAvailable: true,
+      },
+    },
+    vendorPricing: true,
+  },
+  orderBy: {
+    createdAt: "desc",
+  },
+}); */
 
         const reservedQuantity = reservations._sum.quantity || 0;
 
@@ -70,6 +142,7 @@ export async function GET(request: NextRequest) {
           (account.profileStocks?.length || 0) - reservedQuantity
         );
 
+        
         const updatedAccountStocks = account.accountStocks
           .filter((stock) => stock.isAvailable)
           .slice(0, realAccountStock);
@@ -159,6 +232,7 @@ export async function GET(request: NextRequest) {
     //Calcular stock real para cuentas exclusivas
     const exclusiveAccountsWithRealStock = await Promise.all(
       exclusiveAccounts.map(async (account) => {
+        await cleanExpiredReservations(account.id, "EXCLUSIVE");
         // Verificar reservas activas para esta cuenta exclusiva
         const reservations = await db.stockReservation.aggregate({
           where: {

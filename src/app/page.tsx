@@ -49,6 +49,7 @@ interface StreamingAccount {
 }
 
 interface CartItem {
+  exclusiveAccount: any;
   id: string;
   streamingAccount: StreamingAccount;
   quantity: number;
@@ -90,6 +91,24 @@ export default function Home() {
     onMessageUpdate: (messageData) => {
       window.dispatchEvent(new CustomEvent("messagesUpdated"));
     },
+
+    onReservationExpired: (expirationData) => {
+    // Eliminar item expirado del carrito
+    setCartItems(prev => prev.filter(item => {
+      if (expirationData.accountType === "STREAMING") {
+        return item.streamingAccount?.id !== expirationData.accountId;
+      } else if (expirationData.accountType === "EXCLUSIVE") {
+        return item.exclusiveAccount?.id !== expirationData.accountId;
+      }
+      return true;
+    }));
+    
+    // Mostrar notificación
+    toast.error("Una reserva en tu carrito ha expirado");
+    
+    // Refrescar cuentas
+    fetchAccounts();
+  },
 
     onStockUpdate: (stockData) => {
       /* console.log("Stock update recibido:", stockData); */
