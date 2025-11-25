@@ -215,6 +215,17 @@ export async function POST(request: NextRequest) {
           );
         }
 
+        // Get available stock IDs based on sale type
+const availableStockIds =
+  saleType === "PROFILES"
+    ? streamingAccount.profileStocks
+        ?.filter((stock) => stock.isAvailable)
+        .slice(0, newQuantity)
+        .map((stock) => stock.id) || []
+    : streamingAccount.accountStocks
+        ?.filter((stock) => stock.isAvailable)
+        .slice(0, newQuantity)
+        .map((stock) => stock.id) || [];
         // ACTUALIZAR RESERVA PRIMERO
         await db.stockReservation.upsert({
           where: {
@@ -226,11 +237,15 @@ export async function POST(request: NextRequest) {
           },
           update: {
             quantity: newQuantity,
+            stockIds: availableStockIds,
+saleType: saleType,
             expiresAt: new Date(Date.now() + 5 * 60 * 1000),
           },
           create: {
             userId,
             accountId: streamingAccountId,
+            stockIds: availableStockIds,
+saleType: saleType,
             accountType: "STREAMING",
             quantity: newQuantity,
             expiresAt: new Date(Date.now() + 5 * 60 * 1000),
@@ -251,6 +266,17 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json(updatedItem);
       } else {
+        // Get available stock IDs based on sale type
+const availableStockIds =
+  saleType === "PROFILES"
+    ? streamingAccount.profileStocks
+        ?.filter((stock) => stock.isAvailable)
+        .slice(0, quantity || 1)
+        .map((stock) => stock.id) || []
+    : streamingAccount.accountStocks
+        ?.filter((stock) => stock.isAvailable)
+        .slice(0, quantity || 1)
+        .map((stock) => stock.id) || [];
         // Create new reservation first
         await db.stockReservation.upsert({
           where: {
@@ -262,11 +288,15 @@ export async function POST(request: NextRequest) {
           },
           update: {
             quantity: quantity || 1,
+            stockIds: availableStockIds,
+saleType: saleType,
             expiresAt: new Date(Date.now() + 5 * 60 * 1000),
           },
           create: {
             userId,
             accountId: streamingAccountId,
+            stockIds: availableStockIds,
+saleType: saleType,
             accountType: "STREAMING",
             quantity: quantity || 1,
             expiresAt: new Date(Date.now() + 5 * 60 * 1000),

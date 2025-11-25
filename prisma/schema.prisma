@@ -436,11 +436,13 @@ model VendorPricing {
 model StockReservation {
   id          String   @id @default(cuid())
   userId      String
-  accountId   String   // streamingAccountId o exclusiveAccountId
-  accountType String   // "STREAMING" o "EXCLUSIVE"
+  accountId   String
+  accountType String   // STREAMING o EXCLUSIVE
+  saleType    String   // FULL o PROFILE o EXCLUSIVE
+  stockIds    Json     // ["id1", "id2", "id3"] en formato JSON
   quantity    Int
-  expiresAt   DateTime @default(now())
+  expiresAt   DateTime 
   createdAt   DateTime @default(now())
-  
+
   @@unique([userId, accountId, accountType])
 }

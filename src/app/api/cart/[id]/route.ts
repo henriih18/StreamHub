@@ -117,6 +117,17 @@ export async function PUT(
               { status: 400 }
             );
           }
+          // Get available stock IDs based on sale type
+const availableStockIds =
+  cartItem.saleType === "PROFILES"
+    ? cartItem.streamingAccount.profileStocks
+        ?.filter((stock) => stock.isAvailable)
+        .slice(0, quantity)
+        .map((stock) => stock.id) || []
+    : cartItem.streamingAccount.accountStocks
+        ?.filter((stock) => stock.isAvailable)
+        .slice(0, quantity)
+        .map((stock) => stock.id) || [];
 
           // ACTUALIZAR O CREAR LA RESERVA
           if (currentReservation) {
@@ -125,6 +136,8 @@ export async function PUT(
               where: { id: currentReservation.id },
               data: {
                 quantity: quantity,
+                stockIds: availableStockIds, 
+saleType: cartItem.saleType,
                 expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutos
               },
             });
@@ -135,6 +148,8 @@ export async function PUT(
                 userId: cartItem.cart.userId, // USAR EL USER ID DEL CART
                 accountId: cartItem.streamingAccountId,
                 accountType: "STREAMING",
+                saleType: cartItem.saleType,
+                stockIds: availableStockIds,
                 quantity: quantity,
                 expiresAt: new Date(Date.now() + 5 * 60 * 1000),
               },
