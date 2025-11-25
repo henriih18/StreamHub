@@ -171,14 +171,14 @@ export default function Home() {
     },
   });
 
-  useEffect(() => {
+  /* useEffect(() => {
     const handleStockUpdate = () => {
-      /* console.log("Evento de stock recibido, refrescando..."); */
+    
       fetchAccounts();
     };
 
     const handleStockCleaned = () => {
-      /* console.log("Limpieza de stock recibida, refrescando..."); */
+      
       fetchAccounts();
     };
 
@@ -189,7 +189,53 @@ export default function Home() {
       window.removeEventListener("stockUpdated", handleStockUpdate);
       window.removeEventListener("stockCleaned", handleStockCleaned);
     };
-  }, [user]); // Depender de user para tener fetchAccounts disponible
+  }, [user]); */
+
+  useEffect(() => {
+  const handleStockUpdate = () => {
+    fetchAccounts();
+  };
+
+  const handleStockCleaned = () => {
+    fetchAccounts();
+  };
+
+  // AGREGAR ESTE NUEVO MANEJADOR:
+  const handleReservationExpired = (event: CustomEvent) => {
+    const data = event.detail;
+    console.log("Reserva expirada en page.tsx:", data);
+    
+    // Eliminar item del carrito que corresponde a la reserva expirada
+    setCartItems(prev => prev.filter(item => {
+      if (data.accountType === "STREAMING") {
+        return item.streamingAccount?.id !== data.accountId;
+      } else if (data.accountType === "EXCLUSIVE") {
+        return item.exclusiveAccount?.id !== data.accountId;
+      }
+      return true;
+    }));
+    
+    // Mostrar notificación
+    toast.error("Una reserva en tu carrito ha expirado");
+    
+    // Refrescar cuentas para actualizar disponibilidad
+    fetchAccounts();
+  };
+
+  window.addEventListener("stockUpdated", handleStockUpdate);
+  window.addEventListener("stockCleaned", handleStockCleaned);
+  
+  // AGREGAR ESTA LÍNEA:
+  window.addEventListener("reservationExpired", handleReservationExpired as EventListener);
+
+  return () => {
+    window.removeEventListener("stockUpdated", handleStockUpdate);
+    window.removeEventListener("stockCleaned", handleStockCleaned);
+    
+    // AGREGAR ESTA LÍNEA:
+    window.removeEventListener("reservationExpired", handleReservationExpired as EventListener);
+  };
+}, [user]); // Mantén la dependencia existente
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");

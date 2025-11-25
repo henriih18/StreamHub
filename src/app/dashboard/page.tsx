@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/toast-custom";
 import { useOnlineTracking } from "@/hooks/useOnlineTracking";
+import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
 import {
   Play,
   Shield,
@@ -93,6 +94,21 @@ export default function Dashboard() {
     updateInterval: 30000, // 30 segundos
   });
 
+// ---------------------------------------------------
+// Real‑time updates: stock changes & reservation expirations
+// ---------------------------------------------------
+const handleReservationExpired = async (data: any) => {
+  // Refresh cart (if open) – CartSidebar also listens to "cartUpdate"
+  window.dispatchEvent(new CustomEvent('cartUpdate'));
+  // Reload accounts to recalc available stock
+  await reloadAccounts();
+};
+
+const { isConnected } = useRealTimeUpdates({
+  userId: user?.id,
+  onReservationExpired: handleReservationExpired,
+});
+
   // Check authentication on mount
   useEffect(() => {
     const checkAuth = () => {
@@ -121,91 +137,68 @@ export default function Dashboard() {
   }, [router]);
 
   // Fetch streaming accounts from API
-  useEffect(() => {
-    if (!user) return;
+  // Helper to (re)load accounts – used on mount and on real‑time events
+const reloadAccounts = async () => {
+  if (!user) return;
+  try {
+    const userId = user?.id || null;
+    const url = userId
+      ? `/api/streaming-accounts?userId=${userId}`
+      : "/api/streaming-accounts";
+    const response = await fetch(url);
+    if (response.ok) {
+      const data = await response.json();
+      let allAccounts = [
+        ...(data.exclusiveAccounts || []),
+        ...(data.regularAccounts || []),
+      ];
 
-    const fetchAccounts = async () => {
-      try {
-        const userId = user?.id || null;
-        //console.log('Fetching accounts for userId:', userId) // Debug log
-        const url = userId
-          ? `/api/streaming-accounts?userId=${userId}`
-          : "/api/streaming-accounts";
-        //console.log('API URL:', url) // Debug log
-        const response = await fetch(url);
-        if (response.ok) {
-          const data = await response.json();
-          //console.log('API Response:', data) // Debug log
-
-          let allAccounts = [
-            ...(data.exclusiveAccounts || []),
-            ...(data.regularAccounts || []),
-          ];
-
-          //console.log('Special offers for user:', data.specialOffers) // Debug log
-
-          if (data.specialOffers) {
-            data.specialOffers.forEach((offer: any) => {
-              if (offer.streamingAccount) {
-                // Find if the account already exists in our array
-                const existingAccountIndex = allAccounts.findIndex(
-                  (account) => account.id === offer.streamingAccount.id
-                );
-
-                if (existingAccountIndex !== -1) {
-                  allAccounts[existingAccountIndex] = {
-                    ...allAccounts[existingAccountIndex],
-                    specialOffer: offer,
-                    originalPrice: offer.streamingAccount.price,
-                    price: offer.discountPercentage
-                      ? offer.streamingAccount.price *
-                        (1 - offer.discountPercentage / 100)
-                      : offer.specialPrice || offer.streamingAccount.price,
-                  };
-                } else {
-                  allAccounts.push({
-                    ...offer.streamingAccount,
-                    specialOffer: offer,
-                    originalPrice: offer.streamingAccount.price,
-                    price: offer.discountPercentage
-                      ? offer.streamingAccount.price *
-                        (1 - offer.discountPercentage / 100)
-                      : offer.specialPrice || offer.streamingAccount.price,
-                  });
-                }
-              }
-            });
+      if (data.specialOffers) {
+        data.specialOffers.forEach((offer: any) => {
+          if (offer.streamingAccount) {
+            const idx = allAccounts.findIndex(
+              (acc) => acc.id === offer.streamingAccount.id
+            );
+            const enriched = {
+              ...offer.streamingAccount,
+              specialOffer: offer,
+              originalPrice: offer.streamingAccount.price,
+              price: offer.discountPercentage
+                ? offer.streamingAccount.price *
+                  (1 - offer.discountPercentage / 100)
+                : offer.specialPrice || offer.streamingAccount.price,
+            };
+            if (idx !== -1) allAccounts[idx] = enriched;
+            else allAccounts.push(enriched);
           }
-
-          // Sort accounts: exclusive accounts first, then regular accounts
-          allAccounts = allAccounts.sort((a: any, b: any) => {
-            const aIsExclusive =
-              !a.streamingType && !a.accountStocks && !a.profileStocks;
-            const bIsExclusive =
-              !b.streamingType && !b.accountStocks && !b.profileStocks;
-
-            if (aIsExclusive && !bIsExclusive) return -1;
-            if (!aIsExclusive && bIsExclusive) return 1;
-
-            return 0; // Keep original order within each category
-          });
-          setStreamingAccounts(allAccounts);
-          setFilteredAccounts(allAccounts);
-        }
-      } catch (error) {
-        //console.error('Error fetching accounts:', error)
-        //console.error('Error fetching accounts:', error)
-        toast.error(
-          "Error al recuperar las cuentas. Por favor, intenta de nuevo."
-        );
-        setStreamingAccounts([]);
-        setFilteredAccounts([]);
-        setIsError(true);
+        });
       }
-    };
 
-    fetchAccounts();
-  }, [user]);
+      // Sort exclusive first
+      allAccounts = allAccounts.sort((a: any, b: any) => {
+        const aEx = !a.streamingType && !a.accountStocks && !a.profileStocks;
+        const bEx = !b.streamingType && !b.accountStocks && !b.profileStocks;
+        if (aEx && !bEx) return -1;
+        if (!aEx && bEx) return 1;
+        return 0;
+      });
+      setStreamingAccounts(allAccounts);
+      setFilteredAccounts(allAccounts);
+    }
+  } catch (err) {
+    console.error('Error reloading accounts:', err);
+    toast.error(
+      "Error al recuperar las cuentas. Por favor, intenta de nuevo."
+    );
+    setStreamingAccounts([]);
+    setFilteredAccounts([]);
+    setIsError(true);
+  }
+};
+
+useEffect(() => {
+  reloadAccounts();
+}, [user]);
 
   useEffect(() => {
     if (searchQuery.trim() === "") {
@@ -220,6 +213,28 @@ export default function Dashboard() {
       setFilteredAccounts(filtered);
     }
   }, [searchQuery, streamingAccounts]);
+
+  // ---------------------------------------------------
+  // WebSocket listeners for live updates
+  // ---------------------------------------------------
+  useEffect(() => {
+    if (!user) return;
+    const onStock = (e: CustomEvent) => {
+      // Simple reload – accounts will recalc stock based on fresh data
+      reloadAccounts();
+    };
+    const onReservation = (e: CustomEvent) => {
+      // Refresh cart UI and reload accounts
+      window.dispatchEvent(new CustomEvent('cartUpdate'));
+      reloadAccounts();
+    };
+    window.addEventListener('stockUpdated', onStock as EventListener);
+    window.addEventListener('reservationExpired', onReservation as EventListener);
+    return () => {
+      window.removeEventListener('stockUpdated', onStock as EventListener);
+      window.removeEventListener('reservationExpired', onReservation as EventListener);
+    };
+  }, [user]);
 
   useEffect(() => {
     setCurrentPage(1);
