@@ -126,6 +126,6 @@ async function updateCartTotal(cartId: string) {
 
   await db.cart.update({
     where: { id: cartId },
-    data: { totalAmount }
+    data: { totalAmount } 
   })
 }
