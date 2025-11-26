@@ -1,23 +1,15 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
-  typescript: {
-    ignoreBuildErrors: false,
-  },
-
-  reactStrictMode: true,
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // Desactivar Hot Reload para pruebas de WebSocket
   webpack: (config, { dev }) => {
     if (dev) {
       config.watchOptions = {
-        ignored: ["**/*"],
+        poll: 1000,
+        aggregateTimeout: 300,
       };
     }
     return config;
   },
-  eslint: {
-    ignoreDuringBuilds: false,
-  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

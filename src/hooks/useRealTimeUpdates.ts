@@ -35,7 +35,7 @@ export function useRealTimeUpdates({
 
     /* console.log("Intentando conectar socket..."); */
 
-    const socket = io(process.env.NEXT_PUBLIC_WS_URL!, {
+    const socket = io("/", {
       path: "/api/socketio",
       transports: ["websocket", "polling"],
       reconnection: true,
