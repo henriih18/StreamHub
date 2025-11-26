@@ -430,6 +430,11 @@ export default function Home() {
         !account.accountStocks &&
         !account.profileStocks;
 
+        const displayPrice =
+      account.saleType === "PROFILES"
+        ? account.pricePerProfile || account.price
+        : account.price;
+
       let response;
       if (isExclusiveAccount) {
         // Use exclusive cart API for exclusive accounts
@@ -442,6 +447,7 @@ export default function Home() {
             userId: user.id,
             exclusiveAccountId: account.id,
             quantity: quantity,
+            priceAtTime: displayPrice,
           }),
         });
       } else {
@@ -456,6 +462,7 @@ export default function Home() {
             streamingAccountId: account.id,
             quantity: quantity,
             saleType: account.saleType,
+            priceAtTime: displayPrice,
           }),
         });
       }

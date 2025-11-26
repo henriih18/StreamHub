@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, streamingAccountId, quantity, saleType } = body;
+    const { userId, streamingAccountId, quantity, saleType, priceAtTime} = body;
 
     if (!userId || !streamingAccountId) {
       return NextResponse.json(
@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+    
 
     if (!streamingAccount) {
       return NextResponse.json(
@@ -160,7 +161,7 @@ export async function POST(request: NextRequest) {
         );
       }
       // Create new cart item
-      const priceAtTime =
+      /* const priceAtTime =
         saleType === "PROFILES"
           ? streamingAccount.pricePerProfile || streamingAccount.price
           : streamingAccount.price;
@@ -172,6 +173,29 @@ export async function POST(request: NextRequest) {
           quantity: quantity || 1,
           saleType: saleType || "FULL",
           priceAtTime,
+        },
+      }); */
+
+            // Validate priceAtTime if provided
+      let finalPriceAtTime;
+      if (priceAtTime !== undefined) {
+        // Use the price provided by the client (already calculated with discounts)
+        finalPriceAtTime = priceAtTime;
+      } else {
+        // Fallback to original calculation if priceAtTime not provided
+        finalPriceAtTime =
+          saleType === "PROFILES"
+            ? streamingAccount.pricePerProfile || streamingAccount.price
+            : streamingAccount.price;
+      }
+
+      const cartItem = await db.cartItem.create({
+        data: {
+          cartId: cart.id,
+          streamingAccountId,
+          quantity: quantity || 1,
+          saleType: saleType || "FULL",
+          priceAtTime: finalPriceAtTime,
         },
       });
 

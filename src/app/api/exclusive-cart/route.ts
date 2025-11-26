@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { userId, exclusiveAccountId, quantity = 1 } = body
+    const { userId, exclusiveAccountId, quantity, priceAtTime} = body
 
     if (!userId || !exclusiveAccountId) {
       return NextResponse.json(
@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(updatedItem)
     } else {
       // Create new cart item with exclusive account ID
-      const cartItem = await db.cartItem.create({
+      /* const cartItem = await db.cartItem.create({
         data: {
           cartId: cart.id,
           exclusiveAccountId: exclusiveAccountId,
@@ -159,7 +159,27 @@ export async function POST(request: NextRequest) {
           saleType: exclusiveAccount.saleType as 'FULL' | 'PROFILES',
           priceAtTime: exclusiveAccount.price
         }
-      })
+      }) */
+
+              // Validate priceAtTime if provided
+      let finalPriceAtTime;
+      if (priceAtTime !== undefined) {
+        // Use the price provided by the client
+        finalPriceAtTime = priceAtTime;
+      } else {
+        // Fallback to original calculation
+        finalPriceAtTime = exclusiveAccount.price;
+      }
+
+      const cartItem = await db.cartItem.create({
+        data: {
+          cartId: cart.id,
+          exclusiveAccountId,
+          quantity: quantity || 1,
+          saleType: exclusiveAccount.saleType as 'FULL' | 'PROFILES',
+          priceAtTime: finalPriceAtTime,
+        },
+      });
 
       // Update cart total
       await updateCartTotal(cart.id)

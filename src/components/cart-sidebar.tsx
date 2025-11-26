@@ -285,13 +285,13 @@ export function CartSidebar({
                             { maximumFractionDigits: 0 }
                           )}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        {/* <p className="text-xs text-gray-500">
                           $
                           {item.priceAtTime.toLocaleString("es-CO", {
                             maximumFractionDigits: 0,
                           })}{" "}
                           c/u
-                        </p>
+                        </p> */}
                       </div>
                     </div>
                   </div>
