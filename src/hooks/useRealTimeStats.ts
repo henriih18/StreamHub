@@ -39,7 +39,7 @@ export function useRealTimeStats() {
 
   useEffect(() => {
 
-    const socket = io(process.env.NEXT_PUBLIC_WS_URL!, {  
+    const socket = io("/", {  
       path: "/api/socketio",
       transports: ["websocket"],
     });
@@ -55,7 +55,7 @@ export function useRealTimeStats() {
 
     // Connection events
     socket.on("connect", () => {
-      // console.log('Connected to WebSocket server')
+      console.log('Connected to WebSocket server')
       setIsConnected(true);
 
       // Request initial stats
@@ -63,7 +63,7 @@ export function useRealTimeStats() {
     });
 
     socket.on("disconnect", () => {
-      // console.log('Disconnected from WebSocket server')
+       console.log('Disconnected from WebSocket server')
       setIsConnected(false);
     });
 

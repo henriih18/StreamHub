@@ -30,7 +30,8 @@ export function useRealTimeUpdates({
     if (socketRef.current?.connected) return;
 
     try {
-      const socket = io("/api/socketio", {
+      const socket = io("/", {
+        path: "/api/socketio",
         transports: ["websocket", "polling"],
         upgrade: true,
         rememberUpgrade: true,
@@ -65,7 +66,7 @@ export function useRealTimeUpdates({
         if (reconnectAttempts.current < maxReconnectAttempts) {
           reconnectAttempts.current++;
           setTimeout(() => {
-            // console.log(`Attempting to reconnect (${reconnectAttempts.current}/${maxReconnectAttempts})`)
+            console.log(`Attempting to reconnect (${reconnectAttempts.current}/${maxReconnectAttempts})`)
             connect();
           }, 1000 * reconnectAttempts.current);
         }
@@ -77,7 +78,7 @@ export function useRealTimeUpdates({
 
       // Listen for real-time updates
       socket.on("userUpdated", (userData: any) => {
-        // console.log('User updated:', userData)
+         console.log('User updated:', userData)
         onUserUpdate?.(userData);
       });
 
@@ -87,17 +88,17 @@ export function useRealTimeUpdates({
       });
 
       socket.on("accountUpdated", (accountData: any) => {
-        // console.log('Account updated:', accountData)
+         console.log('Account updated:', accountData)
         onAccountUpdate?.(accountData);
       });
 
       socket.on("orderUpdated", (orderData: any) => {
-        // console.log('Order updated:', orderData)
+         console.log('Order updated:', orderData)
         onOrderUpdate?.(orderData);
       });
 
       socket.on("messageUpdate", (messageData: { unreadCount: number }) => {
-        // console.log('Message count updated:', messageData)
+         console.log('Message count updated:', messageData)
         onMessageUpdate?.(messageData);
       });
     } catch (error) {
