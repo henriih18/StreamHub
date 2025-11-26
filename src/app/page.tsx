@@ -128,6 +128,22 @@ export default function Home() {
           return account;
         })
       );
+      /* if (user) {
+      fetchCartItems(); // Refrescar carrito cuando cambia el stock
+    } */
+
+      // Actualizar carrito en tiempo real
+setCartItems(prevItems =>
+  prevItems.map(item => {
+    if (item.streamingAccount?.id === stockData.accountId) {
+      return {
+        ...item,
+        availableStock: stockData.newStock
+      };
+    }
+    return item;
+  })
+);
     },
   });
 

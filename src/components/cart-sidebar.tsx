@@ -106,6 +106,8 @@ export function CartSidebar({
         setPaymentSuccess(true);
         onPaymentSuccess?.(data.newCredits);
 
+        
+
         // Clear cart after successful payment
         setTimeout(() => {
           onCheckout();
@@ -113,6 +115,7 @@ export function CartSidebar({
         }, 2000);
       } else {
         //console.error('Payment error:', data.error)
+        toast.error(data.error || "Error al procesar el pago");
       }
     } catch (error) {
       //console.error('Payment processing error:', error)
