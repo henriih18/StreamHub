@@ -243,10 +243,41 @@ setCartItems(prevItems =>
   };
 
   useEffect(() => {
-    if (!user) return;
+  // Escuchar cuando el usuario hace login
+  const handleUserLogin = () => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+    }
+  };
+
+  window.addEventListener('userLoggedIn', handleUserLogin);
+  
+  return () => {
+    window.removeEventListener('userLoggedIn', handleUserLogin);
+  };
+}, []);
+  
+
+  /* useEffect(() => {
+    // if (!user) return; descomentar si no se quiere mostrar el catalogo sin loguearse
     fetchAccounts();
-    //console.log("user en page.tsx:", user);
-  }, [user]);
+    
+  }, [user?.id, user?.role]); */
+
+  useEffect(() => {
+    // NOTA: Se permite ver el catálogo sin iniciar sesión
+    // Para restringir el catálogo solo a usuarios logueados, descomentar:
+    // if (!user) return;
+    
+    // Pequeño delay para asegurar que el estado user esté actualizado
+    const timer = setTimeout(() => {
+      fetchAccounts();
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [user?.id, user?.role]);
 
   // Fetch cart items if user is logged in
   useEffect(() => {
@@ -509,7 +540,7 @@ setCartItems(prevItems =>
     }
   };
 
-  const handleLogin = (userData: any) => {
+  /* const handleLogin = (userData: any) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
   };
@@ -517,7 +548,7 @@ setCartItems(prevItems =>
   const handleRegister = (userData: any) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
-  };
+  }; */
 
   const handleLogout = () => {
     setUser(null);

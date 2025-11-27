@@ -87,7 +87,7 @@ export default function LoginPage() {
 
         console.log("🔥 Dispatching userLoggedIn event with:", data.user);
 
-        /* window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: data.user })); */
+        window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: data.user }));
 
         toast.success("¡Inicio de sesión exitoso!");
 
