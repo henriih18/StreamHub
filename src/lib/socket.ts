@@ -3,23 +3,22 @@ import { db } from "@/lib/db";
 
 export const setupSocket = (io: Server) => {
   io.on("connection", (socket) => {
-    // console.log('Client connected:', socket.id);
+    // console.log('Cliente conectado:', socket.id);
 
-    // Handle user registration for message updates
+    // Gestionar el registro de usuarios para actualizaciones de mensajes
     socket.on("registerUser", (userId: string) => {
       socket.join(`user:${userId}`);
-      // console.log(`User ${userId} registered for message updates`);
+      // console.log(`El usuario ${userId} se registró para recibir actualizaciones de mensajes`);
     });
 
-    // Handle admin registration for real-time updates
+    // Gestionar el registro de administrador para actualizaciones en tiempo real
     socket.on("registerAdmin", () => {
       socket.join("admins");
       console.log("👑 Admin registered for real-time updates");
     });
 
-    // Handle messages
+    // Manejar mensajes
     socket.on("message", (msg: { text: string; senderId: string }) => {
-      // Echo: broadcast message only the client who send the message
       socket.emit("message", {
         text: `Echo: ${msg.text}`,
         senderId: "system",
@@ -27,7 +26,7 @@ export const setupSocket = (io: Server) => {
       });
     });
 
-    // Handle admin stats requests
+    // Gestionar solicitudes de estadísticas de administración
     socket.on("request-stats", async () => {
       try {
         const stats = await getRealTimeStats();
@@ -37,12 +36,12 @@ export const setupSocket = (io: Server) => {
       }
     });
 
-    // Handle disconnect
+    // Manejar desconexión
     socket.on("disconnect", () => {
-      // console.log('Client disconnected:', socket.id);
+      // console.log('Cliente desconectado:', socket.id);
     });
 
-    // Send welcome message
+    // Enviar mensaje de bienvenida
     socket.emit("message", {
       text: "Welcome to WebSocket Echo Server!",
       senderId: "system",
@@ -50,7 +49,7 @@ export const setupSocket = (io: Server) => {
     });
   });
 
-  // Emit stats updates every 5 seconds
+  // Emitir actualizaciones de estadísticas cada 5 segundos
   setInterval(async () => {
     try {
       const stats = await getRealTimeStats();
@@ -61,24 +60,24 @@ export const setupSocket = (io: Server) => {
   }, 5000);
 };
 
-// Function to broadcast stock updates to all connected clients
+// Función para transmitir actualizaciones de stock a todos los clientes conectados
 export const broadcastStockUpdate = (io: Server, stockData: any) => {
   io.emit("stockUpdated", stockData);
   console.log("📦 Broadcasting stock update:", stockData);
 };
 
-// Function to broadcast account updates to all connected clients
+// Función para transmitir actualizaciones de cuenta a todos los clientes conectados
 export const broadcastAccountUpdate = (io: Server, accountData: any) => {
   io.emit("accountUpdated", accountData);
   console.log("🔄 Broadcasting account update:", accountData);
 };
 
-// Function to broadcast order updates to all connected clients
+// Función para transmitir actualizaciones de pedidos a todos los clientes conectados
 export const broadcastOrderUpdate = (io: Server, orderData: any) => {
   io.emit("orderUpdated", orderData);
   console.log("🛒 Broadcasting order update:", orderData);
 };
-// Function to broadcast message updates to specific users
+// Función para transmitir actualizaciones de mensajes a usuarios específicos
 export const broadcastMessageUpdate = (
   io: Server,
   userId: string,
@@ -87,21 +86,21 @@ export const broadcastMessageUpdate = (
   io.to(`user:${userId}`).emit("messageUpdate", { unreadCount });
 };
 
-// Function to get IO instance
+// Función para obtener la instancia de IO
 export const getIO = (): Server | null => {
   return (global as any).io || null;
 };
 
-// Function to get real-time statistics
+// Función para obtener estadísticas en tiempo real
 async function getRealTimeStats() {
   try {
-    // Get total users
+    // Obtener el total de usuarios
     const totalUsers = await db.user.count();
 
-    // Get total orders
+    // obtener el total de ordenes
     const totalOrders = await db.order.count();
 
-    // Get total revenue
+    // Obtenga ingresos totales
     const orders = await db.order.findMany({
       select: { totalPrice: true },
     });
@@ -110,7 +109,7 @@ async function getRealTimeStats() {
       0
     );
 
-    // Get active users (users with orders)
+    // Obtener usuarios activos (usuarios con pedidos)
     const activeUsers = await db.user.count({
       where: {
         orders: {
@@ -119,38 +118,17 @@ async function getRealTimeStats() {
       },
     });
 
-    // Get total credits
+    // Obtener créditos totales
     const users = await db.user.findMany({
       select: { credits: true },
     });
     const totalCredits = users.reduce((sum, user) => sum + user.credits, 0);
 
-    // Get conversion rate
+    // Obtener tasa de conversión
     const conversionRate =
       totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0;
 
-    /*  const onlineUsersResponse = await fetch(
-      `${
-        process.env.NEXTAUTH_URL || "http://localhost:3000"
-      }/api/admin/online-users`
-    );
-    let onlineUsers = {
-      current: 0,
-      peakToday: 0,
-      averageToday: 0,
-    };
-
-    if (onlineUsersResponse.ok) {
-      const onlineData = await onlineUsersResponse.json();
-      onlineUsers = {
-        current: onlineData.current || 0,
-       
-        peakToday: onlineData.peakToday || 0,
-        averageToday: onlineData.averageToday || 0,
-      };
-    } */
-
-    // Get online users from real tracking system
+    // Obtenga usuarios en línea a partir de un sistema de seguimiento real
     let onlineUsers = {
       current: 0,
       peakToday: 0,
@@ -180,61 +158,12 @@ async function getRealTimeStats() {
       // Usar valores por defecto si hay error
     }
 
-    // Get performance metrics (simulated for now)
-    /* const pagePerformance = {
-      loadTime: Math.random() * 500 + 200,
-      responseTime: Math.random() * 100 + 50,
-      uptime: 99.5 + Math.random() * 0.5,
-      performanceScore: 85 + Math.floor(Math.random() * 15),
-    }; */
     const pagePerformance = {
       loadTime: 0,
       responseTime: 0,
       uptime: 100,
       performanceScore: 100,
     };
-
-    // Get inventory stats
-    /* const [regularAccounts, exclusiveAccounts] = await Promise.all([
-      db.streamingAccount.findMany({
-        include: {
-          _count: {
-            select: {
-              accountStocks: true,
-              profileStocks: true,
-              orders: true,
-            },
-          },
-        },
-      }),
-      db.exclusiveAccount.findMany({
-        include: {
-          exclusiveStocks: true,
-          _count: {
-            select: {
-              orders: true,
-            },
-          },
-        },
-      }),
-    ]);
-
-    // Calculate stock totals
-    const totalRegularStock = regularAccounts.reduce(
-      (sum, account) =>
-        sum +
-        (account._count.accountStocks || 0) +
-        (account._count.profileStocks || 0),
-      0
-    );
-
-    const totalExclusiveStock = exclusiveAccounts.reduce(
-      (sum, account) =>
-        sum +
-        (account.exclusiveStocks?.filter((stock) => stock.isAvailable).length ||
-          0),
-      0
-    ); */
 
     // Get inventory stats
     const [regularAccounts, exclusiveAccounts] = await Promise.all([
@@ -253,7 +182,7 @@ async function getRealTimeStats() {
       }),
     ]);
 
-    // Calculate stock totals
+    // Calcular totales de existencias
     const totalRegularStock = regularAccounts.reduce(
       (sum, account) =>
         sum +
@@ -272,7 +201,7 @@ async function getRealTimeStats() {
 
     const totalStock = totalRegularStock + totalExclusiveStock;
 
-    // Get recent orders for activity
+    // Obtenga pedidos recientes de actividad
     const recentOrders = await db.order.findMany({
       take: 5,
       orderBy: { createdAt: "desc" },

@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 
 export async function GET() {
   try {
-    // Get all users with their action counts in a single query
+    // Obtener todos los usuarios con sus recuentos de acciones en una sola consulta
     const usersWithActionCounts = await db.user.findMany({
       select: {
         id: true,
@@ -25,10 +25,10 @@ export async function GET() {
       },
     });
 
-    // Calculate action counts for all users in a more efficient way
+    // Calcular el número de acciones para todos los usuarios de una manera más eficiente
     const actionCounts: Record<string, number> = {};
 
-    // Get all orders, renewals, and other actions to calculate counts
+    // Obtener todos los pedidos, renovaciones y otras acciones para calcular los recuentos
     const [totalOrders, totalRenewals, totalRecharges] = await Promise.all([
       db.order.groupBy({
         by: ["userId"],
@@ -52,7 +52,7 @@ export async function GET() {
       }),
     ]);
 
-    // Calculate action counts for each user
+    // Calcular el número de acciones para cada usuario
     usersWithActionCounts.forEach((user) => {
       const orderCount =
         totalOrders.find((o) => o.userId === user.id)?._count || 0;
@@ -61,7 +61,7 @@ export async function GET() {
       const rechargeCount =
         totalRecharges.find((r) => r.userId === user.id)?._count || 0;
 
-      // Total actions = orders + renewals + recharges
+      // Total de acciones = pedidos + renovaciones + recargas
       actionCounts[user.id] = orderCount + renewalCount + rechargeCount;
     });
 
@@ -73,7 +73,10 @@ export async function GET() {
       },
     });
   } catch (error) {
-    //console.error('Error fetching users with action counts:', error)
+    console.error(
+      "Error al obtener los usuarios con recuentos de acciones:",
+      error
+    );
     return NextResponse.json(
       { error: "Error al obtener los usuarios con recuentos de acciones" },
       { status: 500 }

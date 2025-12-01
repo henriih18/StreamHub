@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     try {
       const files = await readdir(uploadsDir);
 
-      // Filter for image files and get their stats
+      // Filtrar archivos de imagen y obtener sus estadísticas
       const imageFiles = await Promise.all(
         files
           .filter((file) => {
@@ -32,13 +32,16 @@ export async function GET(request: NextRequest) {
                 modifiedAt: stats.mtime.toISOString(),
               };
             } catch (error) {
-              //console.error(`Error reading file stats for ${file}:`, error);
+              console.error(
+                `Error leyendo estadísticas de archivos para ${file}:`,
+                error
+              );
               return null;
             }
           })
       );
 
-      // Filter out null results and sort by creation date (newest first)
+      // Filtrar resultados nulos y ordenar por fecha de creación (más reciente primero)
       const validFiles = imageFiles
         .filter((file) => file !== null)
         .sort(
@@ -52,16 +55,16 @@ export async function GET(request: NextRequest) {
         total: validFiles.length,
       });
     } catch (dirError) {
-      //console.error("Error reading uploads directory:", dirError);
+      console.error("Error al leer el directorio de cargas:", dirError);
       return NextResponse.json({
         success: true,
         images: [],
         total: 0,
-        message: "No uploads directory found",
+        message: "No se encontró ningún directorio de cargas",
       });
     }
   } catch (error) {
-    //console.error("Error fetching uploaded images:", error);
+    console.error("Error al cargar las imágenes subidas:", error);
     return NextResponse.json(
       { error: "Error al cargar las imágenes subidas" },
       { status: 500 }

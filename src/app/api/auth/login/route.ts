@@ -10,12 +10,10 @@ const loginSchema = z.object({
   password: z.string().min(1, "La contraseña es requerida"),
 });
 
-/* const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production' */
-
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
 if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET environment variable is required");
+  throw new Error("Se requiere la variable de entorno JWT_SECRET");
 }
 
 export async function POST(request: NextRequest) {
@@ -24,16 +22,6 @@ export async function POST(request: NextRequest) {
 
     // Validar los datos de entrada
     const validation = loginSchema.safeParse(body);
-    /* if (!validation.success) {
-      const fieldErrors = validation.error.errors[0]
-      return NextResponse.json(
-        { 
-          error: fieldErrors.message,
-          field: fieldErrors.path[0]
-        },
-        { status: 400 }
-      )
-    } */
 
     if (!validation.success) {
       const allErrors = validation.error.issues.map((issue) => ({
@@ -118,7 +106,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // También verificar el campo isBlocked del usuario (sistema antiguo - compatibilidad)
     if (user.isBlocked) {
       isBlocked = true;
       if (!blockReason) {
@@ -331,7 +318,7 @@ export async function GET(request: NextRequest) {
       );
     }
   } catch (error) {
-    //console.error("Error en verificación de token:", error);
+    console.error("Error en verificación de token:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }

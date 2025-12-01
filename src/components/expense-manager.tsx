@@ -123,7 +123,7 @@ export function ExpenseManager({ isOpen, onClose }: ExpenseManagerProps) {
         setProfitData(profitsData);
       }
     } catch (error) {
-      //console.error('Error fetching expense data:', error)
+      //console.error('Error al cargar los datos:', error)
       toast.error("Error al cargar los datos");
     } finally {
       setLoading(false);
@@ -150,7 +150,7 @@ export function ExpenseManager({ isOpen, onClose }: ExpenseManagerProps) {
         toast.error("Error al crear el gasto");
       }
     } catch (error) {
-      //console.error('Error creating expense:', error)
+      //console.error('Error al crear el gasto:', error)
       toast.error("Error de conexión");
     }
   };
@@ -173,7 +173,7 @@ export function ExpenseManager({ isOpen, onClose }: ExpenseManagerProps) {
         toast.error("Error al actualizar el gasto");
       }
     } catch (error) {
-      //console.error('Error updating expense:', error)
+      //console.error('Error al actualizar el gasto:', error)
       toast.error("Error de conexión");
     }
   };
@@ -191,7 +191,7 @@ export function ExpenseManager({ isOpen, onClose }: ExpenseManagerProps) {
         toast.error("Error al eliminar el gasto");
       }
     } catch (error) {
-      //console.error('Error deleting expense:', error)
+      //console.error('Error al eliminar el gasto:', error)
       toast.error("Error de conexión");
     }
   };
@@ -233,7 +233,7 @@ export function ExpenseManager({ isOpen, onClose }: ExpenseManagerProps) {
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-gray-900 text-white rounded-xl w-full max-w-6xl max-h-[95vh] overflow-hidden border border-gray-800">
-        {/* Header */}
+        {/* Encabezado */}
         <div className="flex items-center justify-between p-6 border-b border-gray-800 bg-gradient-to-r from-green-900/50 to-emerald-900/50">
           <div className="flex items-center space-x-3">
             <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-2 rounded-lg">
@@ -276,7 +276,7 @@ export function ExpenseManager({ isOpen, onClose }: ExpenseManagerProps) {
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Profit Summary */}
+                {/* Resumen de ganancias */}
                 {profitData && (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Card className="bg-gray-800 border-gray-700">
@@ -350,7 +350,7 @@ export function ExpenseManager({ isOpen, onClose }: ExpenseManagerProps) {
                   </div>
                 )}
 
-                {/* Actions */}
+                {/* Acciones */}
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-white">
                     Lista de Gastos
@@ -507,7 +507,7 @@ export function ExpenseManager({ isOpen, onClose }: ExpenseManagerProps) {
                   </Dialog>
                 </div>
 
-                {/* Expenses List */}
+                {/* Lista de gastos */}
                 <div className="space-y-3">
                   {expenses.length === 0 ? (
                     <Card className="bg-gray-800 border-gray-700">
@@ -600,7 +600,7 @@ export function ExpenseManager({ isOpen, onClose }: ExpenseManagerProps) {
         </ScrollArea>
       </div>
 
-      {/* Edit Expense Dialog */}
+      {/* Editar dialogo de gastos */}
       <Dialog
         open={!!editingExpense}
         onOpenChange={() => setEditingExpense(null)}

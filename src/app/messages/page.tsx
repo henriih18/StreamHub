@@ -60,20 +60,12 @@ export default function MessagesPage() {
   const [cartItems, setCartItems] = useState<any[]>([]);
 
   useEffect(() => {
-    // Get user from localStorage
+    // Obtner usuario de localStorage
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       const userData = JSON.parse(storedUser);
       setUser(userData);
-    } /* else {
-      // Set a default user for testing
-      setUser({
-        id: "cmgzu66vt0000rnso2mvvs2n1",
-        name: "Admin",
-        email: "hernandezhenry58@gmail.com",
-        role: "ADMIN",
-      });
-    } */
+    }
   }, []);
 
   useEffect(() => {
@@ -83,7 +75,7 @@ export default function MessagesPage() {
     }
   }, [user]);
 
-  // Load cart items
+  // Cargar artículos del carrito
   const loadCartItems = async () => {
     try {
       const response = await fetch("/api/cart");
@@ -92,11 +84,11 @@ export default function MessagesPage() {
         setCartItems(data.items || []);
       }
     } catch (error) {
-      //console.error("Error loading cart items:", error);
+      console.error("Error al cargar articulos del carrito", error);
     }
   };
 
-  // Listen for cart open events
+  // Escuchar eventos de apertura de carrito
   useEffect(() => {
     const handleOpenCart = () => {
       setIsCartOpen(true);
@@ -111,24 +103,21 @@ export default function MessagesPage() {
 
   const fetchMessages = async () => {
     try {
-      //console.log("Fetching messages...");
+      //console.log("Obteniendo mensajes...");
       const response = await fetch("/api/messages");
-      //console.log(" Response status:", response.status);
+      //console.log(" Estado de respuesta: ", response.status);
 
       if (response.ok) {
         const data = await response.json();
-        //console.log("Messages data:", data);
+        //console.log("Datos de mensajes:", data);
         const messages = data.messages || [];
-        //console.log("Setting messages:", messages.length);
+        //console.log("Mensajes de configuración:", messages.length);
         setMessages(messages);
-
-        // Don't automatically mark all as read - let users do it manually
-        // This was causing messages to disappear
       } else {
-        //console.error("API Error:", response.status);
+        //console.error("Erro de API", response.status);
       }
     } catch (error) {
-      //console.error("Error fetching messages:", error);
+      //console.error("Error al obtener mensajes:", error);
       toast.error("Error al cargar los mensajes");
     } finally {
       setLoading(false);
@@ -136,104 +125,63 @@ export default function MessagesPage() {
   };
 
   const handleSelectMessage = (message: Message) => {
-    /* console.log("Message selected:", {
-      id: message.id,
-      title: message.title,
-      isRead: message.isRead,
-      senderId: message.sender.id,
-      senderEmail: message.sender.email,
-    }); */
     setSelectedMessage(message);
-    // Removed automatic marking as read
   };
 
   const markAsRead = async (messageId: string) => {
     try {
-      //console.log("API call to mark as read:", messageId);
-      //console.log("Full URL:", `/api/messages/${messageId}`);
-
       const response = await fetch(`/api/messages/${messageId}`, {
-        method: "POST", // Changed from PATCH to POST to avoid 403 error
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Add any auth headers if needed
         },
         body: JSON.stringify({ isRead: true }),
-        credentials: "include", // Include cookies for authentication
+        credentials: "include",
       });
 
-      //console.log("Response status:", response.status);
+      //console.log("Estado de respuesta", response.status);
 
       if (response.ok) {
-        //console.log("Message marked as read successfully");
+        //console.log("mensaje marcado como leido exitosamente");
 
-        // Update local state
+        // Cargar localStorage
         setMessages(
           messages.map((msg) =>
             msg.id === messageId ? { ...msg, isRead: true } : msg
           )
         );
 
-        // Update selected message if it's the one being marked as read
+        // Actualizar el mensaje seleccionado si es el que está marcado como leído
         if (selectedMessage?.id === messageId) {
           setSelectedMessage((prev) =>
             prev ? { ...prev, isRead: true } : null
           );
         }
 
-        // Trigger messages update event for navigation badge
-        //console.log("Triggering navigation update...");
+        //console.log("Activación de la actualización de navegación...");
         window.dispatchEvent(new CustomEvent("messagesUpdated"));
 
-        // Show success feedback
+        // Mostrar comentarios de éxito
         toast.success("Mensaje marcado como leído");
       } else {
-        // Read the error response only once
         let errorMessage = "Error al marcar mensaje como leído";
         try {
           const errorData = await response.json();
           errorMessage = errorData.error || errorMessage;
         } catch (e) {
-          // If JSON parsing fails, try text
           try {
             const errorText = await response.text();
             errorMessage = errorText || errorMessage;
           } catch (textError) {
-            // If both fail, use default message
-            //console.error("Could not parse error response");
+            //console.error("No se pudo analizar la respuesta de error");
           }
         }
 
-        /* console.error(
-          "Failed to mark as read:",
-          response.status,
-          errorMessage
-        ); */
         toast.error(`Error ${response.status}: ${errorMessage}`);
       }
     } catch (error) {
-      //console.error("Error marking message as read:", error);
+      //console.error("Error al marcar el mensaje como leído:", error);
       toast.error("Error de conexión al marcar como leído");
-    }
-  };
-
-  const markAllAsReadSilently = async (messageIds: string[]) => {
-    try {
-      await Promise.all(
-        messageIds.map((messageId) =>
-          fetch(`/api/messages/${messageId}`, {
-            method: "POST", // Changed from PATCH to POST
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ isRead: true }),
-          })
-        )
-      );
-      setMessages(messages.map((msg) => ({ ...msg, isRead: true })));
-
-      // Trigger messages update event for navigation badge
-      window.dispatchEvent(new CustomEvent("messagesUpdated"));
-    } catch (error) {
-      //console.error("Error marking messages as read silently:", error);
     }
   };
 
@@ -243,7 +191,7 @@ export default function MessagesPage() {
       await Promise.all(
         unreadMessages.map((msg) =>
           fetch(`/api/messages/${msg.id}`, {
-            method: "POST", // Changed from PATCH to POST
+            method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ isRead: true }),
           })
@@ -252,10 +200,9 @@ export default function MessagesPage() {
       setMessages(messages.map((msg) => ({ ...msg, isRead: true })));
       toast.success("Todos los mensajes marcados como leídos");
 
-      // Trigger messages update event for navigation badge
       window.dispatchEvent(new CustomEvent("messagesUpdated"));
     } catch (error) {
-      //console.error("Error marking all messages as read:", error);
+      //console.error("Error al marcar todos los mensajes como leídos:", error);
       toast.error("Error al marcar todos los mensajes como leídos");
     }
   };
@@ -271,10 +218,9 @@ export default function MessagesPage() {
       }
       toast.success("Mensaje eliminado");
 
-      // Trigger messages update event for navigation badge
       window.dispatchEvent(new CustomEvent("messagesUpdated"));
     } catch (error) {
-      //console.error("Error deleting message:", error);
+      //console.error("Error al eliminar mensaje:", error);
       toast.error("Error al eliminar mensaje");
     }
   };
@@ -315,30 +261,22 @@ export default function MessagesPage() {
 
   const unreadCount = messages.filter((msg) => !msg.isRead).length;
 
-  // Debug information
-  /* console.log('🔍 Debug Info:', {
-    loading,
-    messagesCount: messages.length,
-    unreadCount,
-    messages: messages.map(m => ({ id: m.id, title: m.title, isRead: m.isRead }))
-  }) */
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-6">
-          {/* Message-themed animated icon */}
+          {/* Icono animado con temática de mensaje */}
           <div className="relative">
             <div className="w-24 h-24 relative">
               {/* Outer rotating message bubble */}
               <div className="absolute inset-0 border-4 border-blue-500/20 rounded-2xl animate-spin-slow"></div>
               <div className="absolute inset-2 border-4 border-transparent border-t-blue-500 border-r-cyan-500 rounded-2xl animate-spin"></div>
 
-              {/* Message icon in center */}
+              {/* Icono de mensaje en el centro */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="relative">
                   <MessageSquare className="w-12 h-12 text-blue-400 animate-pulse" />
-                  {/* Animated dots inside message */}
+                  {/* Puntos animados dentro del mensaje */}
                   <div className="absolute inset-0 flex items-center justify-center space-x-1">
                     <div
                       className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"
@@ -356,7 +294,7 @@ export default function MessagesPage() {
                 </div>
               </div>
 
-              {/* Orbiting message indicators */}
+              {/* Indicadores de mensajes en órbita */}
               <div className="absolute inset-0 animate-spin-slow-reverse">
                 <div className="absolute top-0 left-1/2 w-3 h-3 bg-blue-400 rounded-full transform -translate-x-1/2 -translate-y-1.5 flex items-center justify-center">
                   <Bell className="w-2 h-2 text-white" />
@@ -372,7 +310,7 @@ export default function MessagesPage() {
                 </div>
               </div>
 
-              {/* Notification pulse */}
+              {/* Pulso de notificación */}
               <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full animate-ping">
                 <div className="w-6 h-6 bg-red-500 rounded-full animate-ping"></div>
               </div>
@@ -382,7 +320,6 @@ export default function MessagesPage() {
             </div>
           </div>
 
-          {/* Beautiful loading text */}
           <div className="flex flex-col items-center space-y-3">
             <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-indigo-400 animate-pulse">
               Mensajes
@@ -425,7 +362,7 @@ export default function MessagesPage() {
             </p>
           </div>
 
-          {/* Message progress bar */}
+          {/* Barra de progreso del mensaje */}
           <div className="w-80 h-2 bg-slate-700/50 rounded-full overflow-hidden backdrop-blur-sm">
             <div
               className="h-full bg-gradient-to-r from-blue-500 via-cyan-500 to-indigo-500 rounded-full animate-pulse-slow relative overflow-hidden"
@@ -434,12 +371,11 @@ export default function MessagesPage() {
                 animation: "pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite",
               }}
             >
-              {/* Shimmer effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
             </div>
           </div>
 
-          {/* Floating message indicators */}
+          {/* Indicadores de mensajes flotantes */}
           <div className="flex space-x-4">
             <div
               className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center animate-float"
@@ -462,7 +398,7 @@ export default function MessagesPage() {
           </div>
         </div>
 
-        {/* Custom styles */}
+        {/* Estilos personalizados */}
         <style jsx>{`
           @keyframes spin-slow {
             from {
@@ -532,9 +468,7 @@ export default function MessagesPage() {
         user={user}
         cartItemsCount={(cartItems || []).length}
         onCartOpen={() => setIsCartOpen(true)}
-        onLogin={() => {
-          // Redirect to login or handle login modal
-        }}
+        onLogin={() => {}}
         onLogout={() => {
           setUser(null);
           localStorage.removeItem("user");
@@ -553,7 +487,7 @@ export default function MessagesPage() {
                 : "No hay mensajes nuevos"}
             </p>
           </div>
-          {unreadCount > 0 && (
+          {/* {unreadCount > 0 && (
             <Button
               onClick={markAllAsRead}
               variant="outline"
@@ -562,11 +496,11 @@ export default function MessagesPage() {
               <Check className="w-4 h-4 mr-2" />
               Marcar todos como leídos
             </Button>
-          )}
+          )} */}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* Messages List */}
+          {/* Lista de mensajes */}
           <div className="lg:col-span-2">
             <Card className="bg-slate-800 border-slate-700">
               <CardHeader>
@@ -613,7 +547,7 @@ export default function MessagesPage() {
                                   {!message.isRead && (
                                     <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 animate-pulse"></div>
                                   )}
-                                  {/* Action buttons */}
+                                  {/* Boton de acciones */}
                                   <div
                                     className="flex gap-1"
                                     onClick={(e) => e.stopPropagation()}
@@ -679,7 +613,7 @@ export default function MessagesPage() {
             </Card>
           </div>
 
-          {/* Message Detail */}
+          {/* Detalle de mensajes */}
           <div className="lg:col-span-3">
             {selectedMessage ? (
               <Card className="bg-slate-800 border-slate-700">
@@ -828,10 +762,9 @@ export default function MessagesPage() {
           }
         }}
         onCheckout={() => {
-          // ← FALTABA ESTO
           setIsCartOpen(false);
         }}
-        userCredits={user?.credits || 0} // ← FALTABA ESTO
+        userCredits={user?.credits || 0}
         userId={user?.id}
       />
     </div>

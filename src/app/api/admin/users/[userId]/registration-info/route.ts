@@ -8,7 +8,7 @@ export async function GET(
   try {
     const { userId } = params;
 
-    // Get user registration information
+    // Obtener información de registro de usuario
     const user = await db.user.findUnique({
       where: { id: userId },
       select: {
@@ -20,7 +20,6 @@ export async function GET(
         credits: true,
         role: true,
         createdAt: true,
-        // Don't include password in GET request
       },
     });
 
@@ -31,7 +30,7 @@ export async function GET(
       );
     }
 
-    // Return registration info (without password)
+    // Obtener información de registro (sin contraseña)
     const registrationInfo = {
       fullName: user.fullName || "",
       username: user.username || "",
@@ -39,7 +38,7 @@ export async function GET(
       phone: user.phone || "",
       credits: user.credits || 0,
       role: user.role || "USER",
-      password: "", // Never return password
+      password: "",
       confirmPassword: "",
     };
 
@@ -57,7 +56,10 @@ export async function GET(
       },
     });
   } catch (error) {
-    //console.error('Error fetching user registration info:', error)
+    console.error(
+      "Error al obtener la información de registro del usuario:",
+      error
+    );
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }
@@ -84,7 +86,7 @@ export async function PUT(
       confirmPassword,
     } = body;
 
-    // Validate required fields
+    // Validar campos obligatorios
     if (!fullName?.trim()) {
       return NextResponse.json(
         { error: "El nombre completo es requerido", field: "fullName" },
@@ -113,16 +115,16 @@ export async function PUT(
       );
     }
 
-    // Validate role value
-    if (!["USER", "ADMIN"].includes(role)) {
+    // Validar valor de rol
+    if (!["USER", "ADMIN", "VENDEDOR"].includes(role)) {
       return NextResponse.json(
-        { error: "El rol debe ser USER o ADMIN", field: "role" },
+        { error: "El rol debe ser USER, VENDEDOR o ADMIN", field: "role" },
         { status: 400 }
       );
     }
 
     if (!phone?.trim()) {
-      // Phone is optional, only validate if provided
+      // El teléfono es opcional, solo valide si se proporciona
       if (phone && phone.trim()) {
         const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/;
         if (!phoneRegex.test(phone)) {
@@ -134,7 +136,7 @@ export async function PUT(
       }
     }
 
-    // Validate email format
+    // Validar formato de correo electrónico
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return NextResponse.json(
@@ -143,7 +145,7 @@ export async function PUT(
       );
     }
 
-    // Validate username format
+    // Validar formato de nombre de usuario
     const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
     if (!usernameRegex.test(username)) {
       return NextResponse.json(
@@ -156,7 +158,7 @@ export async function PUT(
       );
     }
 
-    // Validate phone format (only if provided)
+    // Validar el formato del teléfono (solo si se proporciona)
     if (phone && phone.trim()) {
       const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/;
       if (!phoneRegex.test(phone)) {
@@ -167,7 +169,7 @@ export async function PUT(
       }
     }
 
-    // Validate password if provided
+    // Validar la contraseña si se proporciona
     if (password || confirmPassword) {
       if (!password || !confirmPassword) {
         return NextResponse.json(
@@ -208,7 +210,7 @@ export async function PUT(
       }
     }
 
-    // Check if user exists
+    // Compruebe si el usuario existe
     const existingUser = await db.user.findUnique({
       where: { id: userId },
     });
@@ -220,7 +222,7 @@ export async function PUT(
       );
     }
 
-    // Check if email is already taken by another user
+    // Comprobar si el correo electrónico ya está en uso por otro usuario
     const emailExists = await db.user.findFirst({
       where: {
         email: email,
@@ -235,7 +237,7 @@ export async function PUT(
       );
     }
 
-    // Check if username is already taken by another user
+    // Comprobar si el nombre de usuario ya está en uso por otro usuario
     const usernameExists = await db.user.findFirst({
       where: {
         username: username,
@@ -253,7 +255,7 @@ export async function PUT(
       );
     }
 
-    // Prepare update data
+    // Preparar datos de actualización
     const updateData: any = {
       fullName: fullName.trim(),
       username: username.trim(),
@@ -264,14 +266,12 @@ export async function PUT(
       updatedAt: new Date(),
     };
 
-    // Add password to update if provided
+    // Agregue una contraseña para actualizar si se proporciona
     if (password) {
-      // In a real application, you would hash the password here
-      // For now, we'll update it directly (but this is not secure)
       updateData.password = password;
     }
 
-    // Update user
+    // Actualizar usuario
     const updatedUser = await db.user.update({
       where: { id: userId },
       data: updateData,
@@ -288,7 +288,7 @@ export async function PUT(
       },
     });
 
-    // Create activity log
+    // Crear registro de actividad
     await db.userActivity.create({
       data: {
         userId: userId,
@@ -306,7 +306,10 @@ export async function PUT(
       user: updatedUser,
     });
   } catch (error) {
-    console.error("Error updating user registration info:", error);
+    console.error(
+      "Error al actualizar la información de registro del usuario:",
+      error
+    );
 
     // Handle specific database errors
     if (error instanceof Error) {

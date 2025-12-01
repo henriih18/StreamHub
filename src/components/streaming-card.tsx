@@ -108,7 +108,7 @@ export function StreamingCard({
   const isSpecialOffer = !!account.specialOffer;
   const isVendor = userRole === "VENDEDOR";
 
-  // Calculate max quantity based on account type
+  // Calcular la cantidad máxima según el tipo de cuenta
   const maxQuantity = isExclusiveAccount ? exclusiveStock : availableStock;
 
   const getGradientColor = (type: string, customColor?: string) => {
@@ -158,12 +158,12 @@ export function StreamingCard({
           : "bg-gradient-to-br from-slate-900 to-slate-800"
       }`}
     >
-      {/* Premium Border Effect for Exclusive Accounts */}
+      {/* Efecto de borde premium para cuentas exclusivas */}
       {isExclusiveAccount && (
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-500/10 to-transparent opacity-50"></div>
       )}
 
-      {/* Gradient overlay effect */}
+      {/* Efecto de superposición de degradado */}
       {account.streamingType?.color &&
       account.streamingType.color.startsWith("#") ? (
         <div
@@ -179,7 +179,7 @@ export function StreamingCard({
         ></div>
       )}
 
-      {/* Special badges - Enhanced for Exclusive */}
+      {/* Insignias especiales - Mejoradas para Exclusividad */}
       <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
         {isVendor &&
           account.originalPrice && ( // <-- AGREGAR ESTE BLOQUE
@@ -285,7 +285,7 @@ export function StreamingCard({
 
       <CardContent className="relative z-10 flex-1">
         <div className="space-y-4">
-          {/* Features - Enhanced for Exclusive */}
+          {/* Características - Mejoradas para Exclusividad */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-center space-x-2">
               <Calendar
@@ -350,7 +350,7 @@ export function StreamingCard({
             </div>
           </div>
 
-          {/* Price section - Enhanced for Exclusive */}
+          {/* Sección de precios - Mejorada para Exclusiva */}
           <div
             className={`pt-4 border-t ${
               isExclusiveAccount ? "border-amber-700/30" : "border-white/10"
@@ -448,7 +448,7 @@ export function StreamingCard({
             </div>
           </div>
 
-          {/* Quantity Selector */}
+          {/* Selector de cantidad */}
           <div
             className={`pt-4 border-t ${
               isExclusiveAccount ? "border-amber-700/30" : "border-white/10"

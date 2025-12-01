@@ -1,10 +1,8 @@
 import { lazy } from "react";
 
-// Lazy load heavy admin components - placeholders moved to _unused
-// These components are now implemented directly in admin page
 export const LazyPermissionManager = lazy(() => import("./PermissionManager"));
 
-// Fallback components for loading states
+// Componentes de respaldo para estados de carga
 export const UserManagementSkeleton = () => (
   <div className="animate-pulse">
     <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>

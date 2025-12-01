@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(cart);
   } catch (error) {
-    //console.error('Error fetching cart:', error)
+    console.error("Error al recuperar el carrito:", error);
     return NextResponse.json(
       { error: "Error al recuperar el carrito" },
       { status: 500 }
@@ -57,7 +57,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, streamingAccountId, quantity, saleType, priceAtTime} = body;
+    const { userId, streamingAccountId, quantity, saleType, priceAtTime } =
+      body;
 
     if (!userId || !streamingAccountId) {
       return NextResponse.json(
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get streaming account details
+    // Obtener detalles de la cuenta de transmisión
     const streamingAccount = await db.streamingAccount.findUnique({
       where: { id: streamingAccountId },
       include: {
@@ -81,7 +82,6 @@ export async function POST(request: NextRequest) {
         },
       },
     });
-    
 
     if (!streamingAccount) {
       return NextResponse.json(
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get or create cart
+    // Obtener o crear carrito
     let cart = await db.cart.findUnique({
       where: { userId },
     });
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Check if item already exists in cart
+    // Comprobar si el artículo ya existe en el carrito
     const existingItem = await db.cartItem.findFirst({
       where: {
         cartId: cart.id,
@@ -114,10 +114,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingItem) {
-      // Calculate new quantity
+      // Calcular nueva cantidad
       const newQuantity = existingItem.quantity + (quantity || 1);
 
-      // Check stock availability BEFORE updating
+      // Consultar la disponibilidad de stock ANTES de actualizar
       const availableStock =
         saleType === "PROFILES"
           ? streamingAccount.profileStocks?.length || 0
@@ -134,13 +134,13 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Update quantity
+      // Cantidad de actualización
       const updatedItem = await db.cartItem.update({
         where: { id: existingItem.id },
         data: { quantity: newQuantity },
       });
 
-      // Update cart total
+      // Actualizar el total del carrito
       await updateCartTotal(cart.id);
 
       return NextResponse.json(updatedItem);
@@ -160,29 +160,14 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      // Create new cart item
-      /* const priceAtTime =
-        saleType === "PROFILES"
-          ? streamingAccount.pricePerProfile || streamingAccount.price
-          : streamingAccount.price;
 
-      const cartItem = await db.cartItem.create({
-        data: {
-          cartId: cart.id,
-          streamingAccountId,
-          quantity: quantity || 1,
-          saleType: saleType || "FULL",
-          priceAtTime,
-        },
-      }); */
-
-            // Validate priceAtTime if provided
+      // Validar priceAtTime si se proporciona
       let finalPriceAtTime;
       if (priceAtTime !== undefined) {
-        // Use the price provided by the client (already calculated with discounts)
+        // Utilice el precio proporcionado por el cliente (ya calculado con descuentos)
         finalPriceAtTime = priceAtTime;
       } else {
-        // Fallback to original calculation if priceAtTime not provided
+        // Volver al cálculo original si no se proporciona priceAtTime
         finalPriceAtTime =
           saleType === "PROFILES"
             ? streamingAccount.pricePerProfile || streamingAccount.price
@@ -199,13 +184,13 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Update cart total
+      // Actualizar el total del carrito
       await updateCartTotal(cart.id);
 
       return NextResponse.json(cartItem, { status: 201 });
     }
   } catch (error) {
-    //console.error('Error adding to cart:', error)
+    console.error("Error al agregar al carrito:", error);
     return NextResponse.json(
       { error: "Error al agregar al carrito" },
       { status: 500 }

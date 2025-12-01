@@ -15,22 +15,14 @@ import { Badge } from "@/components/ui/badge";
 import { Image as ImageIcon, Trash2, Download, Eye } from "lucide-react";
 import { toast } from "@/components/ui/toast-custom";
 
-/* interface SavedImage {
-  id: string
-  name: string
-  data: string // base64 data
-  createdAt: string
-  size: number
-} */
-
 interface SavedImage {
   id: string;
   name: string;
-  data: string; // base64 data
+  data: string;
   createdAt: string;
   size: number;
-  source: "localStorage" | "server"; // Add source tracking
-  url?: string; // For server images
+  source: "localStorage" | "server";
+  url?: string;
 }
 
 interface ImageGalleryProps {
@@ -53,7 +45,7 @@ export default function ImageGallery({
   const loadSavedImages = async () => {
     setLoading(true);
     try {
-      // Load localStorage images
+      // Cargar imagenes de localStorage
       let localStorageImages: SavedImage[] = [];
       try {
         const stored = localStorage.getItem("streaming-type-images");
@@ -65,10 +57,10 @@ export default function ImageGallery({
           }));
         }
       } catch (error) {
-        //console.error('Error loading localStorage images:', error)
+        //console.error('Error al cargar imagenes de localStorage:', error)
       }
 
-      // Load server images
+      // Cargar servidor de imagenes
       let serverImages: SavedImage[] = [];
       try {
         const response = await fetch("/api/uploads");
@@ -77,22 +69,23 @@ export default function ImageGallery({
           serverImages = data.images.map((img: any) => ({
             id: `server_${img.filename}`,
             name: img.filename,
-            data: img.url, // Use URL as data for server images
+            data: img.url,
             createdAt: img.createdAt,
-            size: Math.round(img.size / 1024), // Convert to KB
+            size: Math.round(img.size / 1024),
             source: "server" as const,
             url: img.url,
           }));
         }
       } catch (error) {
-        //console.error('Error loading server images:', error)
+        //console.error('Error al cargar servidor de imagenes:', error)
+        /* toast.error("Error al cargar servidor de Imagenes") */
       }
 
-      // Combine both sources, server images first (newest), then localStorage
       const allImages = [...serverImages, ...localStorageImages];
       setSavedImages(allImages);
     } catch (error) {
-      //console.error('Error loading images:', error)
+      //console.error('Error al cargar imagenes:', error)
+      toast.error("Error al cargar imagenes");
     } finally {
       setLoading(false);
     }
@@ -108,7 +101,7 @@ export default function ImageGallery({
             name,
             data: optimizedBase64,
             createdAt: new Date().toISOString(),
-            size: Math.round((optimizedBase64.length * 0.75) / 1024), // Approximate size in KB
+            size: Math.round((optimizedBase64.length * 0.75) / 1024),
             source: "localStorage",
           };
 
@@ -124,11 +117,11 @@ export default function ImageGallery({
         })
         .catch((error) => {
           toast.error("Error al optimizar la imagen");
-          //console.error('Optimization error:', error)
+          //console.error('Erro en la optimizacion:', error)
         });
     } catch (error) {
       toast.error("Error al guardar la imagen");
-      //console.error('Save error:', error)
+      //console.error('Error all guardar imagen:', error)
     }
   };
 
@@ -139,7 +132,6 @@ export default function ImageGallery({
       const ctx = canvas.getContext("2d");
 
       img.onload = () => {
-        // Calculate new dimensions (max 300x300 for gallery)
         const maxSize = 300;
         let { width, height } = img;
 
@@ -158,10 +150,8 @@ export default function ImageGallery({
         canvas.width = width;
         canvas.height = height;
 
-        // Draw and compress image
         ctx?.drawImage(img, 0, 0, width, height);
 
-        // Convert to base64 with reduced quality
         const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
         resolve(dataUrl);
       };
@@ -177,7 +167,7 @@ export default function ImageGallery({
       if (!imageToDelete) return;
 
       if (imageToDelete.source === "localStorage") {
-        // Remove from localStorage
+        // Eliminar de localStorage
         const updatedImages = savedImages.filter((img) => img.id !== id);
         setSavedImages(updatedImages);
         localStorage.setItem(
@@ -188,14 +178,13 @@ export default function ImageGallery({
         );
         toast.success("Imagen eliminada");
       } else {
-        // Server images cannot be deleted from the gallery (only from server)
         toast.error(
           "Las imágenes subidas al servidor no se pueden eliminar desde aquí"
         );
       }
     } catch (error) {
       toast.error("Error al eliminar la imagen");
-      //console.error('Delete error:', error)
+      //console.error('Error al eliminar la imagen:', error)
     }
   };
 
@@ -204,12 +193,10 @@ export default function ImageGallery({
       const link = document.createElement("a");
 
       if (image.source === "server" && image.url) {
-        // For server images, download directly from URL
         link.href = image.url;
         link.download = image.name;
         link.target = "_blank";
       } else {
-        // For localStorage images, use base64
         link.href = image.data;
         link.download = `${image.name}.png`;
       }
@@ -220,7 +207,7 @@ export default function ImageGallery({
       toast.success("Imagen descargada");
     } catch (error) {
       toast.error("Error al descargar la imagen");
-      //console.error('Download error:', error)
+      //console.error('Error al descargar la imagen:', error)
     }
   };
 
@@ -300,30 +287,6 @@ export default function ImageGallery({
                   >
                     <CardContent className="p-4">
                       <div className="space-y-3">
-                        {/* <div className="relative">
-                          <img
-                            src={image.data}
-                            alt={image.name}
-                            className="w-full h-32 object-cover rounded cursor-pointer"
-                            onClick={() => setPreviewImage(image)}
-                          />
-                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center space-x-2">
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={() => setPreviewImage(image)}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={() => onSelectImage(image.data)}
-                            >
-                              Seleccionar
-                            </Button>
-                          </div>
-                        </div> */}
                         <div className="relative">
                           <img
                             src={
@@ -360,14 +323,6 @@ export default function ImageGallery({
                         </div>
 
                         <div className="space-y-2">
-                          {/* <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-medium text-white truncate">
-                              {image.name}
-                            </h3>
-                            <Badge variant="secondary" className="text-xs">
-                              {formatFileSize(image.size)}
-                            </Badge>
-                          </div> */}
                           <div className="flex flex-wrap items-center justify-between gap-1">
                             <div className="flex flex-wrap items-center space-x-2 gap-1">
                               <h3 className="text-sm font-medium text-white break-all">
@@ -391,32 +346,6 @@ export default function ImageGallery({
                             {formatDate(image.createdAt)}
                           </p>
 
-                          {/* <div className="flex items-center space-x-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => onSelectImage(image.data)}
-                              className="flex-1 border-emerald-600 text-emerald-400 hover:bg-emerald-600 hover:text-white"
-                            >
-                              Usar
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => downloadImage(image)}
-                              className="border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white"
-                            >
-                              <Download className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => deleteImage(image.id)}
-                              className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div> */}
                           <div className="flex items-center space-x-2">
                             <Button
                               size="sm"
@@ -461,7 +390,7 @@ export default function ImageGallery({
           </ScrollArea>
         </div>
 
-        {/* Preview Dialog */}
+        {/* Cuadro de diálogo de vista previa */}
         {previewImage && (
           <Dialog
             open={!!previewImage}
@@ -473,34 +402,7 @@ export default function ImageGallery({
                   {previewImage.name}
                 </DialogTitle>
               </DialogHeader>
-              {/* <div className="space-y-4">
-                <img
-                  src={previewImage.data}
-                  alt={previewImage.name}
-                  className="w-full max-h-96 object-contain rounded"
-                />
-                <div className="flex items-center justify-between text-sm text-slate-400">
-                  <span>Tamaño: {formatFileSize(previewImage.size)}</span>
-                  <span>Creada: {formatDate(previewImage.createdAt)}</span>
-                </div>
-                <div className="flex space-x-2">
-                  <Button
-                    onClick={() => {
-                      onSelectImage(previewImage.data)
-                      setPreviewImage(null)
-                    }}
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-                  >
-                    Seleccionar esta imagen
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setPreviewImage(null)}
-                  >
-                    Cerrar
-                  </Button>
-                </div>
-              </div> */}
+
               <div className="space-y-4">
                 <img
                   src={

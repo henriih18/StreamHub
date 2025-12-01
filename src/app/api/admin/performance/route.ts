@@ -38,13 +38,13 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
       };
 
-      // Cache for 2 minutes - performance metrics change frequently
+     
       userCache.set(cacheKey, performanceMetrics, 2 * 60 * 1000);
     }
 
     return createDynamicJsonResponse(performanceMetrics);
   } catch (error) {
-    //console.error('Error fetching performance metrics:', error)
+    console.error('Error al obtener las métricas de rendimiento:', error)
     return NextResponse.json(
       { error: "Error al obtener las métricas de rendimiento" },
       { status: 500 }

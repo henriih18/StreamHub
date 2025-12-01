@@ -22,14 +22,14 @@ export async function PUT(
       },
     });
 
-    // Invalidate cache when type is updated
+    // Invalidar caché cuando se actualiza el tipo
     userCache.delete("admin:streaming-types:list");
-    // Also invalidate streaming accounts cache since they depend on types
+    // También invalida el caché de las cuentas de streaming, ya que dependen de tipos
     userCache.delete("admin:streaming-accounts:list");
 
     return NextResponse.json(updatedType);
   } catch (error) {
-    //console.error('Error updating streaming type:', error)
+    console.error("Error al actualizar el tipo de transmisión:", error);
     return NextResponse.json(
       { error: "Error al actualizar el tipo Streaming" },
       { status: 500 }
@@ -44,7 +44,7 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    // Primero obtener el tipo para conocer su nombre
+    //  obtener el tipo para conocer su nombre
     const streamingType = await db.streamingType.findUnique({
       where: { id },
     });
@@ -77,16 +77,16 @@ export async function DELETE(
       where: { id },
     });
 
-    // Invalidate cache when type is deleted
+    // Invalidar caché cuando se elimina el tipo
     userCache.delete("admin:streaming-types:list");
-    // Also invalidate streaming accounts cache since they depend on types
+    // También invalida el caché de las cuentas de streaming, ya que dependen de tipos
     userCache.delete("admin:streaming-accounts:list");
 
     return NextResponse.json({
       message: "Tipo de Streaming eliminado correctamente",
     });
   } catch (error) {
-    //console.error('Error deleting streaming type:', error)
+    console.error("Error al eliminar el tipo de Streaming:", error);
     return NextResponse.json(
       { error: "Error al eliminar el tipo de Streaming" },
       { status: 500 }

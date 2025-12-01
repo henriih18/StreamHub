@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
   try {
     const { userId, amount } = await request.json();
 
-    // Validate required fields
+    // Validar campos obligatorios
     if (!userId || !amount) {
       return NextResponse.json(
         { error: "Faltan campos obligatorios" },
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update user credits
+    // Actualizar créditos de usuario
     const user = await db.user.update({
       where: {
         id: userId,
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create credit recharge record
+    // Crear registro de recarga de crédito
     const creditRecharge = await db.creditRecharge.create({
       data: {
         userId: userId,
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ user, creditRecharge });
   } catch (error) {
-    //console.error('Error recharging credits:', error)
+    console.error('Error al recargar créditos:', error)
 
     return NextResponse.json(
       { error: "Error al recargar creditos" },

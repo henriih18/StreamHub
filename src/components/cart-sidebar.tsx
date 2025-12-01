@@ -106,19 +106,17 @@ export function CartSidebar({
         setPaymentSuccess(true);
         onPaymentSuccess?.(data.newCredits);
 
-        
-
-        // Clear cart after successful payment
+        // Limpiar el carrito despues del pago
         setTimeout(() => {
           onCheckout();
           setPaymentSuccess(false);
         }, 2000);
       } else {
-        //console.error('Payment error:', data.error)
+        //console.error('Error de pago:', data.error)
         toast.error(data.error || "Error al procesar el pago");
       }
     } catch (error) {
-      //console.error('Payment processing error:', error)
+      //console.error('Error al procesar el pago:', error)
     } finally {
       setIsProcessing(false);
     }
@@ -288,13 +286,6 @@ export function CartSidebar({
                             { maximumFractionDigits: 0 }
                           )}
                         </p>
-                        {/* <p className="text-xs text-gray-500">
-                          $
-                          {item.priceAtTime.toLocaleString("es-CO", {
-                            maximumFractionDigits: 0,
-                          })}{" "}
-                          c/u
-                        </p> */}
                       </div>
                     </div>
                   </div>
@@ -323,13 +314,18 @@ export function CartSidebar({
                   </div>
                   {userCredits < total && (
                     <div className="text-right">
-                      <p className="text-xs text-red-400">Insuficientes</p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs font-bold text-red-400">
+                        Créditos Insuficientes
+                      </p>
+                      <p className="text-xs font-semibold text-gray-200">
                         Necesitas $
                         {(total - userCredits).toLocaleString("es-CO", {
                           maximumFractionDigits: 0,
                         })}{" "}
                         más
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        Contacta con soporte para recargar tus créditos
                       </p>
                     </div>
                   )}

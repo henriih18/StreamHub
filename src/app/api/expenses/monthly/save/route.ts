@@ -1,46 +1,56 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   try {
-    const { year, month, force = false } = await request.json()
-    
+    const { year, month, force = false } = await request.json();
+
     if (!year || !month) {
-      return NextResponse.json({ error: 'Se requiere el año y el mes' }, { status: 400 })
+      return NextResponse.json(
+        { error: "Se requiere el año y el mes" },
+        { status: 400 }
+      );
     }
 
-    // Check if record already exists
+    // Comprobar si el registro ya existe
     const existingRecord = await db.monthlyProfit.findUnique({
       where: {
         year_month: {
           year: parseInt(year),
-          month: parseInt(month)
-        }
-      }
-    })
+          month: parseInt(month),
+        },
+      },
+    });
 
     if (existingRecord && !force) {
-      return NextResponse.json({ 
-        error: 'Ya existe un registro mensual', 
-        existingRecord 
-      }, { status: 409 })
+      return NextResponse.json(
+        {
+          error: "Ya existe un registro mensual",
+          existingRecord,
+        },
+        { status: 409 }
+      );
     }
 
-    // Calculate profits for the specified month
-    const profitsResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/expenses/profits?year=${year}&month=${month}`)
+    // Calcular las ganancias para el mes especificado
+    const profitsResponse = await fetch(
+      `${
+        process.env.NEXTAUTH_URL || "http://localhost:3000"
+      }/api/expenses/profits?year=${year}&month=${month}`
+    );
     if (!profitsResponse.ok) {
-      throw new Error('No se logró calcular las ganancias')
+      throw new Error("No se logró calcular las ganancias");
     }
 
-    const profitData = await profitsResponse.json()
+    const profitData = await profitsResponse.json();
 
-    // Save or update the monthly record
+    // Guardar o actualizar el registro mensual
     const monthlyRecord = await db.monthlyProfit.upsert({
       where: {
         year_month: {
           year: parseInt(year),
-          month: parseInt(month)
-        }
+          month: parseInt(month),
+        },
       },
       update: {
         revenue: profitData.revenue,
@@ -52,7 +62,7 @@ export async function POST(request: NextRequest) {
         averageRecharge: profitData.averageRecharge,
         details: profitData.details,
         isClosed: true,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
       create: {
         year: parseInt(year),
@@ -65,27 +75,31 @@ export async function POST(request: NextRequest) {
         uniqueUsers: profitData.uniqueUsers,
         averageRecharge: profitData.averageRecharge,
         details: profitData.details,
-        isClosed: true
-      }
-    })
+        isClosed: true,
+      },
+    });
 
     return NextResponse.json({
       success: true,
-      message: `Registro mensual de ${year}-${month.toString().padStart(2, '0')} guardado correctamente`,
-      record: monthlyRecord
-    })
-
+      message: `Registro mensual de ${year}-${month
+        .toString()
+        .padStart(2, "0")} guardado correctamente`,
+      record: monthlyRecord,
+    });
   } catch (error) {
-    //console.error('Error saving monthly record:', error)
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+    console.error("Error al guardar el registro mensual:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
+      { status: 500 }
+    );
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const year = searchParams.get('year')
-    const month = searchParams.get('month')
+    const { searchParams } = new URL(request.url);
+    const year = searchParams.get("year");
+    const month = searchParams.get("month");
 
     if (year && month) {
       // Get specific month record
@@ -93,30 +107,32 @@ export async function GET(request: NextRequest) {
         where: {
           year_month: {
             year: parseInt(year),
-            month: parseInt(month)
-          }
-        }
-      })
+            month: parseInt(month),
+          },
+        },
+      });
 
       if (!record) {
-        return NextResponse.json({ error: 'No se encontró el registro mensual' }, { status: 404 })
+        return NextResponse.json(
+          { error: "No se encontró el registro mensual" },
+          { status: 404 }
+        );
       }
 
-      return NextResponse.json(record)
+      return NextResponse.json(record);
     } else {
-      // Get all monthly records
+      // Obtener todos los registros mensuales
       const records = await db.monthlyProfit.findMany({
-        orderBy: [
-          { year: 'desc' },
-          { month: 'desc' }
-        ]
-      })
+        orderBy: [{ year: "desc" }, { month: "desc" }],
+      });
 
-      return NextResponse.json(records)
+      return NextResponse.json(records);
     }
-
   } catch (error) {
-    //console.error('Error fetching monthly records:', error)
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+    console.error("Error al obtener registros mensuales:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
+      { status: 500 }
+    );
   }
 }

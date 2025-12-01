@@ -68,7 +68,6 @@ export default function RegisterPage() {
       [field]: { available: false, message: "", checking: true },
     }));
 
-    // Debounce de 500ms
     debounceTimers.current[field] = setTimeout(async () => {
       try {
         const response = await fetch(

@@ -46,22 +46,18 @@ export default function Navigation({
   const [unreadCount, setUnreadCount] = useState(0);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
-  // Check admin status
+  // Verificar estado de administrador
   useEffect(() => {
     if (user) {
-      const adminStatus =
-        user &&
-        user.role === "ADMIN" /*  || 
-        user.email === 'admin@streamhub.com' || 
-        user.email === 'admin@example.com' */;
+      const adminStatus = user && user.role === "ADMIN";
       setIsAdmin(adminStatus);
 
-      // Fetch messages if user is logged in
+      // Obtener mensajes si el usuario ha iniciado sesión
       fetchMessages();
     }
   }, [user]);
 
-  // Listen for message updates
+  // Escuche las actualizaciones de mensajes
   useEffect(() => {
     const handleMessageUpdate = () => {
       if (user) {
@@ -86,13 +82,14 @@ export default function Navigation({
         const data = await response.json();
         const newUnreadCount = data.unreadCount || 0;
 
-        // Only update if count changed to avoid unnecessary re-renders
+        // Actualice solo si el recuento cambió para evitar re-renderizaciones innecesarias
         if (newUnreadCount !== unreadCount) {
           setUnreadCount(newUnreadCount);
+          toast.info("Tienes un mensaje nuevo de Administración");
         }
       }
     } catch (error) {
-      //console.error('Navigation: Error fetching messages:', error)
+      //console.error('Navegación: Error al obtener mensajes:', error)
     }
   };
 
@@ -162,6 +159,11 @@ export default function Navigation({
     return pathname.startsWith(href);
   };
 
+  function truncateUsername(name) {
+    if (!name) return "";
+    return name.length > 7 ? name.slice(0, 7) + "..." : name;
+  }
+
   return (
     <nav className="bg-slate-900/95 backdrop-blur-xl border-b border-slate-700/50 sticky top-0 z-50 shadow-lg shadow-slate-900/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -202,10 +204,19 @@ export default function Navigation({
                   <span className="text-lg font-bold text-slate-300 tracking-wide">
                     Hub
                   </span>
+
                   {user && (
-                    <span className="text-lg font-medium text-emerald-400">
-                      | {user.username || user.email}
-                    </span>
+                    <>
+                      {/* Pantallas grandes: nombre completo */}
+                      <span className="hidden md:inline text-lg font-medium text-emerald-400">
+                        | {user.username || user.email}
+                      </span>
+
+                      {/* Pantallas pequeñas: nombre truncado */}
+                      <span className="md:hidden text-lg font-medium text-emerald-400">
+                        | {truncateUsername(user.username || user.email)}
+                      </span>
+                    </>
                   )}
                 </div>
               </div>

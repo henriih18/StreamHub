@@ -22,7 +22,7 @@ export async function GET(
 
     return NextResponse.json(warnings);
   } catch (error) {
-    //console.error('Error fetching warnings:', error)
+    console.error("Error al obtener advertencias:", error);
     return NextResponse.json(
       { error: "Error al obtener advertencias" },
       { status: 500 }

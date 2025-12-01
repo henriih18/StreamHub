@@ -10,7 +10,7 @@ export async function PUT(
       await request.json();
     const { id } = params;
 
-    // Validate required fields
+    // Validar campos obligatorios
     if (!name || !number || !type) {
       return NextResponse.json(
         { error: "Se requiere nombre, número y tipo" },
@@ -32,7 +32,7 @@ export async function PUT(
 
     return NextResponse.json(supportContact);
   } catch (error) {
-    //console.error('Error updating support contact:', error)
+    console.error("Error al actualizar el contacto de soporte:", error);
     return NextResponse.json(
       { error: "Error al actualizar el contacto de soporte" },
       { status: 500 }
@@ -53,7 +53,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    //console.error('Error deleting support contact:', error)
+    console.error("Error al eliminar el contacto de soporte:", error);
     return NextResponse.json(
       { error: "Error al eliminar el contacto de soporte" },
       { status: 500 }

@@ -22,7 +22,7 @@ export async function GET(
 
     return NextResponse.json(blocks);
   } catch (error) {
-    //console.error('Error fetching blocks:', error)
+    console.error("Error al obtener bloqueos: ", error);
     return NextResponse.json(
       { error: "Error al obtener bloqueos" },
       { status: 500 }

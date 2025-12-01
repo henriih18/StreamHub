@@ -107,17 +107,17 @@ export default function AccountPage() {
       }
     };
 
-    // Check initial auth state
+    // comprobar el estado de autorización inicial
     checkAuth();
 
-    // Listen for storage changes (for cross-tab sync)
+    // Escuchar los cambios de almacenamiento (para la sincronización entre tablas cruzadas)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "user") {
         checkAuth();
       }
     };
 
-    // Listen for custom logout event
+    // Escuchar el evento de cierre de sesión personalizado
     const handleLogout = () => {
       setUser(null);
     };
@@ -131,7 +131,7 @@ export default function AccountPage() {
     };
   }, []);
 
-  // Fetch fresh user data from server
+  // Obtener datos de usuario actualizados del servidor
   const fetchUserData = async () => {
     if (!user?.id) return;
 
@@ -140,7 +140,6 @@ export default function AccountPage() {
       if (response.ok) {
         const userData = await response.json();
         if (userData.user) {
-          // Format createdAt to memberSince if it exists
           if (userData.user.createdAt) {
             userData.user.memberSince = new Date(
               userData.user.createdAt
@@ -152,16 +151,16 @@ export default function AccountPage() {
           }
 
           setUser(userData.user);
-          // Update localStorage with fresh data
+          // Actualizar localStorage con datos nuevos
           localStorage.setItem("user", JSON.stringify(userData.user));
         }
       }
     } catch (error) {
-      //console.error('Error fetching user data:', error)
+      //console.error('Error al obtener los datos del usuario:', error)
     }
   };
 
-  // Fetch support contacts
+  // Obtener contactos de soporte
   const fetchSupportContacts = async () => {
     try {
       const response = await fetch("/api/support-contacts");
@@ -170,11 +169,11 @@ export default function AccountPage() {
         setSupportContacts(data.contacts || []);
       }
     } catch (error) {
-      //console.error('Error fetching support contacts:', error)
+      //console.error('Error al obtener los contactos de soporte:', error)
     }
   };
 
-  // Fetch user orders
+  // Obtener pedidos de usuarios
   const fetchUserOrders = async () => {
     if (!user) return;
 
@@ -183,20 +182,20 @@ export default function AccountPage() {
       const response = await fetch(`/api/orders?userId=${user.id}`);
       if (response.ok) {
         const data = await response.json();
-        // Handle both response formats - direct array or wrapped in orders property
+
         const ordersData = Array.isArray(data) ? data : data.orders || [];
         setOrders(ordersData);
       } else {
-        console.error("Failed to fetch orders:", response.status);
+        //console.error("No se pudieron obtener los pedidos:", response.status);
       }
     } catch (error) {
-      //console.error('Error fetching orders:', error)
+      //console.error('Error al obtener pedidos:', error)
     } finally {
       setLoadingOrders(false);
     }
   };
 
-  // Fetch orders and support contacts when user changes
+  // Obtener pedidos y contactos de soporte cuando el usuario cambia
   useEffect(() => {
     if (user) {
       fetchUserOrders();
@@ -209,7 +208,7 @@ export default function AccountPage() {
     }
   }, [user]);
 
-  // Load cart items
+  // Cargar artículos del carrito
   const loadCartItems = async () => {
     try {
       const response = await fetch("/api/cart");
@@ -218,11 +217,11 @@ export default function AccountPage() {
         setCartItems(data.items || []);
       }
     } catch (error) {
-      //console.error('Error loading cart items:', error)
+      //console.error('Error al cargar los artículos del carrito:', error)
     }
   };
 
-  // Listen for cart open events
+  // Escuchar eventos de apertura de carrito
   useEffect(() => {
     const handleOpenCart = () => {
       setIsCartOpen(true);
@@ -235,7 +234,8 @@ export default function AccountPage() {
     };
   }, []);
 
-  // Refresh user data when page gains focus
+  // Actualizar los datos del usuario cuando la página obtiene el foco
+
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden && user) {
@@ -249,23 +249,22 @@ export default function AccountPage() {
       }
     };
 
-    // Add event listeners
+    // Agregar detectores de eventos
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("focus", handleFocus);
 
-    // Initial fetch after component mounts
+    // Búsqueda inicial después de montar el componente
     if (user) {
       fetchUserData();
     }
 
-    // Set up periodic refresh every 5 minutes
+    // Configurar una actualización periódica cada 5 minutos
     const interval = setInterval(() => {
       if (user) {
         fetchUserData();
       }
     }, 5 * 60 * 1000); // 5 minutes
 
-    // Cleanup
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleFocus);
@@ -283,7 +282,7 @@ export default function AccountPage() {
     setExpandedOrders(newExpanded);
   };
 
-  // Cart functions
+  // Funciones del carrito
   const updateQuantity = async (itemId: string, quantity: number) => {
     try {
       const response = await fetch(`/api/cart/${itemId}`, {
@@ -297,7 +296,7 @@ export default function AccountPage() {
         window.dispatchEvent(new CustomEvent("cartUpdated"));
       }
     } catch (error) {
-      //console.error('Error updating quantity:', error)
+      //console.error('Error al actualizar la cantidad:', error)
       toast.error("Error al actualizar cantidad");
     }
   };
@@ -314,7 +313,7 @@ export default function AccountPage() {
         toast.success("Producto eliminado del carrito");
       }
     } catch (error) {
-      //console.error('Error removing from cart:', error)
+      //console.error('Error al eliminar del carrito:', error)
       toast.error("Error al eliminar producto");
     }
   };
@@ -446,12 +445,21 @@ export default function AccountPage() {
                       Actualizar
                     </Button>
                   </div>
+
                   <Badge
                     className={`${
-                      user.role === "ADMIN" ? "bg-purple-600" : "bg-emerald-600"
-                    } text-white mb-2`}
+                      user.role === "ADMIN"
+                        ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                        : user.role === "VENDEDOR"
+                        ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
+                        : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                    }`}
                   >
-                    {user.role === "ADMIN" ? "Administrador" : "Usuario"}
+                    {user.role === "ADMIN"
+                      ? "Administrador"
+                      : user.role === "VENDEDOR"
+                      ? "Vendedor"
+                      : "Usuario"}
                   </Badge>
                   <div className="text-sm text-slate-400">
                     Miembro desde{" "}

@@ -8,7 +8,7 @@ export async function GET(
   try {
     const { userId } = params;
 
-    // Fetch user's recharge history with admin information
+    // Obtener el historial de recargas del usuario con información del administrador
     const recharges = await db.creditRecharge.findMany({
       where: {
         userId: userId,
@@ -27,17 +27,17 @@ export async function GET(
       },
     });
 
-    // Transform the data to include admin information
+    // Transformar los datos para incluir información administrativa
     const transformedRecharges = recharges.map((recharge) => ({
       ...recharge,
-      adminName: "Administrador", // Since we don't have admin tracking in the schema yet
+      adminName: "Administrador",
       user: {
         ...recharge.user,
         name: recharge.user.fullName,
       },
     }));
 
-    // Calculate statistics
+    // Calcular estadísticas
     const totalRecharges = recharges.length;
     const totalAmount = recharges.reduce(
       (sum, recharge) => sum + recharge.amount,
@@ -54,7 +54,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    //console.error('Error fetching recharge history:', error)
+    console.error("Error al recuperar el historial de recargas: ", error);
     return NextResponse.json(
       { error: "Error al recuperar el historial de recargas" },
       { status: 500 }

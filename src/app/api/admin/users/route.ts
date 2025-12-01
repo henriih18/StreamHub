@@ -33,21 +33,18 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
         },
       });
 
-      // Transform the data to match the expected interface
-      // Transform the data to match expected interface
-users = (users || []).map((user) => ({
+      users = (users || []).map((user) => ({
         ...user,
         name: user.fullName,
         isActive: !user.isBlocked,
       }));
 
-      // Cache for 3 minutes
       userCache.set(cacheKey, users, 3 * 60 * 1000);
     }
 
     return NextResponse.json(users);
   } catch (error) {
-    //console.error('Error fetching users:', error)
+    console.error("Error al recuperar usuarios:", error);
     return NextResponse.json(
       { error: "Error al recuperar usuarios" },
       { status: 500 }

@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server";
 
-// Helper function to add compression headers to API responses
+// Función auxiliar para agregar encabezados de compresión a las respuestas de API
 export function withCompression(response: NextResponse) {
-  // Add compression headers
+  // Agregar encabezados de compresión
   response.headers.set("Content-Encoding", "gzip");
   response.headers.set("Vary", "Accept-Encoding");
 
-  // Add cache control headers for better performance
-  response.headers.set("Cache-Control", "public, max-age=300"); // 5 minutes
+  // Agregar encabezados de control de caché para un mejor rendimiento
+  response.headers.set("Cache-Control", "public, max-age=300"); // 5 minutos
 
   return response;
 }
 
-// Helper function to create optimized JSON responses
+// Función auxiliar para crear respuestas JSON optimizadas
 export function createJsonResponse(data: any, status: number = 200) {
   const response = NextResponse.json(data, { status });
 
@@ -23,24 +23,24 @@ export function createJsonResponse(data: any, status: number = 200) {
   return response;
 }
 
-// Helper function for static data responses (longer cache)
+// Función auxiliar para respuestas de datos estáticos (caché más largo)
 export function createStaticJsonResponse(data: any, status: number = 200) {
   const response = NextResponse.json(data, { status });
 
   // Longer cache for static data
   response.headers.set("Vary", "Accept-Encoding");
-  response.headers.set("Cache-Control", "public, max-age=600"); // 10 minutes
+  response.headers.set("Cache-Control", "public, max-age=600"); // 10 minutos
 
   return response;
 }
 
-// Helper function for dynamic data responses (shorter cache)
+// Función auxiliar para respuestas de datos dinámicos (caché más corto)
 export function createDynamicJsonResponse(data: any, status: number = 200) {
   const response = NextResponse.json(data, { status });
 
-  // Shorter cache for dynamic data
+  // Caché más corta para datos dinámicos
   response.headers.set("Vary", "Accept-Encoding");
-  response.headers.set("Cache-Control", "public, max-age=60"); // 1 minute
+  response.headers.set("Cache-Control", "public, max-age=60"); // 1 minuto
 
   return response;
 }

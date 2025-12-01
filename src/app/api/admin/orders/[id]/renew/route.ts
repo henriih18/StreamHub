@@ -10,7 +10,7 @@ export async function PUT(
   try {
     const orderId = params.id;
 
-    // Get the order with user and streaming account details
+    // Obtener el pedido con los detalles del usuario y la cuenta de streaming
     const order = await db.order.findUnique({
       where: { id: orderId },
       include: {
@@ -34,7 +34,7 @@ export async function PUT(
       );
     }
 
-    // Check if user has enough credits
+    // Verificar si el usuarios tiene creditos suficientes
     const renewalPrice =
       order.streamingAccount?.price || order.exclusiveAccount?.price || 0;
 
@@ -47,13 +47,13 @@ export async function PUT(
       );
     }
 
-    // Calculate new expiration date based on the streaming account duration
+    // Calcular nueva fecha de vencimiento en función de la duración de la cuenta de streaming
     const duration = order.streamingAccount?.duration || "1 mes";
     const newExpiresAt = calculateExpirationDate(duration);
 
     // Start transaction
     const result = await db.$transaction(async (tx) => {
-      // Deduct credits from user
+      // Deducir créditos del usuario
       await tx.user.update({
         where: { id: order.userId },
         data: {
@@ -66,7 +66,7 @@ export async function PUT(
         },
       });
 
-      // Update order with new expiration and renewal count
+      // Actualizar pedido con nuevo recuento de vencimientos y renovaciones
       const updatedOrder = await tx.order.update({
         where: { id: orderId },
         data: {
@@ -101,23 +101,8 @@ export async function PUT(
         
         Gracias por continuar con nuestro servicio!
       `;
-
-      /* await zai.chat.completions.create({
-        messages: [
-          {
-            role: 'system',
-            content: 'Eres un asistente que genera notificaciones amigables para usuarios.'
-          },
-          {
-            role: 'user',
-            content: `Genera una notificación concisa y amigable basada en esta información: ${notificationMessage}`
-          }
-        ],
-        max_tokens: 200
-      }) */
     } catch (notificationError) {
-      //console.error('Error sending notification:', notificationError)
-      // Continue even if notification fails
+      console.error("Error al enviar notificación:", notificationError);
     }
 
     return NextResponse.json({
@@ -132,7 +117,7 @@ export async function PUT(
       },
     });
   } catch (error) {
-    //console.error('Error renewing order:', error)
+    console.error("Error al renovar el pedido:", error);
     return NextResponse.json(
       { error: "Error al renovar la cuenta" },
       { status: 500 }

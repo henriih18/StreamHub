@@ -18,7 +18,7 @@ export async function GET() {
 
     return NextResponse.json(banner);
   } catch (error) {
-    //console.error('Error fetching announcement banner:', error)
+    console.error("Error al cargar el banner del anuncio:", error);
     return NextResponse.json(
       { error: "Error al cargar el banner del anuncio" },
       { status: 500 }
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(banner);
   } catch (error) {
-    //console.error('Error creating announcement banner:', error)
+    console.error("Error al crear el banner del anuncio:", error);
     return NextResponse.json(
       { error: "Error al crear el banner del anuncio" },
       { status: 500 }
@@ -82,7 +82,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(banner);
   } catch (error) {
-    //console.error('Error updating announcement banner:', error)
+    console.error("Error al actualizar el banner del anuncio:", error);
     return NextResponse.json(
       { error: "Error al actualizar el banner del anuncio" },
       { status: 500 }

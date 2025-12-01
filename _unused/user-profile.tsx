@@ -85,9 +85,16 @@ export function UserProfile({ user, onUpdate, onLogout }: UserProfileProps) {
                   <h2 className="text-xl font-semibold text-white mb-2">
                     {user.name}
                   </h2>
-                  <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
-                    {user.role === "ADMIN" ? "Administrador" : "Usuario"}
-                  </Badge>
+                  <Badge className={`${
+  user.role === "ADMIN" 
+    ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
+    : user.role === "VENDEDOR"
+    ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
+    : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+}`}>
+  {user.role === "ADMIN" ? "Administrador" : 
+   user.role === "VENDEDOR" ? "Vendedor" : "Usuario"}
+</Badge>
                 </div>
 
                 {/* Quick Stats */}

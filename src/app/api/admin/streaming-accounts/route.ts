@@ -9,7 +9,7 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
     let cachedData = userCache.get(cacheKey);
 
     if (!cachedData) {
-      // Get accounts with real available stock
+      // Obtenercuentas con stock real disponible
       const rawAccounts = await db.streamingAccount.findMany({
         where: {
           isActive: true,
@@ -39,7 +39,7 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
         },
       });
 
-      // Transform to match frontend expectations
+      // Transformar para que coincida con las expectativas del frontend
       const accounts = rawAccounts.map((account) => ({
         ...account,
         _count: {
@@ -49,14 +49,13 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
         },
       }));
 
-      // Cache for 7 minutes
       userCache.set(cacheKey, accounts, 7 * 60 * 1000);
       cachedData = accounts;
     }
 
     return NextResponse.json(cachedData);
   } catch (error) {
-    //console.error('Error fetching streaming accounts:', error)
+    console.error("Error al obtener las cuentas de streaming:", error);
     return NextResponse.json(
       { error: "Error al obtener las cuentas de streaming" },
       { status: 500 }
@@ -79,7 +78,7 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
       pricePerProfile,
     } = await request.json();
 
-    // Validate required fields
+    // Validar campos obligatorios
     if (
       !name ||
       !description ||
@@ -110,12 +109,12 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
       },
     });
 
-    // Invalidate cache when new account is created
+    // Invalidar caché al crear una nueva cuenta
     userCache.delete("admin:streaming-accounts:list");
 
     return NextResponse.json(streamingAccount);
   } catch (error) {
-    //console.error('Error creating streaming account:', error)
+    console.error("Error al crear una cuenta de streaming:", error);
     return NextResponse.json(
       { error: "Error al crear una cuenta de streaming" },
       { status: 500 }

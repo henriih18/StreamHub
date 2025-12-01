@@ -74,7 +74,7 @@ export async function PUT(
       order: updatedOrder,
     });
   } catch (error) {
-    //console.error('Error rehabilitating order:', error)
+    console.error("Error al rehabilitar pedido", error);
 
     return NextResponse.json(
       { error: "Error al rehabilitar pedido" },

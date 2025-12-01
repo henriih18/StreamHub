@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user's cart with items
+    // Obtener el carrito del usuario con artículos
     const cart = await db.cart.findUnique({
       where: { userId },
       include: {
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
 
     const totalAmount = cart.totalAmount;
 
-    // Check if user has enough credits
+    // Compruebar si el usuario tiene suficientes créditos
     if (user.credits < totalAmount) {
       return NextResponse.json(
         { error: "Créditos insuficientes" },
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Process the order using a transaction
+    // Procesar el pedido mediante una transacción
     const result = await db.$transaction(async (tx) => {
       // Deduct credits from user
       await tx.user.update({
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Create orders for each cart item
+      // Crear pedidos para cada artículo del carrito
       const orders: any[] = [];
       for (const cartItem of cart.items) {
         const {
@@ -109,7 +109,6 @@ export async function POST(request: NextRequest) {
           let stockQuery: any = {};
 
           if (saleType === "PROFILES") {
-            // Handle profile stock
             availableStock =
               streamingAccount.profileStocks?.filter(
                 (stock) => stock.isAvailable
@@ -120,7 +119,7 @@ export async function POST(request: NextRequest) {
               );
             }
 
-            // Atomic update: Find and mark profiles as unavailable in one operation
+            // Actualización atómica: Buscar y marcar perfiles como no disponibles en una sola operación
             const profileUpdateResult = await tx.accountProfile.updateMany({
               where: {
                 streamingAccountId: streamingAccount.id,
@@ -139,7 +138,7 @@ export async function POST(request: NextRequest) {
               );
             }
 
-            // Get the assigned profiles for order creation
+            // Obtener los perfiles asignados para la creación de pedidos
             const assignedProfiles = await tx.accountProfile.findMany({
               where: {
                 streamingAccountId: streamingAccount.id,
@@ -150,7 +149,7 @@ export async function POST(request: NextRequest) {
               orderBy: { soldAt: "desc" },
             });
 
-            // Create orders for each assigned profile
+            // Crear pedidos para cada perfil asignado
             for (const profile of assignedProfiles) {
               const order = await tx.order.create({
                 data: {
@@ -172,7 +171,6 @@ export async function POST(request: NextRequest) {
               orders.push(order);
             }
           } else {
-            // Handle full account stock
             availableStock =
               streamingAccount.accountStocks?.filter(
                 (stock) => stock.isAvailable
@@ -183,7 +181,7 @@ export async function POST(request: NextRequest) {
               );
             }
 
-            // Atomic update: Find and mark accounts as unavailable in one operation
+            // Actualización atómica: Encuentrar y marcar cuentas como no disponibles en una sola operación
             const accountUpdateResult = await tx.accountStock.updateMany({
               where: {
                 streamingAccountId: streamingAccount.id,
@@ -202,7 +200,7 @@ export async function POST(request: NextRequest) {
               );
             }
 
-            // Get the assigned accounts for order creation
+            // Obtener las cuentas asignadas para la creación de pedidos
             const assignedAccounts = await tx.accountStock.findMany({
               where: {
                 streamingAccountId: streamingAccount.id,
@@ -213,7 +211,7 @@ export async function POST(request: NextRequest) {
               orderBy: { soldAt: "desc" },
             });
 
-            // Create orders for each assigned account
+            // Crear pedidos para cada cuenta asignada
             for (const account of assignedAccounts) {
               const order = await tx.order.create({
                 data: {
@@ -234,7 +232,7 @@ export async function POST(request: NextRequest) {
             }
           }
         } else if (exclusiveAccount) {
-          // Process exclusive account
+          // Procesar cuenta exclusiva
           const availableStock = exclusiveAccount.exclusiveStocks?.length || 0;
           if (availableStock < quantity) {
             throw new Error(
@@ -242,7 +240,7 @@ export async function POST(request: NextRequest) {
             );
           }
 
-          // Atomic update: Find and mark exclusive stocks as unavailable in one operation
+          // Actualización atómica: Encontrar y marcar existencias exclusivas como no disponibles en una sola operación
           const exclusiveUpdateResult = await tx.exclusiveStock.updateMany({
             where: {
               exclusiveAccountId: exclusiveAccount.id,
@@ -261,7 +259,7 @@ export async function POST(request: NextRequest) {
             );
           }
 
-          // Get the assigned exclusive stocks for order creation
+          // Obtener los stocks exclusivos asignados para la creación de pedidos
           const assignedExclusiveStocks = await tx.exclusiveStock.findMany({
             where: {
               exclusiveAccountId: exclusiveAccount.id,
@@ -272,7 +270,7 @@ export async function POST(request: NextRequest) {
             orderBy: { soldAt: "desc" },
           });
 
-          // Create orders for each assigned exclusive stock
+          // Crear pedidos para cada stock exclusivo asignado
           for (const stock of assignedExclusiveStocks) {
             const order = await tx.order.create({
               data: {
@@ -297,7 +295,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Clear the cart
+      // Limpiar el carrito
       await tx.cartItem.deleteMany({
         where: { cartId: cart.id },
       });
@@ -354,7 +352,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Get updated user credits
+    // Obtener créditos de usuario actualizados
     const updatedUser = await db.user.findUnique({
       where: { id: userId },
       select: { credits: true },
@@ -367,7 +365,7 @@ export async function POST(request: NextRequest) {
       newCredits: updatedUser?.credits || 0,
     });
   } catch (error) {
-    console.error("Error processing checkout:", error);
+    console.error("Error al procesar el pago:", error);
 
     if (error instanceof Error) {
       return NextResponse.json({ error: error.message }, { status: 400 });

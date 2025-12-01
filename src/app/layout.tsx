@@ -54,7 +54,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Check if user is authenticated and cache user data
+  // Comprobar si el usuario está autenticado y almacenar en caché los datos del usuario
   const session = await getServerSession(authOptions);
 
   if (session?.user?.email) {
@@ -62,13 +62,13 @@ export default async function RootLayout({
     let user = userCache.get(cacheKey);
 
     if (!user) {
-      // Fetch from database if not in cache
+      // Obtener de la base de datos si no está en caché
       user = await db.user.findUnique({
         where: { email: session.user.email },
       });
 
       if (user) {
-        // Cache the user data for 5 minutes
+        // Almacenar en caché los datos del usuario durante 5 minutos
         userCache.set(cacheKey, user);
       }
     }
@@ -88,7 +88,7 @@ export default async function RootLayout({
           theme="dark"
           toastOptions={{
             style: {
-             /*  background:
+              /*  background:
                 "linear-gradient(135deg, rgba(139, 92, 246, 0.85) 0%, rgba(236, 72, 153, 0.85) 100%)",
               border: "1px solid rgba(255, 255, 255, 0.3)", */
               borderRadius: "12px",

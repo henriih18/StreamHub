@@ -76,19 +76,18 @@ export default function Home() {
 
   const itemsPerPage = 9;
 
-  // Track online users
+  // Seguimiento de usuarios en línea
   useOnlineTracking({
     userId: user?.id,
     enabled: true,
-    updateInterval: 30000, // 30 segundos
+    updateInterval: 30000,
   });
 
-  // Real-time updates for messages
+  // Actualizaciones de mensajes en tiempo real
 
   useRealTimeUpdates({
     userId: user?.id,
     onMessageUpdate: (messageData) => {
-      // Trigger navigation update when message count changes
       window.dispatchEvent(new CustomEvent("messagesUpdated"));
     },
     onStockUpdate: (stockData) => {
@@ -98,7 +97,7 @@ export default function Home() {
             const updatedAccount = { ...account };
 
             if (stockData.accountType === "exclusive") {
-              // Update exclusive stock
+              // Actualizar stock de cuentas exclusivas
               updatedAccount.exclusiveStocks =
                 account.exclusiveStocks?.map((stock, index) =>
                   index < stockData.newStock
@@ -106,7 +105,7 @@ export default function Home() {
                     : { ...stock, isAvailable: false }
                 ) || [];
             } else if (stockData.type === "PROFILES") {
-              // Update regular profile stock
+              // Actualizar stock de perfiles
               updatedAccount.profileStocks =
                 account.profileStocks?.map((stock, index) =>
                   index < stockData.newStock
@@ -114,7 +113,7 @@ export default function Home() {
                     : { ...stock, isAvailable: false }
                 ) || [];
             } else {
-              // Update regular account stock
+              // Actualizar stock de cuentas
               updatedAccount.accountStocks =
                 account.accountStocks?.map((stock, index) =>
                   index < stockData.newStock
@@ -128,22 +127,19 @@ export default function Home() {
           return account;
         })
       );
-      /* if (user) {
-      fetchCartItems(); // Refrescar carrito cuando cambia el stock
-    } */
 
       // Actualizar carrito en tiempo real
-setCartItems(prevItems =>
-  prevItems.map(item => {
-    if (item.streamingAccount?.id === stockData.accountId) {
-      return {
-        ...item,
-        availableStock: stockData.newStock
-      };
-    }
-    return item;
-  })
-);
+      setCartItems((prevItems) =>
+        prevItems.map((item) => {
+          if (item.streamingAccount?.id === stockData.accountId) {
+            return {
+              ...item,
+              availableStock: stockData.newStock,
+            };
+          }
+          return item;
+        })
+      );
     },
   });
 
@@ -190,7 +186,7 @@ setCartItems(prevItems =>
               );
 
               if (existingAccountIndex !== -1) {
-                // Update existing account with special offer
+                // Actualizar cuenta existente con oferta especial
                 allAccounts[existingAccountIndex] = {
                   ...allAccounts[existingAccountIndex],
                   specialOffer: offer,
@@ -203,7 +199,6 @@ setCartItems(prevItems =>
                     : offer.specialPrice || offer.streamingAccount.price,
                 };
               } else {
-                // If account doesn't exist (shouldn't happen), add it
                 allAccounts.push({
                   ...offer.streamingAccount,
                   specialOffer: offer,
@@ -220,9 +215,8 @@ setCartItems(prevItems =>
           });
         }
 
-        // Sort accounts: exclusive accounts first, then regular accounts
+        // Ordenar las cuentas: primero las cuentas exclusivas, luego las cuentas regulares
         allAccounts = allAccounts.sort((a: any, b: any) => {
-          // Only priority: exclusive accounts first, regular accounts after
           const aIsExclusive =
             !a.streamingType && !a.accountStocks && !a.profileStocks;
           const bIsExclusive =
@@ -231,7 +225,7 @@ setCartItems(prevItems =>
           if (aIsExclusive && !bIsExclusive) return -1;
           if (!aIsExclusive && bIsExclusive) return 1;
 
-          return 0; // Keep original order within each category
+          return 0;
         });
         setStreamingAccounts(allAccounts);
         setFilteredAccounts(allAccounts);
@@ -243,43 +237,36 @@ setCartItems(prevItems =>
   };
 
   useEffect(() => {
-  // Escuchar cuando el usuario hace login
-  const handleUserLogin = () => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-    }
-  };
+    // Escuchar cuando el usuario hace login
+    const handleUserLogin = () => {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+      }
+    };
 
-  window.addEventListener('userLoggedIn', handleUserLogin);
-  
-  return () => {
-    window.removeEventListener('userLoggedIn', handleUserLogin);
-  };
-}, []);
-  
+    window.addEventListener("userLoggedIn", handleUserLogin);
 
-  /* useEffect(() => {
-    // if (!user) return; descomentar si no se quiere mostrar el catalogo sin loguearse
-    fetchAccounts();
-    
-  }, [user?.id, user?.role]); */
+    return () => {
+      window.removeEventListener("userLoggedIn", handleUserLogin);
+    };
+  }, []);
 
   useEffect(() => {
     // NOTA: Se permite ver el catálogo sin iniciar sesión
     // Para restringir el catálogo solo a usuarios logueados, descomentar:
     // if (!user) return;
-    
+
     // Pequeño delay para asegurar que el estado user esté actualizado
     const timer = setTimeout(() => {
       fetchAccounts();
     }, 100);
-    
+
     return () => clearTimeout(timer);
   }, [user?.id, user?.role]);
 
-  // Fetch cart items if user is logged in
+  // Obtener artículos del carrito si el usuario está conectado
   useEffect(() => {
     if (user) {
       fetchCartItems();
@@ -295,7 +282,7 @@ setCartItems(prevItems =>
         setUserCredits(data.credits || 0);
       }
     } catch (error) {
-      //console.error('Error fetching user credits:', error)
+      //console.error('Error al obtener los créditos del usuario:', error)
     }
   };
 
@@ -305,8 +292,8 @@ setCartItems(prevItems =>
       if (response.ok) {
         const cartData = await response.json();
         const formattedItems = cartData.items.map((item: any) => {
-          // Calculate available stock for this item
-          let availableStock = 99; // Default high value
+          // Calcular el stock disponible para este artículo
+          let availableStock = 99;
 
           if (item.streamingAccount) {
             if (item.saleType === "PROFILES") {
@@ -321,7 +308,7 @@ setCartItems(prevItems =>
                 ).length || 0;
             }
           } else if (item.exclusiveAccount) {
-            // For exclusive accounts, use exclusiveStocks
+            // Para cuentas exclusivas, utilice exclusiveStocks
             availableStock =
               item.exclusiveAccount.exclusiveStocks?.filter(
                 (stock: any) => stock.isAvailable
@@ -336,23 +323,22 @@ setCartItems(prevItems =>
         setCartItems(formattedItems);
       }
     } catch (error) {
-      //console.error('Error fetching cart items:', error)
+      //console.error('Error al obtener los artículos del carrito:', error)
     }
   };
 
   const updateQuantity = async (itemId: string, quantity: number) => {
-    // Find the cart item to get account info
+    // Encuentre el elemento del carrito para obtener información de la cuenta
     const cartItem = cartItems.find((item) => item.id === itemId);
     if (!cartItem) {
       return;
     }
 
-    // Check stock availability
+    // Consultar disponibilidad de stock
     if (
       cartItem.availableStock !== undefined &&
       cartItem.availableStock < quantity
     ) {
-      // You could show a toast here if needed
       return;
     }
 
@@ -367,9 +353,11 @@ setCartItems(prevItems =>
 
       if (response.ok) {
         await fetchCartItems();
+        toast.success("Cantidad actualizada");
       }
     } catch (error) {
-      //console.error('Error updating quantity:', error)
+      //console.error('Error al actualizar la cantidad:', error)
+      toast.error("Error al actulaizar la cantidad");
     }
   };
 
@@ -381,14 +369,16 @@ setCartItems(prevItems =>
 
       if (response.ok) {
         await fetchCartItems();
+        toast.warning("Artículo eliminado del carrito");
       }
     } catch (error) {
-      //console.error('Error removing item:', error)
+      //console.error('Error al eliminar artículo del carrito:', error)
+      toast.error("Error al eliminar artículo del carrito");
     }
   };
 
   const handleCheckout = () => {
-    // Cart will be cleared by the payment processing
+    // El carrito será vaciado mediante el procesamiento del pago.
     setCartItems([]);
   };
 
@@ -415,32 +405,30 @@ setCartItems(prevItems =>
     }
   }, [searchQuery, streamingAccounts]);
 
-  // Reset to page 1 when search changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
 
-  // Pagination logic
+  // Paginacion
   const totalPages = Math.ceil((filteredAccounts || []).length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentAccounts = (filteredAccounts || []).slice(startIndex, endIndex);
 
   const getAvailableStock = (account: StreamingAccount): number => {
-    // For exclusive accounts, check if they have any exclusiveStocks
     const isExclusiveAccount =
       !account.streamingType &&
       !account.accountStocks &&
       !account.profileStocks;
     if (isExclusiveAccount) {
-      // Use actual exclusive stock count
+      // Utilice el recuento de existencias exclusivo real
       return (
         account.exclusiveStocks?.filter((stock) => stock.isAvailable).length ||
         0
       );
     }
 
-    // For regular accounts
+    // Cuentas regulares
     if (account.saleType === "PROFILES") {
       return (
         account.profileStocks?.filter((stock) => stock.isAvailable).length || 0
@@ -455,11 +443,11 @@ setCartItems(prevItems =>
   const addToCart = async (account: StreamingAccount, quantity: number = 1) => {
     if (!user) {
       toast.error("Por favor inicia sesión para agregar productos al carrito");
-      router.push("/login");
+      //router.push("/login");
       return;
     }
 
-    // Check stock availability
+    // Consultar disponibilidad de stock
     const availableStock = getAvailableStock(account);
     if (availableStock < quantity) {
       toast.error(
@@ -471,20 +459,19 @@ setCartItems(prevItems =>
     }
 
     try {
-      // Check if it's an exclusive account
+      // Comprueba si es una cuenta exclusiva
       const isExclusiveAccount =
         !account.streamingType &&
         !account.accountStocks &&
         !account.profileStocks;
 
-        const displayPrice =
-      account.saleType === "PROFILES"
-        ? account.pricePerProfile || account.price
-        : account.price;
+      const displayPrice =
+        account.saleType === "PROFILES"
+          ? account.pricePerProfile || account.price
+          : account.price;
 
       let response;
       if (isExclusiveAccount) {
-        // Use exclusive cart API for exclusive accounts
         response = await fetch("/api/exclusive-cart", {
           method: "POST",
           headers: {
@@ -498,7 +485,6 @@ setCartItems(prevItems =>
           }),
         });
       } else {
-        // Use regular cart API for streaming accounts
         response = await fetch("/api/cart", {
           method: "POST",
           headers: {
@@ -515,10 +501,9 @@ setCartItems(prevItems =>
       }
 
       if (response.ok) {
-        // Refresh cart items
+        // Actualizar artículos del carrito
         await fetchCartItems();
 
-        // Show success notification
         const accountType =
           account.saleType === "PROFILES" ? "Perfil" : "Cuenta Completa";
         const quantityText = quantity > 1 ? `${quantity} unidades` : "1 unidad";
@@ -556,13 +541,13 @@ setCartItems(prevItems =>
     setCartItems([]);
     localStorage.removeItem("user");
 
-    // Emit custom event to notify other components
+    // Emitir un evento personalizado para notificar a otros componentes
     window.dispatchEvent(new CustomEvent("userLogout"));
 
     toast.success("Sesión cerrada correctamente");
   };
 
-  // Show loading screen while checking authentication
+  // Mostrar pantalla de carga al verificar la autenticación
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 flex items-center justify-center">
@@ -603,17 +588,17 @@ setCartItems(prevItems =>
       <AnnouncementBanner />
 
       <main>
-        {/* Hero Section - Panel Style */}
+        {/*  Estilo de panel */}
         <section
           className="relative flex items-center justify-center overflow-hidden"
           style={{ minHeight: "70vh" }}
         >
-          {/* Background Gradient */}
+          {/* Degradado de fondo */}
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/30 via-transparent to-teal-900/30"></div>
 
           <div className="relative z-10 max-w-7xl mx-auto px-4 py-12">
             <div className="text-center">
-              {/* Status Badge */}
+              {/* Insignia de estado */}
               <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-4 py-2 mb-6">
                 <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
                 <span className="text-emerald-300 text-sm font-medium">
@@ -621,7 +606,7 @@ setCartItems(prevItems =>
                 </span>
               </div>
 
-              {/* Main Title */}
+              {/* Título principal */}
               <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 leading-tight">
                 StreamHub
                 <span className="block text-emerald-400">
@@ -629,7 +614,7 @@ setCartItems(prevItems =>
                 </span>
               </h1>
 
-              {/* Subtitle */}
+              {/* Subtitulo */}
               <p className="text-lg text-white/60 max-w-2xl mx-auto mb-8">
                 Las mejores cuentas de streaming al mejor precio
               </p>
@@ -637,7 +622,7 @@ setCartItems(prevItems =>
           </div>
         </section>
 
-        {/* Accounts Section - Manteniendo las Cards Exactamente Igual */}
+        {/* Sección de Cuentas  */}
         <section
           id="accounts"
           className="py-20 bg-gradient-to-b from-transparent to-slate-900"
@@ -655,7 +640,7 @@ setCartItems(prevItems =>
                 contenido
               </p>
 
-              {/* Search Bar */}
+              {/* Barra de búsqueda */}
               <div className="max-w-md mx-auto mb-8">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
@@ -692,7 +677,7 @@ setCartItems(prevItems =>
               ))}
             </div>
 
-            {/* Pagination */}
+            {/* Paginacion */}
             {totalPages > 1 && (
               <Pagination
                 currentPage={currentPage}
@@ -732,7 +717,7 @@ setCartItems(prevItems =>
         </section>
       </main>
 
-      {/* Footer - Panel Style */}
+      {/* Pie de página - Estilo del panel */}
       <footer className="bg-slate-900 border-t border-slate-800">
         <div className="max-w-7xl mx-auto px-4 py-12">
           <div className="grid md:grid-cols-2 gap-8">

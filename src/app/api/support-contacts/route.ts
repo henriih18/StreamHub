@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       active: contacts.filter((c) => c.isActive).length,
     });
   } catch (error) {
-    //console.error('Error fetching support contacts:', error)
+    console.error("Error al obtener los contactos de soporte:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }
@@ -59,16 +59,6 @@ export async function POST(request: NextRequest) {
 
     // Validar datos
     const validation = supportContactSchema.safeParse(body);
-    /* if (!validation.success) {
-      const fieldErrors = validation.error.errors[0]
-      return NextResponse.json(
-        { 
-          error: fieldErrors.message,
-          field: fieldErrors.path[0]
-        },
-        { status: 400 }
-      )
-    } */
 
     if (!validation.success) {
       const allErrors = validation.error.issues.map((issue) => ({
@@ -120,7 +110,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Error creating support contact:", error);
+    console.error("Error al crear contacto de soporte:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }
@@ -143,16 +133,6 @@ export async function PUT(request: NextRequest) {
 
     // Validar datos (parcial)
     const validation = supportContactSchema.partial().safeParse(updateData);
-    /* if (!validation.success) {
-      const fieldErrors = validation.error.errors[0]
-      return NextResponse.json(
-        { 
-          error: fieldErrors.message,
-          field: fieldErrors.path[0]
-        },
-        { status: 400 }
-      )
-    } */
 
     if (!validation.success) {
       const allErrors = validation.error.issues.map((issue) => ({
@@ -204,7 +184,7 @@ export async function PUT(request: NextRequest) {
       contact: updatedContact,
     });
   } catch (error) {
-    //console.error("Error updating support contact:", error);
+    console.error("Error al actualizar contacto de soporte", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }
@@ -247,7 +227,7 @@ export async function DELETE(request: NextRequest) {
       message: "Contacto de soporte eliminado exitosamente",
     });
   } catch (error) {
-    //console.error("Error deleting support contact:", error);
+    console.error("Error al eliminar contacto de soporte:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }

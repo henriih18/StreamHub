@@ -37,7 +37,7 @@ export function useRealTimeUpdates({
         rememberUpgrade: true,
         timeout: 20000,
         forceNew: true,
-         reconnection: true,
+        reconnection: true,
         reconnectionAttempts: 5,
         reconnectionDelay: 1000,
       });
@@ -45,28 +45,30 @@ export function useRealTimeUpdates({
       socketRef.current = socket;
 
       socket.on("connect", () => {
-        console.log('WebSocket connected')
+        console.log("WebSocket connected");
         reconnectAttempts.current = 0;
 
-        // Register for updates
+        // Regístrese para recibir actualizaciones
         if (userId) {
-          console.log('👤 Registrando usuario:', userId);
+          console.log("👤 Registrando usuario:", userId);
           socket.emit("registerUser", userId);
         }
         if (isAdmin) {
-          console.log('👑 Registrando admin'); 
+          console.log("👑 Registrando admin");
           socket.emit("registerAdmin");
         }
       });
 
       socket.on("disconnect", (reason) => {
-        console.log('WebSocket disconnected:', reason)
+        console.log("WebSocket disconnected:", reason);
 
-        // Attempt to reconnect
+        // Intentar reconectarse
         if (reconnectAttempts.current < maxReconnectAttempts) {
           reconnectAttempts.current++;
           setTimeout(() => {
-            console.log(`Attempting to reconnect (${reconnectAttempts.current}/${maxReconnectAttempts})`)
+            console.log(
+              `Attempting to reconnect (${reconnectAttempts.current}/${maxReconnectAttempts})`
+            );
             connect();
           }, 1000 * reconnectAttempts.current);
         }
@@ -76,29 +78,29 @@ export function useRealTimeUpdates({
         console.error("WebSocket connection error:", error);
       });
 
-      // Listen for real-time updates
+      // Escuche actualizaciones en tiempo real
       socket.on("userUpdated", (userData: any) => {
-         console.log('User updated:', userData)
+        console.log("User updated:", userData);
         onUserUpdate?.(userData);
       });
 
       socket.on("stockUpdated", (stockData: any) => {
-         console.log('Stock updated:', stockData)
+        console.log("Stock updated:", stockData);
         onStockUpdate?.(stockData);
       });
 
       socket.on("accountUpdated", (accountData: any) => {
-         console.log('Account updated:', accountData)
+        console.log("Account updated:", accountData);
         onAccountUpdate?.(accountData);
       });
 
       socket.on("orderUpdated", (orderData: any) => {
-         console.log('Order updated:', orderData)
+        console.log("Order updated:", orderData);
         onOrderUpdate?.(orderData);
       });
 
       socket.on("messageUpdate", (messageData: { unreadCount: number }) => {
-         console.log('Message count updated:', messageData)
+        console.log("Message count updated:", messageData);
         onMessageUpdate?.(messageData);
       });
     } catch (error) {
@@ -129,7 +131,7 @@ export function useRealTimeUpdates({
     };
   }, [connect, disconnect, userId, isAdmin]);
 
-  // Reconnect when userId or isAdmin changes
+  // Reconectarse cuando cambie userId o isAdmin
   useEffect(() => {
     if (socketRef.current?.connected) {
       disconnect();

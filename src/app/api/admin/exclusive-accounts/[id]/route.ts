@@ -2,28 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { userCache } from "@/lib/cache";
 
-// Temporarily disable authentication for development
-// TODO: Implement proper authentication with NextAuth
-
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // For development, we'll skip authentication check
-    // In production, uncomment the following:
-    /*
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-    */
-
     const { id } = await params;
     const data = await request.json();
 
-    // Update exclusive account
+    // Actualizar cuenta exclusiva
     const account = await db.exclusiveAccount.update({
       where: { id },
       data: {
@@ -72,18 +59,18 @@ export async function PUT(
       },
     });
 
-    // Transform the data to include usedSlots count
+    // Transformar los datos para incluir el recuento de usedSlots
     const transformedAccount = {
       ...account,
       usedSlots: account.orders.length,
     };
 
-    // Invalidate cache when exclusive account is updated
+    // Invalidar caché cuando se actualiza cuenta exclusiva
     userCache.delete("admin:exclusive-accounts:list");
 
     return NextResponse.json(transformedAccount);
   } catch (error) {
-    //console.error('Error updating exclusive account:', error)
+    console.error('Error al actualizar la cuenta exclusiva:', error)
 
     return NextResponse.json(
       { error: "Error al actualizar cuenta exclusiva" },
@@ -97,19 +84,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // For development, we'll skip authentication check
-    // In production, uncomment the following:
-    /*
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-    */
-
     const { id } = await params;
 
-    // Check if account has active orders
+    // Comprobar si la cuenta tiene pedidos activos
     const activeOrders = await db.order.findMany({
       where: {
         exclusiveAccountId: id,
@@ -124,25 +101,24 @@ export async function DELETE(
       );
     }
 
-    // Delete exclusive account with cascading deletes
+    // Eliminar cuenta exclusiva con eliminaciones en cascada
     await db.$transaction(async (tx) => {
-      // Delete related exclusive stocks first
+     
       await tx.exclusiveStock.deleteMany({
         where: { exclusiveAccountId: id },
       });
 
-      // Then delete the account
       await tx.exclusiveAccount.delete({
         where: { id },
       });
     });
 
-    // Invalidate cache when exclusive account is deleted
+    // Invalidar caché cuando se elimina una cuenta exclusiva
     userCache.delete("admin:exclusive-accounts:list");
 
     return NextResponse.json({ message: "Cuenta eliminada exitosamente" });
   } catch (error) {
-    //console.error('Error deleting exclusive account:', error)
+    console.error('Error al eliminar cuenta exclusiva:', error)
 
     return NextResponse.json(
       { error: "Error al eliminar cuenta exclusiva" },

@@ -16,7 +16,7 @@ export async function POST(
       );
     }
 
-    // Update user unblock status
+    // Actualizar el estado de desbloqueo del usuario
     const updatedUser = await db.user.update({
       where: { id: userId },
       data: {
@@ -26,7 +26,7 @@ export async function POST(
       },
     });
 
-    // Deactivate all active blocks for this user
+    // Desactivar todos los bloqueos activos para este usuario
     await db.userBlock.updateMany({
       where: {
         userId,
@@ -37,17 +37,19 @@ export async function POST(
       },
     });
 
-    // Get first admin as sender
+    // Obtener el primer administrador como remitente
     const adminUser = await db.user.findFirst({
       where: { role: "ADMIN" },
       select: { id: true, name: true, email: true },
     });
 
     if (!adminUser) {
-      //console.warn('No admin user found for sending unblock notification')
+      console.warn(
+        "No se encontró ningún usuario administrador para enviar la notificación de desbloqueo"
+      );
     }
 
-    // Send internal message if requested and admin user exists
+    // Enviar mensaje interno si se solicita y existe el usuario administrador
     if (notifyUser && adminUser) {
       await db.message.create({
         data: {
@@ -60,7 +62,7 @@ export async function POST(
       });
     }
 
-    // Log the action
+    // Registra la acción
     console.log(`User ${userId} unblocked:`, {
       reason,
       timestamp: new Date(),
@@ -68,7 +70,7 @@ export async function POST(
 
     return NextResponse.json(updatedUser);
   } catch (error) {
-    //console.error('Error unblocking user:', error)
+    console.error("Error al desbloquear usuario:", error);
     return NextResponse.json(
       { error: "Error al desbloquear usuario" },
       { status: 500 }

@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(updatedUser);
   } catch (error) {
-    //console.error('Error blocking user:', error)
+    console.error("Error al bloquear usuario:", error);
     return NextResponse.json(
       { error: "Error al bloquear usuario" },
       { status: 500 }

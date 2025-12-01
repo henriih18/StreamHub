@@ -85,9 +85,11 @@ export default function LoginPage() {
         localStorage.setItem("authToken", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
-        console.log("🔥 Dispatching userLoggedIn event with:", data.user);
+        //console.log("Dispatching userLoggedIn event with:", data.user);
 
-        window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: data.user }));
+        window.dispatchEvent(
+          new CustomEvent("userLoggedIn", { detail: data.user })
+        );
 
         toast.success("¡Inicio de sesión exitoso!");
 
@@ -96,7 +98,6 @@ export default function LoginPage() {
           router.push("/admin");
         } else {
           router.push("/");
-          
         }
       } else {
         // Si requiere verificación, redirigir a verificación
@@ -122,8 +123,6 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
-
-  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

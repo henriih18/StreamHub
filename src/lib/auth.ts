@@ -25,8 +25,6 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        // In a real app, you would hash the password and compare
-        // For now, we'll just check if password exists
         if (!user.password) {
           return null;
         }
@@ -65,8 +63,6 @@ export const authOptions: NextAuthOptions = {
 };
 
 export const auth = async () => {
-  // For now, return a mock session for testing
-  // In a real app, this would use getServerSession
   const mockUser = await db.user.findFirst({
     where: { role: "ADMIN" },
   });

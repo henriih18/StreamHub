@@ -31,7 +31,7 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
       },
     });
 
-    // Transform the data to match the expected interface
+    // Transformar los datos para que coincidan con la interfaz esperada
     const transformedOrders = orders.map((order) => ({
       ...order,
       user: {
@@ -42,7 +42,7 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
 
     return NextResponse.json(transformedOrders);
   } catch (error) {
-    //console.error('Error al recuperar los pedidos: {error}')
+    console.error("Error al recuperar los pedidos: {error}");
 
     return NextResponse.json(
       { error: "Error al recuperar los pedidos" },

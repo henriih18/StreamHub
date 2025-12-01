@@ -12,10 +12,10 @@ export async function GET() {
             price: true,
             type: true,
             duration: true,
-            screens: true
-          }
-        }
-      }
+            screens: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json(pricing);
@@ -30,26 +30,26 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     const { pricing } = await request.json();
-    
+
     for (const [accountId, config] of Object.entries(pricing)) {
       const { vendorPrice } = config as { vendorPrice: number };
-      
+
       await db.vendorPricing.upsert({
         where: { streamingAccountId: accountId },
         update: {
           vendorPrice: vendorPrice || 0,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         create: {
           streamingAccountId: accountId,
-          vendorPrice: vendorPrice || 0
-        }
+          vendorPrice: vendorPrice || 0,
+        },
       });
     }
-    
-    return NextResponse.json({ 
-      success: true, 
-      message: "Precios de vendedor actualizados correctamente" 
+
+    return NextResponse.json({
+      success: true,
+      message: "Precios de vendedor actualizados correctamente",
     });
   } catch (error) {
     console.error("Error al guardar precios de vendedor:", error);

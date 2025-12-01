@@ -1,58 +1,61 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId')
-    // console.log('API: Received request for userId:', userId) // Debug log
-    
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
+    // console.log('API: Received request for userId:', userId)
 
     let userRole = "USER";
     if (userId) {
       const user = await db.user.findUnique({
         where: { id: userId },
-        select: { role: true }
+        select: { role: true },
       });
       userRole = user?.role || "USER";
     }
-    
-    // Get regular streaming accounts
+
+    // Obtener cuaentas regualares
     const accounts = await db.streamingAccount.findMany({
       where: {
-        isActive: true
+        isActive: true,
       },
       include: {
         streamingType: {
           select: {
             icon: true,
             color: true,
-            imageUrl: true
-          }
+            imageUrl: true,
+          },
         },
         accountStocks: {
           where: {
-            isAvailable: true
-          }
+            isAvailable: true,
+          },
         },
         profileStocks: {
           where: {
-            isAvailable: true
-          }
+            isAvailable: true,
+          },
         },
-        vendorPricing: true
+        vendorPricing: true,
       },
       orderBy: {
-        createdAt: 'desc'
-      }
-    })
+        createdAt: "desc",
+      },
+    });
 
-    const processedAccounts = accounts.map(account => {
+    const processedAccounts = accounts.map((account) => {
       let finalPrice = account.price;
       let originalPrice: number | undefined = undefined;
 
       // Si es VENDEDOR y tiene configuración de precios, aplicar descuento
-      if (userRole === 'VENDEDOR' && account.vendorPricing && account.vendorPricing.isActive) {
+      if (
+        userRole === "VENDEDOR" &&
+        account.vendorPricing &&
+        account.vendorPricing.isActive
+      ) {
         originalPrice = account.price;
         finalPrice = account.vendorPricing.vendorPrice;
       }
@@ -60,68 +63,65 @@ export async function GET(request: NextRequest) {
       return {
         ...account,
         price: finalPrice,
-        originalPrice: originalPrice
+        originalPrice: originalPrice,
       };
     });
 
-    // Get exclusive accounts
-    let exclusiveAccounts: any[] = []
+    // Obtener cuentas exclusivas
+    let exclusiveAccounts: any[] = [];
     // console.log('API: Fetching exclusive accounts for user:', userId) // Debug log
-    
-    // Build the where condition based on whether user is logged in
+
+    // Construir condición where en función de si el usuario ha iniciado sesión
     const whereCondition: any = {
       isActive: true,
-      OR: [
-        { isPublic: true }
-      ]
-    }
-    
+      OR: [{ isPublic: true }],
+    };
+
     if (userId) {
       whereCondition.OR.push({
         allowedUsers: {
           some: {
-            id: userId
-          }
-        }
-      })
+            id: userId,
+          },
+        },
+      });
     }
-    
+
     exclusiveAccounts = await db.exclusiveAccount.findMany({
       where: whereCondition,
       include: {
-        allowedUsers: userId ? {
-          where: {
-            id: userId
-          }
-        } : undefined,
+        allowedUsers: userId
+          ? {
+              where: {
+                id: userId,
+              },
+            }
+          : undefined,
         exclusiveStocks: {
           where: {
-            isAvailable: true
-          }
+            isAvailable: true,
+          },
         },
         orders: {
           select: {
-            id: true
-          }
-        }
+            id: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
-    })
+        createdAt: "desc",
+      },
+    });
 
-    // Get special offers for user
-    let specialOffers: any[] = []
+    // Obtener ofertas especiales para usuarios
+    let specialOffers: any[] = [];
     if (userId) {
       // console.log('API: Fetching special offers for user:', userId) // Debug log
       specialOffers = await db.specialOffer.findMany({
         where: {
           userId: userId,
           isActive: true,
-          OR: [
-            { expiresAt: null },
-            { expiresAt: { gt: new Date() } }
-          ]
+          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
         },
         include: {
           streamingAccount: {
@@ -130,45 +130,43 @@ export async function GET(request: NextRequest) {
                 select: {
                   icon: true,
                   color: true,
-                  imageUrl: true
-                }
+                  imageUrl: true,
+                },
               },
               accountStocks: {
                 where: {
-                  isAvailable: true
-                }
+                  isAvailable: true,
+                },
               },
               profileStocks: {
                 where: {
-                  isAvailable: true
-                }
+                  isAvailable: true,
+                },
               },
-              vendorPricing: true
-            }
-          }
-        }
-      })
+              vendorPricing: true,
+            },
+          },
+        },
+      });
     }
-    
-    
 
     return NextResponse.json({
       regularAccounts: processedAccounts,
       exclusiveAccounts,
-      specialOffers
-    })
+      specialOffers,
+    });
   } catch (error) {
-    //console.error('Error fetching streaming accounts:', error)
+    console.error("Error al obtener las cuentas de streaming", error);
     return NextResponse.json(
-      { error: 'Error al obtener las cuentas de streaming' },
+      { error: "Error al obtener las cuentas de streaming" },
       { status: 500 }
-    )
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const body = await request.json();
     const {
       name,
       description,
@@ -183,30 +181,37 @@ export async function POST(request: NextRequest) {
       email,
       password,
       stock,
-      profilesStock
-    } = body
+      profilesStock,
+    } = body;
 
     // Validate required fields
-    if (!name || !description || !price || !type || !duration || !quality || !screens) {
+    if (
+      !name ||
+      !description ||
+      !price ||
+      !type ||
+      !duration ||
+      !quality ||
+      !screens
+    ) {
       return NextResponse.json(
-        { error: 'Faltan campos obligatorios' },
+        { error: "Faltan campos obligatorios" },
         { status: 400 }
-      )
+      );
     }
 
     // Create or get streaming type
     let streamingType = await db.streamingType.findUnique({
-      where: { name: type }
-    })
+      where: { name: type },
+    });
 
     if (!streamingType) {
       streamingType = await db.streamingType.create({
         data: {
           name: type,
           description: `${type} streaming service`,
-         
-        }
-      })
+        },
+      });
     }
 
     const account = await db.streamingAccount.create({
@@ -218,23 +223,23 @@ export async function POST(request: NextRequest) {
         duration,
         quality,
         screens: parseInt(screens),
-        saleType: saleType || 'FULL',
+        saleType: saleType || "FULL",
         maxProfiles: maxProfiles ? parseInt(maxProfiles) : null,
-        pricePerProfile: pricePerProfile ? parseFloat(pricePerProfile) : null
+        pricePerProfile: pricePerProfile ? parseFloat(pricePerProfile) : null,
       },
       include: {
         streamingType: true,
         accountStocks: true,
-        profileStocks: true
-      }
-    })
+        profileStocks: true,
+      },
+    });
 
-    return NextResponse.json(account, { status: 201 })
+    return NextResponse.json(account, { status: 201 });
   } catch (error) {
-    //console.error('Error creating streaming account:', error)
+    console.error("Error al crear una cuenta de streaming", error);
     return NextResponse.json(
-      { error: 'Error al crear una cuenta de streaming' },
+      { error: "Error al crear una cuenta de streaming" },
       { status: 500 }
-    )
+    );
   }
 }

@@ -44,7 +44,7 @@ export async function GET() {
         },
       });
 
-      // Transform the data to include usedSlots count and match expected interface
+      // Transforme los datos para incluir el recuento de usedSlots y que coincida con la interfaz esperada
       accounts = dbAccounts.map((account) => ({
         ...account,
         allowedUsers: account.allowedUsers.map((user) => ({
@@ -62,13 +62,13 @@ export async function GET() {
         })),
       }));
 
-      // Cache for 6 minutes - exclusive accounts change moderately
+      // Caché durante 6 minutos: las cuentas exclusivas cambian moderadamente
       userCache.set(cacheKey, accounts, 6 * 60 * 1000);
     }
 
     return NextResponse.json(accounts);
   } catch (error) {
-    //console.error('Error fetching exclusive accounts:', error)
+    console.error('Error al obtener cuentas exclusivas:', error)
     return NextResponse.json(
       { error: "Error al cargar cuentas exclusivas" },
       { status: 500 }
@@ -95,7 +95,7 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
       expiresAt,
     } = await request.json();
 
-    // Validate required fields
+    // Validar campos obligatorios
     if (
       !name ||
       !description ||
@@ -111,7 +111,7 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
       );
     }
 
-    // Create exclusive account (NOT streaming account)
+    // Crear cuenta exclusiva (NO cuenta de streaming)
     const exclusiveAccount = await db.exclusiveAccount.create({
       data: {
         name,
@@ -145,7 +145,7 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
       },
     });
 
-    // Transform data to match expected interface
+    // Transformar los datos para que coincidan con la interfaz esperada
     const transformedAccount = {
       ...exclusiveAccount,
       allowedUsers: exclusiveAccount.allowedUsers.map((user) => ({
@@ -154,12 +154,12 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
       })),
     };
 
-    // Invalidate cache when new exclusive account is created
+    //  Invalidar caché cuando se crea una nueva cuenta exclusiva
     userCache.delete("admin:exclusive-accounts:list");
 
     return NextResponse.json(transformedAccount);
   } catch (error) {
-    console.error("Error creating exclusive account:", error);
+    console.error("Error al crear cuenta exclusiva:", error);
     return NextResponse.json(
       { error: "Error al crear cuenta exclusiva" },
       { status: 500 }

@@ -8,7 +8,7 @@ export async function GET() {
     let cachedOffers = userCache.get(cacheKey);
 
     if (!cachedOffers) {
-      // First, check and update expired offers
+      // verificary actualizar las ofertas vencidas
       const now = new Date();
       await db.specialOffer.updateMany({
         where: {
@@ -43,7 +43,7 @@ export async function GET() {
         },
       });
 
-      // Transform the data to match the expected interface
+      // Transformar los datos para que coincidan con la interfaz esperada
       cachedOffers = specialOffers.map((offer) => ({
         ...offer,
         user: {
@@ -52,13 +52,12 @@ export async function GET() {
         },
       }));
 
-      // Cache for 5 minutes - offers can change frequently
       userCache.set(cacheKey, cachedOffers, 5 * 60 * 1000);
     }
 
     return NextResponse.json(cachedOffers);
   } catch (error) {
-    //console.error('Error fetching special offers:', error)
+    console.error("Error al obtener ofertas especiales:", error);
     return NextResponse.json(
       { error: "Error al cargar las ofertas especiales" },
       { status: 500 }
@@ -83,7 +82,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate that either applyToAllUsers is true or userIds is provided
+    // Valida que applyToAllUsers sea verdadero o que se proporcione userIds
     if (
       !applyToAllUsers &&
       (!userIds || !Array.isArray(userIds) || userIds.length === 0)
@@ -100,13 +99,13 @@ export async function POST(request: NextRequest) {
     let specialOffers;
 
     if (applyToAllUsers) {
-      // Get all normal users (not vendors)
+      // Obtener todos los usuarios normales (no proveedores)
       const normalUsers = await db.user.findMany({
         where: { role: "USER" },
         select: { id: true },
       });
 
-      // Create special offers for all normal users
+      // Crea ofertas especiales para todos los usuarios normales.
       specialOffers = await Promise.all(
         normalUsers.map((user) =>
           db.specialOffer.create({
@@ -137,7 +136,7 @@ export async function POST(request: NextRequest) {
         )
       );
     } else {
-      // Create special offers for selected users (original logic)
+      // Crear ofertas especiales para usuarios seleccionados
       specialOffers = await Promise.all(
         userIds.map((userId: string) =>
           db.specialOffer.create({
@@ -169,7 +168,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Transform the data to match the expected interface
+    // Transformar los datos para que coincidan con la interfaz esperada
     const transformedOffers = specialOffers.map((offer) => ({
       ...offer,
       user: {
@@ -178,12 +177,12 @@ export async function POST(request: NextRequest) {
       },
     }));
 
-    // Invalidate cache when new offers are created
+    // Invalidar caché cuando se crean nuevas ofertas
     userCache.delete("admin:special-offers:list");
 
     return NextResponse.json(transformedOffers);
   } catch (error) {
-    //console.error('Error creating special offers:', error)
+    console.error("Error al crear ofertas especiales:", error);
     return NextResponse.json(
       { error: "Error al crear ofertas especiales" },
       { status: 500 }

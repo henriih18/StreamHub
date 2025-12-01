@@ -16,7 +16,7 @@ export async function POST(
       );
     }
 
-    // Create warning record
+    // Crear registro de advertencia
     const warning = await db.userWarning.create({
       data: {
         userId,
@@ -27,17 +27,19 @@ export async function POST(
       },
     });
 
-    // Get first admin as sender
+    // Obtener el primer administrador como remitente
     const adminUser = await db.user.findFirst({
       where: { role: "ADMIN" },
       select: { id: true, name: true, email: true },
     });
 
     if (!adminUser) {
-      //console.warn('No admin user found for sending warning notification')
+      console.warn(
+        "No se encontró ningún usuario administrador para enviar notificaciones de advertencia"
+      );
     }
 
-    // Send internal message if requested and admin user exists
+    // Enviar mensaje interno si se solicita y existe el usuario administrador
     if (notifyUser && adminUser) {
       await db.message.create({
         data: {
@@ -51,16 +53,16 @@ export async function POST(
     }
 
     // Log the action
-    /* console.log(`Warning created for user ${userId}:`, {
+    console.log(`Advertencia creada para el usuario ${userId}:`, {
       warningId: warning.id,
       reason,
       severity,
-      timestamp: new Date()
-    }) */
+      timestamp: new Date(),
+    });
 
     return NextResponse.json(warning);
   } catch (error) {
-    //console.error('Error creating warning:', error)
+    console.error("Error al crear advertencia", error);
     return NextResponse.json(
       { error: "Error al crear advertencia" },
       { status: 500 }

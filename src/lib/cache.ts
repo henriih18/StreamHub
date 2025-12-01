@@ -1,13 +1,12 @@
-// Memory cache implementation for user data
 interface CacheItem<T> {
   data: T;
   timestamp: number;
-  ttl: number; // Time to live in milliseconds
+  ttl: number;
 }
 
 class MemoryCache {
   private cache = new Map<string, CacheItem<any>>();
-  private readonly DEFAULT_TTL = 5 * 60 * 1000; // 5 minutes
+  private readonly DEFAULT_TTL = 5 * 60 * 1000;
 
   set<T>(key: string, data: T, ttl: number = this.DEFAULT_TTL): void {
     this.cache.set(key, {
@@ -24,7 +23,7 @@ class MemoryCache {
       return null;
     }
 
-    // Check if item has expired
+    // Comprobar si el artículo ha caducado
     if (Date.now() - item.timestamp > item.ttl) {
       this.cache.delete(key);
       return null;
@@ -41,7 +40,7 @@ class MemoryCache {
     this.cache.clear();
   }
 
-  // Clean up expired items
+  // Limpiar artículos caducados
   cleanup(): void {
     const now = Date.now();
     for (const [key, item] of this.cache.entries()) {
@@ -51,26 +50,26 @@ class MemoryCache {
     }
   }
 
-  // Get cache statistics
+  // Obtener estadísticas de caché
   size(): number {
     return this.cache.size;
   }
 
-  // Check if key exists and is not expired
+  // Comprobar si la clave existe y no ha caducado
   has(key: string): boolean {
     return this.get(key) !== null;
   }
 }
 
-// Create singleton instance
+// Crear instancia única
 export const userCache = new MemoryCache();
 
-// Auto cleanup every 5 minutes
+// Limpieza automática cada 5 minutos
 setInterval(() => {
   userCache.cleanup();
 }, 5 * 60 * 1000);
 
-// Helper functions for user caching
+// Funciones auxiliares para el almacenamiento en caché de usuarios
 export const cacheKeys = {
   userByEmail: (email: string) => `user:${email}`,
   userPermissions: (userId: string) => `user:permissions:${userId}`,

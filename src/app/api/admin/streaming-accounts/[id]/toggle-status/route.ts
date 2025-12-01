@@ -29,7 +29,7 @@ export async function PUT(
       },
     });
 
-    // Invalidate cache when account status is toggled
+    // Invalidar caché cuando el estado de la cuenta está alternado
     userCache.delete("admin:streaming-accounts:list");
 
     return NextResponse.json({
@@ -39,7 +39,7 @@ export async function PUT(
       } exitosamente`,
     });
   } catch (error) {
-    //console.error('Error toggling account status:', error)
+    console.error("Error al alternar el estado de la cuenta:", error);
     return NextResponse.json(
       { error: "Error al cambiar estado de la cuenta" },
       { status: 500 }

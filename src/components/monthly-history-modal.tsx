@@ -103,7 +103,7 @@ export function MonthlyHistoryModal({
         setHistoryData(data);
       }
     } catch (error) {
-      //console.error('Error fetching history data:', error)
+      //console.error('Error al obtener los datos del historial:', error)
       toast.error("Error al cargar historial");
     } finally {
       setLoading(false);
@@ -237,7 +237,7 @@ export function MonthlyHistoryModal({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Controls */}
+          {/* Controles */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Select value={selectedYear} onValueChange={setSelectedYear}>
@@ -266,7 +266,7 @@ export function MonthlyHistoryModal({
             </Button>
           </div>
 
-          {/* Summary Cards */}
+          {/* Tarjetas de resumen */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card className="bg-gray-700 border-gray-600">
               <CardContent className="p-4">
@@ -325,7 +325,7 @@ export function MonthlyHistoryModal({
             </Card>
           </div>
 
-          {/* Monthly History */}
+          {/* Historial Mensual */}
           <ScrollArea className="h-96">
             <div className="space-y-4">
               {historyData.yearlySummary.map((yearData: any) => (
@@ -356,7 +356,7 @@ export function MonthlyHistoryModal({
                       </div>
                     </div>
 
-                    {/* Year Summary */}
+                    {/* Resumen del año */}
                     <div className="grid grid-cols-4 gap-4 mt-3">
                       <div className="text-center">
                         <p className="text-xs text-gray-400">Ingresos</p>

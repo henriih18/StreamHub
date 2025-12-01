@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
-// Simulación de almacenamiento de usuarios en línea
-// En un entorno real, esto usaría Redis o una base de datos en memoria
 const onlineUsersStore = new Map<
   string,
   {
@@ -112,7 +110,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    //console.error('Error updating online user:', error)
+    console.error('Error updating online user:', error)
     return NextResponse.json(
       { error: "Error al actualizar el usuario en línea" },
       { status: 500 }
@@ -138,7 +136,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    //console.error('Error removing online user:', error)
+    console.error('Error removing online user:', error)
     return NextResponse.json(
       { error: "Error al eliminar el usuario en línea" },
       { status: 500 }

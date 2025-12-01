@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 
 export async function verifyAdmin(request: NextRequest) {
   try {
-    // Get user ID from request headers or query params
+    // Obtener el ID de usuario a partir de los encabezados de solicitud o parámetros de consulta
     const userId =
       request.headers.get("x-user-id") ||
       new URL(request.url).searchParams.get("userId");
@@ -12,7 +12,7 @@ export async function verifyAdmin(request: NextRequest) {
       return { error: "Se requiere autenticación", status: 401 };
     }
 
-    // Fetch user from database
+    // Obtener usuario de la base de datos
     const user = await db.user.findUnique({
       where: { id: userId },
       select: {
@@ -31,10 +31,8 @@ export async function verifyAdmin(request: NextRequest) {
       return { error: "Usuario bloqueado", status: 403 };
     }
 
-    // Check if user has admin permissions
-    const isAdmin = user.role === "ADMIN"; /* || 
-                   user.email === 'admin@streamhub.com' || 
-                   user.email === 'admin@example.com' */
+    // Comprobar si el usuario tiene permisos de administrador
+    const isAdmin = user.role === "ADMIN";
 
     if (!isAdmin) {
       return { error: "Acceso no autorizado", status: 403 };
@@ -42,7 +40,7 @@ export async function verifyAdmin(request: NextRequest) {
 
     return { user, success: true };
   } catch (error) {
-    //console.error('Error verifying admin:', error)
+    //console.error('Error al verificar el administrador:', error)
     return { error: "Error de verificación", status: 500 };
   }
 }
@@ -60,7 +58,7 @@ export function withAdminAuth(
       });
     }
 
-    // Add user to context for the handler
+    // Agregar usuario al contexto para el controlador
     return handler(request, { ...context, user: verification.user });
   };
 }

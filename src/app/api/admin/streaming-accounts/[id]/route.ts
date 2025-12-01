@@ -39,12 +39,12 @@ export async function PUT(
       },
     });
 
-    // Invalidate cache when account is updated
+    // Invalidar caché cuando se actualiza la cuenta
     userCache.delete("admin:streaming-accounts:list");
 
     return NextResponse.json(updatedAccount);
   } catch (error) {
-    //console.error('Error updating streaming account:', error)
+    console.error("Error al actualizar la cuenta de streaming:", error);
     return NextResponse.json(
       { error: "Error al actualizar la cuenta de streaming" },
       { status: 500 }
@@ -99,14 +99,14 @@ export async function DELETE(
       where: { id },
     });
 
-    // Invalidate cache when account is deleted
+    // Invalidar caché al eliminar cuenta
     userCache.delete("admin:streaming-accounts:list");
 
     return NextResponse.json({
       message: "Cuenta de streaming eliminada correctamente",
     });
   } catch (error) {
-    //console.error('Error deleting streaming account:', error)
+    console.error("Error al eliminar la cuenta de streaming:", error);
     return NextResponse.json(
       { error: "Error al eliminar la cuenta de streaming" },
       { status: 500 }

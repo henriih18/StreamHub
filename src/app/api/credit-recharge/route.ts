@@ -1,87 +1,85 @@
-import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
 export async function POST(request: Request) {
   try {
-    const { userId, amount, method, reference } = await request.json()
+    const { userId, amount, method, reference } = await request.json();
 
     if (!userId || !amount || !method) {
       return NextResponse.json(
-        { error: 'Se requiere ID de usuario, cantidad y método de pago.' },
+        { error: "Se requiere ID de usuario, cantidad y método de pago." },
         { status: 400 }
-      )
+      );
     }
 
-    // Create credit recharge record
+    // Crear registro de recarga de crédito
     const recharge = await db.creditRecharge.create({
       data: {
         userId,
         amount,
         method,
         reference,
-        status: 'PENDING'
-      }
-    })
+        status: "PENDING",
+      },
+    });
 
-    // For demo purposes, auto-approve the recharge
-    // In a real application, this would be handled by a payment processor
     await db.creditRecharge.update({
       where: { id: recharge.id },
-      data: { status: 'COMPLETED' }
-    })
+      data: { status: "COMPLETED" },
+    });
 
     // Update user credits
     const user = await db.user.findUnique({
-      where: { id: userId }
-    })
+      where: { id: userId },
+    });
 
     if (user) {
       await db.user.update({
         where: { id: userId },
         data: {
-          credits: user.credits + amount
-        }
-      })
+          credits: user.credits + amount,
+        },
+      });
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      recharge: { ...recharge, status: 'COMPLETED' }
-    })
+    return NextResponse.json({
+      success: true,
+      recharge: { ...recharge, status: "COMPLETED" },
+    });
   } catch (error) {
-    //console.error('Error processing credit recharge:', error)
+    console.error("Error al procesar la recarga de crédito:", error);
     return NextResponse.json(
-      { error: 'No se pudo procesar la recarga de crédito.' },
+      { error: "No se pudo procesar la recarga de crédito." },
       { status: 500 }
-    )
+    );
   }
 }
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId')
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
 
     if (!userId) {
       return NextResponse.json(
-        { error: 'Se requiere el ID de usuario' },
+        { error: "Se requiere el ID de usuario" },
         { status: 400 }
-      )
+      );
     }
 
     const recharges = await db.creditRecharge.findMany({
       where: { userId },
       orderBy: {
-        createdAt: 'desc'
-      }
-    })
+        createdAt: "desc",
+      },
+    });
 
-    return NextResponse.json(recharges)
+    return NextResponse.json(recharges);
   } catch (error) {
-    //console.error('Error fetching credit recharges:', error)
+    console.error("Error al obtener recargas de crédito:", error);
     return NextResponse.json(
-      { error: 'No se pudieron realizar las recargas de crédito.' },
+      { error: "No se pudieron realizar las recargas de crédito." },
       { status: 500 }
-    )
+    );
   }
 }

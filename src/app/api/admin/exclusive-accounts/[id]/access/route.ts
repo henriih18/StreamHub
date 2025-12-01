@@ -1,24 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
-// Temporarily disable authentication for development
-// TODO: Implement proper authentication with NextAuth
-
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    // For development, we'll skip authentication check
-    // In production, uncomment the following:
-    /*
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-    */
-
     const data = await request.json();
     const { userId, action } = data;
     const { id: accountId } = params;
@@ -30,7 +17,7 @@ export async function POST(
       );
     }
 
-    // Get the exclusive account
+    // obtener cuenta exclusiva
     const account = await db.exclusiveAccount.findUnique({
       where: { id: accountId },
       include: {
@@ -45,7 +32,7 @@ export async function POST(
       );
     }
 
-    // Check if user exists
+    // Verificar si el usuario existe
     const user = await db.user.findUnique({
       where: { id: userId },
     });
@@ -57,9 +44,9 @@ export async function POST(
       );
     }
 
-    // Update access based on action
+    // Actualizar el acceso según la acción
     if (action === "add") {
-      // Add user to allowed users
+      // Agregar usuario a usuarios permitidos
       await db.exclusiveAccount.update({
         where: { id: accountId },
         data: {
@@ -69,7 +56,7 @@ export async function POST(
         },
       });
     } else {
-      // Remove user from allowed users
+      // Eliminar usuario de los usuarios permitidos
       await db.exclusiveAccount.update({
         where: { id: accountId },
         data: {
@@ -86,7 +73,7 @@ export async function POST(
       } exitosamente`,
     });
   } catch (error) {
-    //console.error('Error updating access:', error)
+    console.error('Error al actualizar el acceso:', error)
     return NextResponse.json(
       { error: "Error al actualizar acceso" },
       { status: 500 }

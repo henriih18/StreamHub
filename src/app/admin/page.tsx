@@ -364,7 +364,7 @@ interface AdvancedStats {
 }
 
 export default function AdminPage() {
-  // Real-time stats hook
+  // estadísticas en tiempo real
   const {
     stats: realTimeStats,
     isConnected,
@@ -405,24 +405,21 @@ export default function AdminPage() {
     Set<string>
   >(new Set());
 
-  // Cart states
+  // Estados del carrito
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
 
-  // Recharge history states
+  // Estados del historial de recarga
   const [showRechargeHistory, setShowRechargeHistory] = useState(false);
   const [rechargeHistory, setRechargeHistory] = useState<any[]>([]);
   const [loadingRechargeHistory, setLoadingRechargeHistory] = useState(false);
   const [selectedUserForRechargeHistory, setSelectedUserForRechargeHistory] =
     useState<string | null>(null);
-
-  // User action counts
   const [userActionCounts, setUserActionCounts] = useState<
     Record<string, number>
   >({});
 
-  // New states for enhanced functionality
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [selectedUsersForOffer, setSelectedUsersForOffer] = useState<string[]>(
     []
@@ -435,7 +432,6 @@ export default function AdminPage() {
   const [selectedUserForPermissions, setSelectedUserForPermissions] =
     useState<User | null>(null);
 
-  // State for broadcast message to all users
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
   const [broadcastMessage, setBroadcastMessage] = useState({
     title: "",
@@ -443,7 +439,7 @@ export default function AdminPage() {
     type: "GENERAL" as "GENERAL" | "WARNING" | "SYSTEM_NOTIFICATION",
   });
 
-  // State for user registration info dropdowns
+  // Estado de los menús desplegables de información de registro de usuario
   const [expandedUserRegistration, setExpandedUserRegistration] = useState<
     Set<string>
   >(new Set());
@@ -457,7 +453,6 @@ export default function AdminPage() {
     Set<string>
   >(new Set());
 
-  // Edit states
   const [editingAccount, setEditingAccount] = useState<StreamingAccount | null>(
     null
   );
@@ -465,7 +460,6 @@ export default function AdminPage() {
   const [showEditAccountDialog, setShowEditAccountDialog] = useState(false);
   const [showEditTypeDialog, setShowEditTypeDialog] = useState(false);
 
-  // Form states
   const [newAccount, setNewAccount] = useState({
     name: "",
     description: "",
@@ -583,7 +577,6 @@ export default function AdminPage() {
     bySaleType: [],
   });
 
-  // Banner modal state
   const [showBannerModal, setShowBannerModal] = useState(false);
   const [bannerData, setBannerData] = useState({
     text: "",
@@ -609,7 +602,7 @@ export default function AdminPage() {
   // Función para actualizar el inventario manualmente
   const refreshInventory = async () => {
     try {
-      console.log("🔄 Actualizando inventario...");
+      //console.log("Actualizando inventario...");
 
       if (!user?.id) {
         toast.error("Usuario no autenticado");
@@ -727,7 +720,7 @@ export default function AdminPage() {
       if (response.ok) {
         toast.success("Banner configurado exitosamente");
         setShowBannerModal(false);
-        // Reset form
+
         setBannerData({
           text: "",
           isActive: true,
@@ -740,7 +733,7 @@ export default function AdminPage() {
         toast.error(error.error || "Error al configurar el banner");
       }
     } catch (error) {
-      //console.error("Error saving banner:", error);
+      //console.error("Error al guardar el banner:", error);
       toast.error("Error al configurar el banner");
     } finally {
       setLoadingBanner(false);
@@ -763,12 +756,12 @@ export default function AdminPage() {
         }
       }
     } catch (error) {
-      //console.error("Error loading banner data:", error);
+      //console.error("Error al cargar los datos del banner:", error);
     }
   };
 
   useEffect(() => {
-    // Load user from localStorage and verify admin permissions first
+    // Cargar el usuario desde localStorage y verificar primero los permisos de administrador
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
@@ -778,7 +771,7 @@ export default function AdminPage() {
 
         if (!isAdmin) {
           toast.error("No tienes permisos de administrador");
-          // Redirect non-admin users immediately
+          // Redirigir a los usuarios no administradores inmediatamente
           window.location.href = "/";
           return;
         }
@@ -787,7 +780,7 @@ export default function AdminPage() {
 
         fetchData(parsedUser);
       } catch (error) {
-        //console.error("Error parsing user from localStorage:", error);
+        //console.error("Error al analizar el usuario de localStorage:", error);
         localStorage.removeItem("user");
 
         window.location.href = "/login";
@@ -797,16 +790,15 @@ export default function AdminPage() {
     }
   }, []);
 
-  // Prefetch critical data only after user is set
+  // Obtener previamente datos críticos solo después de que el usuario esté configurado
   useEffect(() => {
     if (user && user.id) {
-      // Prefetch critical data after user state is confirmed to be set
       setTimeout(prefetchCriticalData, 2000);
     }
   }, [user]);
 
   const handleLogin = () => {
-    // Redirect to login page or show login modal
+    // Redirigir a la página de inicio de sesión o mostrar el modal de inicio de sesión
     window.location.href = "/login";
   };
 
@@ -817,7 +809,7 @@ export default function AdminPage() {
     window.location.href = "/";
   };
 
-  // Utility functions
+  // Funciones de utilidad
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "Sin fecha de expiración";
     return new Date(dateString).toLocaleDateString("es-CO", {
@@ -997,7 +989,7 @@ export default function AdminPage() {
     performanceData?: any,
     onlineUsersData?: any
   ): AdvancedStats => {
-    // Basic stats
+    // Estadísticas básicas
     const totalRevenue = ordersData.reduce(
       (sum: number, order: Order) => sum + order.totalPrice,
       0
@@ -1005,7 +997,7 @@ export default function AdminPage() {
     const totalUsers = usersData.length;
     const totalOrders = ordersData.length;
 
-    // Sales by type
+    // Ventas por tipo
     const salesByTypeMap = new Map<
       string,
       { count: number; revenue: number }
@@ -1052,7 +1044,7 @@ export default function AdminPage() {
       });
     }
 
-    // Top products
+    // Productos destacados
     const productMap = new Map<
       string,
       { name: string; type: string; sales: number; revenue: number }
@@ -1075,7 +1067,7 @@ export default function AdminPage() {
       .sort((a, b) => b.sales - a.sales)
       .slice(0, 5);
 
-    // User growth
+    // Crecimiento de usuarios
     const userGrowth: Array<{
       month: string;
       users: number;
@@ -1106,7 +1098,7 @@ export default function AdminPage() {
       });
     }
 
-    // Recent activity
+    // Actividad reciente
     const recentActivity: Array<{
       type: string;
       description: string;
@@ -1125,7 +1117,7 @@ export default function AdminPage() {
       });
     });
 
-    // Additional metrics
+    // Metricas adicionales
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
     const activeUsers = usersData.filter((user) =>
       ordersData.some((order) => order.user.email === user.email)
@@ -1134,7 +1126,7 @@ export default function AdminPage() {
     const conversionRate =
       totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0;
 
-    // Top users by spending
+    // Usuarios principales por gasto
     const topUsers = usersData
       .sort((a, b) => b.totalSpent - a.totalSpent)
       .slice(0, 5);
@@ -1172,7 +1164,7 @@ export default function AdminPage() {
     };
   };
 
-  // Fetch support contacts
+  // Obtener contactos de soporte
   const fetchSupportContacts = async () => {
     try {
       const response = await fetch("/api/support-contacts");
@@ -1181,11 +1173,11 @@ export default function AdminPage() {
         setSupportContacts(data.contacts || []);
       }
     } catch (error) {
-      //console.error("Error fetching support contacts:", error);
+      //console.error("Error al obtener los contactos de soporte:", error);
     }
   };
 
-  // Add support contact
+  // Agregar contacto de soporte
   const addSupportContact = async () => {
     try {
       const response = await fetch("/api/support-contacts", {
@@ -1213,12 +1205,12 @@ export default function AdminPage() {
         toast.error(errorData.error || "Error al agregar contacto");
       }
     } catch (error) {
-      //console.error("Error adding support contact:", error);
+      //console.error("Error al agregar contacto de soporte", error);
       toast.error("Error de conexión");
     }
   };
 
-  // Delete support contact
+  // Eliminar contacto de soporte
   const deleteSupportContact = async (id: string) => {
     try {
       const response = await fetch(`/api/support-contacts?id=${id}`, {
@@ -1234,12 +1226,12 @@ export default function AdminPage() {
         toast.error(errorData.error || "Error al eliminar contacto");
       }
     } catch (error) {
-      //console.error("Error deleting support contact:", error);
+      //console.error("Error al eliminar contacto de soporte", error);
       toast.error("Error de conexión");
     }
   };
 
-  // Toggle support contact active status
+  // Activar o desactivar el estado activo del contacto de soporte
   const toggleSupportContact = async (id: string) => {
     try {
       const response = await fetch(`/api/support-contacts/${id}/toggle`, {
@@ -1255,7 +1247,7 @@ export default function AdminPage() {
         toast.error(errorData.error || "Error al actualizar contacto");
       }
     } catch (error) {
-      //console.error('Error toggling support contact:', error)
+      //console.error('Error al alternar el contacto de soporte:', error)
       toast.error("Error de conexión");
     }
   };
@@ -1285,7 +1277,7 @@ export default function AdminPage() {
 
           return response;
         } catch (error) {
-          //console.error("tempAdminFetch error for", url, ":", error);
+          //console.error("tempAdminFetch error para", url, ":", error);
           throw error;
         }
       };
@@ -1302,16 +1294,15 @@ export default function AdminPage() {
     }
   };
 
-  // Prefetch critical data for better performance
+  // Precargar datos críticos para un mejor rendimiento
   const prefetchCriticalData = async () => {
     try {
-      // Double-check user is available before prefetching
       if (!user?.id) {
         console.warn("Prefetch skipped: User not available");
         return;
       }
 
-      // Prefetch commonly accessed data
+      // Precargar datos a los que se accede comúnmente
       const prefetchPromises = [
         adminFetch("/api/admin/streaming-types"),
         adminFetch("/api/admin/performance"),
@@ -1319,20 +1310,20 @@ export default function AdminPage() {
         adminFetch("/api/admin/support-contacts"),
       ];
 
-      // Execute prefetches in background without blocking
+      // Ejecutar prefetches en segundo plano sin bloqueo
       Promise.allSettled(prefetchPromises).then((results) => {
         results.forEach((result, index) => {
           if (result.status === "rejected") {
-            //console.warn(`Prefetch ${index} failed:`, result.reason);
+            //console.warn(`Prefetch ${index} fallido:`, result.reason);
           }
         });
       });
     } catch (error) {
-      //console.warn("Prefetch failed:", error);
+      //console.warn("Prefetch fallido:", error);
     }
   };
 
-  // Helper function for admin API requests
+  // Función auxiliar para solicitudes de API de administración
   const adminFetch = async (url: string, options: RequestInit = {}) => {
     if (!user?.id) {
       throw new Error("Usuario no autenticado");
@@ -1350,20 +1341,20 @@ export default function AdminPage() {
 
       return response;
     } catch (error) {
-      //console.error("adminFetch error for", url, ":", error);
+      //console.error("adminFetch error para", url, ":", error);
       throw error;
     }
   };
 
   const fetchData = async (userOverride?: any) => {
     try {
-      // Use provided user or fall back to state
+      // Utilizar el usuario proporcionado o vuelva al estado
       const currentUser = userOverride || user;
       if (!currentUser?.id) {
         throw new Error("Usuario no autenticado");
       }
 
-      // Create a temporary adminFetch that uses the provided user
+      // Cree un adminFetch temporal que utilice el usuario proporcionado
       const tempAdminFetch = async (url: string, options: RequestInit = {}) => {
         if (!currentUser?.id) {
           throw new Error("Usuario no autenticado");
@@ -1385,7 +1376,7 @@ export default function AdminPage() {
 
           return response;
         } catch (error) {
-          //console.error("tempAdminFetch error for", url, ":", error);
+          //console.error("tempAdminFetch error para", url, ":", error);
           throw error;
         }
       };
@@ -1438,16 +1429,16 @@ export default function AdminPage() {
       setSpecialOffers(offersData);
       setExclusiveAccounts(exclusiveData);
 
-      // Set support contacts
+      // Establecer contactos de soporte
       if (supportContactsRes.ok) {
         const supportContactsData = await supportContactsRes.json();
         setSupportContacts(supportContactsData || []);
       }
 
-      // Fetch stock data
+      // Obtener datos bursátiles
       await fetchStockData(currentUser);
 
-      // Calculate advanced stats
+      // Calcular estadísticas avanzadas
       const usersData = usersWithCountsData.success
         ? usersWithCountsData.data.users
         : await tempAdminFetch("/api/admin/users").then((res) => res.json());
@@ -1460,7 +1451,7 @@ export default function AdminPage() {
       );
       setStats(advancedStats);
 
-      // Calculate top VENDEDORS by sales count
+      // Calcular los mejores VENDEDORES por recuento de ventas
       const vendorUsers = usersData.filter(
         (user: User) => user.role === "USER"
       );
@@ -1478,7 +1469,7 @@ export default function AdminPage() {
 
       setTopUsersBySales(topVendorsBySales);
     } catch (error) {
-      //console.error("Error in fetchData:", error);
+      //console.error("Error en fetchData:", error);
       toast.error("Error al cargar datos");
     } finally {
       setLoading(false);
@@ -1686,7 +1677,7 @@ export default function AdminPage() {
 
   const handleCreateSpecialOffer = async () => {
     try {
-      // Validate that users are selected (si no se aplica a todos)
+      // Validar que los usuarios estén seleccionados (si no se aplica a todos)
       if (!applyToAllUsers && selectedUsersForOffer.length === 0) {
         toast.error(
           "Por favor selecciona al menos un usuario de las estadísticas o marca la opción de aplicar a todos"
@@ -1694,13 +1685,13 @@ export default function AdminPage() {
         return;
       }
 
-      // Validate expiration date is in the future (only if provided)
+      // Validar que la fecha de vencimiento sea futura (solo si se proporciona)
       if (
         newSpecialOffer.expiresAt &&
         newSpecialOffer.expiresAt.trim() !== ""
       ) {
         const expirationDate = new Date(newSpecialOffer.expiresAt);
-        // Set time to end of day for proper comparison
+
         expirationDate.setHours(23, 59, 59, 999);
         if (expirationDate <= new Date()) {
           toast.error("La fecha de expiración debe ser en el futuro");
@@ -1708,7 +1699,7 @@ export default function AdminPage() {
         }
       }
 
-      // Convert selected users to array for API
+      // Convertir usuarios seleccionados en una matriz para API
       const offerData = {
         /* userIds: selectedUsersForOffer, */
         userIds: applyToAllUsers ? [] : selectedUsersForOffer,
@@ -1787,7 +1778,7 @@ export default function AdminPage() {
 
   const handleCreateExclusiveAccount = async () => {
     try {
-      // Validate that users are selected
+      // Validar que los usuarios estén seleccionados
       if (selectedUsersForExclusive.length === 0) {
         toast.error(
           "Por favor selecciona al menos un usuario de las estadísticas"
@@ -1795,13 +1786,13 @@ export default function AdminPage() {
         return;
       }
 
-      // Validate expiration date is in the future (only if provided)
+      // Validar que la fecha de vencimiento sea futura (solo si se proporciona)
       if (
         newExclusiveAccount.expiresAt &&
         newExclusiveAccount.expiresAt.trim() !== ""
       ) {
         const expirationDate = new Date(newExclusiveAccount.expiresAt);
-        // Set time to end of day for proper comparison
+
         expirationDate.setHours(23, 59, 59, 999);
         if (expirationDate <= new Date()) {
           toast.error("La fecha de expiración debe ser en el futuro");
@@ -1893,7 +1884,7 @@ export default function AdminPage() {
       setUserOrders(orders);
       setSelectedUser(user);
       setShowUserOrders(true);
-      // Reset expanded orders when opening new user orders
+      // Restablecer pedidos expandidos al abrir nuevos pedidos de usuario
       setExpandedOrders(new Set());
     } catch (error) {
       toast.error("Error al cargar pedidos de usuarios");
@@ -1944,7 +1935,7 @@ export default function AdminPage() {
         toast.error("Error al cargar el historial de recargas");
       }
     } catch (error) {
-      //console.error("Error fetching recharge history:", error);
+      //console.error("Error al obtener el historial de recarga:", error);
       toast.error("Error de conexión al cargar el historial");
     } finally {
       setLoadingRechargeHistory(false);
@@ -1961,7 +1952,7 @@ export default function AdminPage() {
         return data.count || 0;
       }
     } catch (error) {
-      //console.error("Error fetching user action count:", error);
+      //console.error("Error al obtener el recuento de acciones del usuario:", error);
     }
     return 0;
   };
@@ -2028,7 +2019,7 @@ export default function AdminPage() {
             ).toLocaleDateString()}\n` +
             `Total de renovaciones: ${data.order.renewalCount}`
         );
-        fetchData(); // Refresh data to show updated renewal count and new expiration
+        fetchData(); // Actualizar datos para mostrar el recuento de renovación actualizado y el nuevo vencimiento
       } else {
         toast.error(data.error || "Error al renovar la cuenta");
       }
@@ -2037,7 +2028,7 @@ export default function AdminPage() {
     }
   };
 
-  // Edit and delete functions for accounts
+  // Funciones de edición y eliminación de cuentas
   const handleEditAccount = (account: StreamingAccount) => {
     setEditingAccount(account);
     setShowEditAccountDialog(true);
@@ -2102,7 +2093,7 @@ export default function AdminPage() {
         }
       }
     } catch (error) {
-      //console.error("Error deleting account:", error);
+      //console.error("Error al eliminar la cuenta:", error);
       toast.error("Error de conexión al eliminar cuenta");
     }
   };
@@ -2140,7 +2131,7 @@ export default function AdminPage() {
     }
   };
 
-  // Order rehabilitation functions
+  // Ordenar funciones de rehabilitación.
   const handleEditOrder = (order: Order) => {
     setEditingOrder(order);
     setEditedOrderData({
@@ -2220,7 +2211,7 @@ export default function AdminPage() {
     }
   };
 
-  // Edit and delete functions for types
+  // Editar y eliminar funciones para tipos
   const handleEditType = (type: StreamingType) => {
     setEditingType(type);
     setShowEditTypeDialog(true);
@@ -2285,13 +2276,12 @@ export default function AdminPage() {
         }
       }
     } catch (error) {
-      //console.error("Error deleting type:", error);
+      //console.error("Error al eliminar el tipo", error);
       toast.error("Error de conexión al eliminar tipo");
     }
   };
 
-  // Enhanced permission management functions
-
+  // Funciones mejoradas de gestión de permisos
   const openPermissionManager = (user: User) => {
     setSelectedUserForPermissions(user);
     setShowPermissionManager(true);
@@ -2334,7 +2324,7 @@ export default function AdminPage() {
         }
       }
     } catch (error) {
-      //console.error("Broadcast message catch error:", error);
+      //console.error("Error de captura de mensaje de difusión:", error);
       toast.error("Error de conexión al enviar mensaje");
     }
   };
@@ -2384,7 +2374,7 @@ export default function AdminPage() {
           toast.error("Error al cargar información de registro");
         }
       } catch (error) {
-        //console.error("Error fetching user registration info:", error);
+        //console.error("Error al obtener la información de registro del usuario:", error);
         toast.error("Error de conexión");
       } finally {
         setLoadingUserRegistration((prev) => {
@@ -2447,7 +2437,7 @@ export default function AdminPage() {
         toast.error(errorData.error || "Error al actualizar información");
       }
     } catch (error) {
-      //console.error("Error updating registration info:", error);
+      //console.error("Error al actualizar la información de registro:", error);
       toast.error("Error de conexión");
     } finally {
       setLoadingUserRegistration((prev) => {
@@ -2482,19 +2472,19 @@ export default function AdminPage() {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-6">
-          {/* Animated logo/icon */}
+          {/* Logotipo/icono animado */}
           <div className="relative">
             <div className="w-20 h-20 relative">
-              {/* Outer rotating ring */}
+              {/* Anillo giratorio exterior */}
               <div className="absolute inset-0 border-4 border-emerald-500/20 rounded-full animate-spin-slow"></div>
               <div className="absolute inset-2 border-4 border-transparent border-t-emerald-500 border-r-teal-500 rounded-full animate-spin"></div>
 
-              {/* Center content */}
+              {/* Contenido del centro */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg animate-pulse"></div>
               </div>
 
-              {/* Orbiting dots */}
+              {/* Puntos en órbita */}
               <div className="absolute inset-0 animate-spin-slow">
                 <div className="absolute top-0 left-1/2 w-2 h-2 bg-emerald-400 rounded-full transform -translate-x-1/2 -translate-y-1"></div>
                 <div className="absolute bottom-0 left-1/2 w-2 h-2 bg-teal-400 rounded-full transform -translate-x-1/2 translate-y-1"></div>
@@ -2504,7 +2494,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Beautiful loading text */}
+          {/* Hermoso texto de carga */}
           <div className="flex flex-col items-center space-y-2">
             <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 animate-pulse">
               StreamHub Admin
@@ -2547,7 +2537,7 @@ export default function AdminPage() {
             </p>
           </div>
 
-          {/* Progress bar */}
+          {/* Barra de progreso */}
           <div className="w-64 h-1 bg-slate-800 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full animate-pulse-slow"
@@ -2559,7 +2549,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Custom styles */}
+        {/* Estilos personalizados */}
         <style jsx>{`
           @keyframes spin-slow {
             from {
@@ -2589,10 +2579,10 @@ export default function AdminPage() {
     );
   }
 
-  // Additional admin check for render-time protection
+  // Comprobación de administrador adicional para la protección en tiempo de renderizado
   const isAdmin = user?.role === "ADMIN";
 
-  // Show loading or redirect if not admin
+  // Mostrar cargando o redirigir si no es administrador
   if (!user || !isAdmin) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
@@ -5685,6 +5675,12 @@ export default function AdminPage() {
                                             Usuario
                                           </SelectItem>
                                           <SelectItem
+                                            value="VENDEDOR"
+                                            className="text-white"
+                                          >
+                                            Vendedor
+                                          </SelectItem>
+                                          <SelectItem
                                             value="ADMIN"
                                             className="text-white"
                                           >
@@ -5698,6 +5694,9 @@ export default function AdminPage() {
                                           {userRegistrationData[user.id]
                                             ?.role === "ADMIN"
                                             ? "Administrador"
+                                            : userRegistrationData[user.id]
+                                                ?.role === "VENDEDOR"
+                                            ? "Vendedor"
                                             : "Usuario"}
                                         </p>
                                         <Badge
@@ -5705,12 +5704,18 @@ export default function AdminPage() {
                                             userRegistrationData[user.id]
                                               ?.role === "ADMIN"
                                               ? "bg-purple-600"
+                                              : userRegistrationData[user.id]
+                                                  ?.role === "VENDEDOR"
+                                              ? "bg-blue-600"
                                               : "bg-emerald-600"
                                           } text-white`}
                                         >
                                           {userRegistrationData[user.id]
                                             ?.role === "ADMIN"
                                             ? "ADMIN"
+                                            : userRegistrationData[user.id]
+                                                ?.role === "VENDEDOR"
+                                            ? "VENDEDOR"
                                             : "USER"}
                                         </Badge>
                                       </div>

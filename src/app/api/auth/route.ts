@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // If no action specified, default to login
+    // Si no se especifica ninguna acción, el valor predeterminado es iniciar sesión
     if (!action || action === "login") {
       // Login
       if (!password) {
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Return user without password
+      // Devolver usuario sin contraseña
       const { password: _, ...userWithoutPassword } = user;
       return NextResponse.json({ user: userWithoutPassword });
     } else if (action === "register") {
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Check if user already exists
+      // Compruebe si el usuario ya existe
       const existingUser = await db.user.findUnique({
         where: { email },
       });
@@ -68,27 +68,27 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Hash password
+      // contraseña hash
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Create user
+      // Crear usuario
       const user = await db.user.create({
         data: {
           email,
           name,
           password: hashedPassword,
-          credits: 50, // Give new users 50 credits to start
+          credits: 50,
         },
       });
 
-      // Return user without password
+      // Devolver usuario sin contraseña
       const { password: _, ...userWithoutPassword } = user;
       return NextResponse.json({ user: userWithoutPassword }, { status: 201 });
     } else {
       return NextResponse.json({ error: "Acción inválida" }, { status: 400 });
     }
   } catch (error) {
-    //console.error('Authentication error:', error)
+    console.error("Error de autenticación:", error);
     return NextResponse.json(
       { error: "Error de autenticación" },
       { status: 500 }

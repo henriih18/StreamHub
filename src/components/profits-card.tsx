@@ -65,7 +65,7 @@ export function ProfitsCard({ className = "" }: ProfitsCardProps) {
         const data = await response.json();
         const months: MonthOption[] = [];
 
-        // Add current month
+        // Agregar mes actual
         const now = new Date();
         const currentMonthValue = `${now.getFullYear()}-${(now.getMonth() + 1)
           .toString()
@@ -79,7 +79,7 @@ export function ProfitsCard({ className = "" }: ProfitsCardProps) {
           month: now.getMonth() + 1,
         });
 
-        // Add historical months
+        // Agregar meses históricos
         data.history?.forEach((record: any) => {
           const monthValue = `${record.year}-${record.month
             .toString()
@@ -98,7 +98,7 @@ export function ProfitsCard({ className = "" }: ProfitsCardProps) {
         setSelectedMonth(currentMonthValue);
       }
     } catch (error) {
-      //console.error('Error fetching available months:', error)
+      //console.error('Error al obtener los meses disponibles:', error)
     }
   };
 
@@ -116,7 +116,7 @@ export function ProfitsCard({ className = "" }: ProfitsCardProps) {
         setProfitData(data);
       }
     } catch (error) {
-      //console.error('Error fetching profit data:', error)
+      //console.error('Error al obtener los datos de ganancias:', error)
     } finally {
       setLoading(false);
     }
@@ -209,7 +209,7 @@ export function ProfitsCard({ className = "" }: ProfitsCardProps) {
         <CardContent
           onClick={() => isCurrentMonth() && setIsExpenseManagerOpen(true)}
         >
-          {/* Month Selector */}
+          {/* Selector de mes */}
           <div className="mb-3">
             <Select value={selectedMonth} onValueChange={handleMonthChange}>
               <SelectTrigger className="w-full h-8 text-xs bg-gray-700 border-gray-600">

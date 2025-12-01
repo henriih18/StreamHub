@@ -11,7 +11,7 @@ export async function GET() {
 
     return NextResponse.json(supportContacts);
   } catch (error) {
-    //console.error('Error fetching support contacts:', error)
+    console.error("Error al obtener los contactos de soporte:", error);
     return NextResponse.json(
       { error: "Error al obtener los contactos de soporte" },
       { status: 500 }
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const { name, number, type, description, isActive, order } =
       await request.json();
 
-    // Validate required fields
+    // Validar campos obligatorios
     if (!name || !number || !type) {
       return NextResponse.json(
         { error: "Se requiere nombre, número y tipo" },
@@ -45,9 +45,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(supportContact);
   } catch (error) {
-    //console.error('Error creating support contact:', error)
+    console.error("Error al crear el contacto de soporte:", error);
     return NextResponse.json(
-      { error: "Error al crear el contacto de soporte." },
+      { error: "Error al crear el contacto de soporte" },
       { status: 500 }
     );
   }

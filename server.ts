@@ -1,4 +1,4 @@
-// server.ts - Next.js Standalone + Socket.IO
+// server.ts - Servidor Next.js Standalone + Socket.IO
 import { setupSocket /* , getIO  */ } from "@/lib/socket";
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -6,25 +6,25 @@ import next from "next";
 
 const dev = process.env.NODE_ENV !== "production";
 const currentPort = 3000;
-const hostname = "127.0.0.1";  //Cambia para produccion
+const hostname = "127.0.0.1"; //Cambia para produccion
 
-// Custom server with Socket.IO integration
+// Servidor personalizado con integración Socket.IO
 async function createCustomServer() {
   try {
-    // Create Next.js app
+    // Crear aplicación Next.js
     const nextApp = next({
       dev,
       dir: process.cwd(),
-      // In production, use the current directory where .next is located
+      // En producción, usar el directorio actual donde se encuentra .next
       conf: dev ? undefined : { distDir: "./.next" },
     });
 
     await nextApp.prepare();
     const handle = nextApp.getRequestHandler();
 
-    // Create HTTP server that will handle both Next.js and Socket.IO
+    // Crear servidor HTTP que manejará tanto Next.js como Socket.IO
     const server = createServer((req, res) => {
-      // Skip socket.io requests from Next.js handler
+      // Omitir solicitudes socket.io del manejador de Next.js
       if (req.url?.startsWith("/api/socketio")) {
         return;
       }
@@ -40,7 +40,7 @@ async function createCustomServer() {
       },
     }); */
 
-    // Setup Socket.IO
+    // Configurar Socket.IO
     const io = new Server(server, {
       path: "/api/socketio",
       cors: {
@@ -54,10 +54,10 @@ async function createCustomServer() {
 
     setupSocket(io);
 
-    // Export IO instance for API routes
+    // Exportar instancia IO para rutas API
     (global as any).io = io;
 
-    // Start the server
+    // Iniciar servidor
     server.listen(currentPort, hostname, () => {
       console.log(`> Ready on http://${hostname}:${currentPort}`);
       console.log(
@@ -70,5 +70,5 @@ async function createCustomServer() {
   }
 }
 
-// Start the server
+// Iniciar servidor
 createCustomServer();

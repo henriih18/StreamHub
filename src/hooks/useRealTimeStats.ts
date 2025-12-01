@@ -38,32 +38,24 @@ export function useRealTimeStats() {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-
-    const socket = io("/", {  
+    const socket = io("/", {
       path: "/api/socketio",
       transports: ["websocket"],
     });
 
-    // Initialize socket connection
-    /* const socket = io("/api/socketio", {
-      transports: ["websocket", "polling"],
-      upgrade: true,
-      rememberUpgrade: true,
-    }); */
-
     socketRef.current = socket;
 
-    // Connection events
+    // Eventos de conexión
     socket.on("connect", () => {
-      console.log('Connected to WebSocket server')
+      console.log("Connected to WebSocket server");
       setIsConnected(true);
 
-      // Request initial stats
+      // Solicitar estadísticas iniciales
       socket.emit("request-stats");
     });
 
     socket.on("disconnect", () => {
-       console.log('Disconnected from WebSocket server')
+      console.log("Disconnected from WebSocket server");
       setIsConnected(false);
     });
 
@@ -72,13 +64,13 @@ export function useRealTimeStats() {
       setIsConnected(false);
     });
 
-    // Stats update event
+    // Evento de actualización de estadísticas
     socket.on("stats-update", (newStats: RealTimeStats) => {
       setStats(newStats);
       setLastUpdate(new Date());
     });
 
-    // Cleanup on unmount
+    // Limpieza al desmontar
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
@@ -87,7 +79,7 @@ export function useRealTimeStats() {
     };
   }, []);
 
-  // Manual refresh function
+  // Función de actualización manual
   const refreshStats = () => {
     if (socketRef.current && isConnected) {
       socketRef.current.emit("request-stats");

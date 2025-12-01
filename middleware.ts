@@ -28,16 +28,6 @@ const protectedRoutes = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Permitir rutas públicas y estáticas
-  /* if (
-    publicRoutes.some((route) => pathname.startsWith(route)) ||
-    staticRoutes.some((route) => pathname.startsWith(route))
-  ) {
-    return NextResponse.next();
-  } */
-
-    
-
   // Verificar token JWT
   const token =
     request.cookies.get("authToken")?.value ||

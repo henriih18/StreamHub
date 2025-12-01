@@ -134,7 +134,7 @@ export default function ExclusiveAccountsPage() {
     [key: string]: boolean;
   }>({});
 
-  // Form states
+  // Estados del formulario
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -151,7 +151,7 @@ export default function ExclusiveAccountsPage() {
     expiresAt: "",
   });
 
-  // Stock form states
+  // Estados del formulario de stock
   const [stockFormData, setStockFormData] = useState({
     email: "",
     password: "",

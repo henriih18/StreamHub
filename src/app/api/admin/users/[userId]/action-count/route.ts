@@ -8,7 +8,7 @@ export async function GET(
   try {
     const { userId } = await params;
 
-    // Count warnings and 24h blocks for this user
+    // Contar advertencias y bloques de 24h para este usuario.
     const warningsCount = await db.userWarning.count({
       where: {
         userId: userId,
@@ -31,7 +31,10 @@ export async function GET(
       blocks24h: blocks24hCount,
     });
   } catch (error) {
-    //console.error('Error fetching user action count:', error)
+    console.error(
+      "Error al obtener el recuento de acciones del usuario:",
+      error
+    );
     return NextResponse.json(
       { error: "Error al obtener el recuento de acciones del usuario" },
       { status: 500 }

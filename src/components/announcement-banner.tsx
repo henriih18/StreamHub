@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export function AnnouncementBanner() {
   const [banner, setBanner] = useState<any>(null);
@@ -21,7 +22,8 @@ export function AnnouncementBanner() {
         }
       }
     } catch (error) {
-      //console.error('Error loading banner:', error)
+      //console.error('Error al cargar banner:', error)
+      toast.error("Error al cargar banner");
     }
   };
 

@@ -9,7 +9,7 @@ export async function DELETE(
   try {
     const { id } = params;
 
-    // Verify the special offer exists
+    // Verificar que exista la oferta especial
     const existingOffer = await db.specialOffer.findUnique({
       where: { id },
     });
@@ -21,19 +21,19 @@ export async function DELETE(
       );
     }
 
-    // Delete the special offer
+    // Eliminar la oferta especial
     await db.specialOffer.delete({
       where: { id },
     });
 
-    // Invalidate cache when special offer is deleted
+    // Invalidar caché cuando se elimina una oferta especial
     userCache.delete("admin:special-offers:list");
 
     return NextResponse.json({
       message: "Oferta especial eliminada con éxito",
     });
   } catch (error) {
-    //console.error('Error deleting special offer:', error)
+    console.error("Error al eliminar oferta especial:", error);
     return NextResponse.json(
       { error: "Error al eliminar la oferta especial" },
       { status: 500 }

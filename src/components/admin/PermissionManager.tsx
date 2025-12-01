@@ -410,7 +410,7 @@ export default function PermissionManager({
                   </CardContent>
                 </Card>
 
-                {/* Warning Action */}
+                {/* Acción de advertencia */}
                 <Card className="bg-slate-700 border-slate-600">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2 text-white">
@@ -527,7 +527,7 @@ export default function PermissionManager({
                   </CardContent>
                 </Card>
 
-                {/* Block Action */}
+                {/* Accion de bloqueo */}
                 <Card className="bg-slate-700 border-slate-600">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2 text-white">
@@ -666,7 +666,7 @@ export default function PermissionManager({
                   </CardContent>
                 </Card>
 
-                {/* Unblock Action */}
+                {/* Acciones de desbloqueo */}
                 {user.isBlocked && (
                   <Card className="bg-slate-700 border-slate-600">
                     <CardHeader>
@@ -680,11 +680,14 @@ export default function PermissionManager({
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <Label className="font-semibold text-white" htmlFor="unblockReason">
+                        <Label
+                          className="font-semibold text-white"
+                          htmlFor="unblockReason"
+                        >
                           Motivo del desbloqueo
                         </Label>
                         <Textarea
-                        className="text-slate-200"
+                          className="text-slate-200"
                           id="unblockReason"
                           placeholder="Describe el motivo del desbloqueo..."
                           value={unblockData.reason}
@@ -713,7 +716,7 @@ export default function PermissionManager({
                           htmlFor="unblockNotify"
                           className="flex items-center gap-2"
                         >
-                          <Bell className="w-4 h-4 font-semibold text-yellow-400"/>
+                          <Bell className="w-4 h-4 font-semibold text-yellow-400" />
                           Notificar al usuario por mensaje interno
                         </Label>
                       </div>
@@ -802,7 +805,7 @@ export default function PermissionManager({
                   </CardContent>
                 </Card>
 
-                {/* Blocks History */}
+                {/* Historial de bloqueos */}
                 <Card className="bg-slate-700 border-slate-600">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2 font-semibold text-white">

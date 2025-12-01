@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -14,10 +13,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get all users except admins
+    // Consigue todos los usuarios excepto los administradores.
     const users = await db.user.findMany({
       where: {
-        role: "USER", // Only regular users, not admins
+        role: {
+          in: ["USER", "VENDEDOR"],
+        },
       },
       select: {
         id: true,
@@ -26,10 +27,9 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    //console.log(`Found ${users.length} users with role USER`)
+    //console.log(`Se encontraron ${users.length} usuarios con rol USER y VENDEDOR`)
 
     if (users.length === 0) {
-      // Get all users to debug
       const allUsers = await db.user.findMany({
         select: {
           id: true,
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
           role: true,
         },
       });
-      //console.log('All users in database:', allUsers)
+      //console.log('Todos los usuarios en la base de datos:', allUsers)
 
       return NextResponse.json(
         {
@@ -52,13 +52,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get first admin as sender
+    // Obtener el primer administrador como remitente
     const adminUser = await db.user.findFirst({
       where: { role: "ADMIN" },
       select: { id: true, name: true, email: true },
     });
 
-    //console.log('Found admin user:', adminUser)
+    //console.log('Usuario administrador encontrado:', adminUser)
 
     if (!adminUser) {
       return NextResponse.json(
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create messages for all users
+    // Crear mensajes para todos los usuarios
     const messages = await Promise.all(
       users.map((user) =>
         db.message.create({
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
       )
     );
 
-    //console.log(`Successfully created ${messages.length} messages`)
+    //console.log(`Se crearon correctamente ${messages.length} mensajes`)
 
     return NextResponse.json({
       message: "Mensajes enviados exitosamente",
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       sender: adminUser.name || adminUser.email,
     });
   } catch (error) {
-    //console.error('Error al enviar el mensaje de difusión.', error)
+    console.error('Error al enviar el mensaje de difusión.', error)
     const errorMessage =
       error instanceof Error ? error.message : "Error desconocido";
     const errorDetails =
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Get statistics about broadcast messages
+    // Obtener estadísticas sobre los mensajes de difusión
     const totalUsers = await db.user.count({
       where: { role: "USER" },
     });
@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
       where: {
         senderId: "system",
         createdAt: {
-          gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
+          gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
         },
       },
     });
@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
       canSendBroadcast: totalUsers > 0,
     });
   } catch (error) {
-    //console.error('Error al obtener las estadísticas de la transmisión: ', error)
+    console.error('Error al obtener las estadísticas de la transmisión: ', error)
     return NextResponse.json(
       { error: "Error al obtener estadísticas" },
       { status: 500 }

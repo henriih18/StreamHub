@@ -14,14 +14,12 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
         orderBy: { name: "asc" },
       });
 
-      // Cache for 10 minutes - static data changes rarely
       userCache.set(cacheKey, types, 10 * 60 * 1000);
     }
 
-    /* return createStaticJsonResponse(types); */
     return NextResponse.json(types);
   } catch (error) {
-    //console.error('Error fetching streaming types:', error)
+    console.error("Error al recuperar tipos de Streaming", error);
     return NextResponse.json(
       { error: "Error al recuperar tipos de Streaming" },
       { status: 500 }
@@ -60,14 +58,12 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
       },
     });
 
-    // Invalidate cache when new type is added
     userCache.delete("admin:streaming-types:list");
-    // Also invalidate streaming accounts cache since they depend on types
     userCache.delete("admin:streaming-accounts:list");
 
     return NextResponse.json(newType);
   } catch (error) {
-    //console.error('Error creating streaming type:', error)
+    console.error("Error al crear el tipo de streaming:", error);
     return NextResponse.json(
       { error: "Error al crear el tipo de streaming" },
       { status: 500 }

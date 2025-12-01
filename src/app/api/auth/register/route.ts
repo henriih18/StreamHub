@@ -32,12 +32,7 @@ const registerSchema = z.object({
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
       "La contraseña debe incluir mayúsculas, minúsculas y números"
     ),
-  /* country: z.string()
-    .min(2, 'Selecciona un país válido')
-    .max(5, 'País no válido'),
-  language: z.enum(['es', 'en'], {
-    errorMap: () => ({ message: 'Idioma no válido' })
-  }), */
+
   acceptMarketing: z.boolean().default(false),
 });
 
@@ -47,16 +42,6 @@ export async function POST(request: NextRequest) {
 
     // Validar los datos de entrada
     const validation = registerSchema.safeParse(body);
-    /* if (!validation.success) {
-      const fieldErrors = validation.error.errors[0]
-      return NextResponse.json(
-        { 
-          error: fieldErrors.message,
-          field: fieldErrors.path[0]
-        },
-        { status: 400 }
-      )
-    } */
 
     if (!validation.success) {
       const allErrors = validation.error.issues.map((issue) => ({
@@ -176,7 +161,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    //console.error("Error en registro:", error);
+    console.error("Error en registro:", error);
 
     // Manejar errores específicos de la base de datos
     if (error instanceof Error) {
@@ -242,9 +227,7 @@ export async function PUT(request: NextRequest) {
       data: {
         userId: user.id,
         action: "EMAIL_VERIFIED",
-        /* details: {
-          ip: request.headers.get('x-forwarded-for') || 'unknown'
-        }, */
+
         details: JSON.stringify({
           ip: request.headers.get("x-forwarded-for") || "unknown",
           userAgent: request.headers.get("user-agent") || "unknown",
@@ -257,7 +240,7 @@ export async function PUT(request: NextRequest) {
       message: "Email verificado exitosamente",
     });
   } catch (error) {
-    //console.error("Error en verificación de email:", error);
+    console.error("Error en verificación de email:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }
@@ -314,19 +297,11 @@ export async function PATCH(request: NextRequest) {
       },
     });
 
-    // Enviar email (simulado)
-    /* console.log(
-      "Nuevo código de verificación para",
-      email,
-      ":",
-      verificationCode
-    ); */
-
     return NextResponse.json({
       message: "Código de verificación reenviado",
     });
   } catch (error) {
-    //console.error("Error al reenviar código:", error);
+    console.error("Error al reenviar código:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }
