@@ -11,6 +11,8 @@ interface UseRealTimeUpdatesProps {
   onAccountUpdate?: (accountData: any) => void;
   onOrderUpdate?: (orderData: any) => void;
   onMessageUpdate?: (messageData: { unreadCount: number }) => void;
+
+  onUserBlocked?: (blockData: any) => void;
 }
 
 export function useRealTimeUpdates({
@@ -21,6 +23,7 @@ export function useRealTimeUpdates({
   onAccountUpdate,
   onOrderUpdate,
   onMessageUpdate,
+  onUserBlocked,
 }: UseRealTimeUpdatesProps) {
   const socketRef = useRef<Socket | null>(null);
   const reconnectAttempts = useRef(0);
@@ -103,6 +106,12 @@ export function useRealTimeUpdates({
         console.log("Message count updated:", messageData);
         onMessageUpdate?.(messageData);
       });
+
+       //Manejar evento de bloqueo
+      socket.on("userBlocked", (blockData: any) => {
+        console.log('User blocked notification received:', blockData);
+        onUserBlocked?.(blockData);
+      });
     } catch (error) {
       console.error("Failed to create WebSocket connection:", error);
     }
@@ -114,6 +123,7 @@ export function useRealTimeUpdates({
     onAccountUpdate,
     onOrderUpdate,
     onMessageUpdate,
+    onUserBlocked,
   ]);
 
   const disconnect = useCallback(() => {

@@ -255,3 +255,16 @@ function getRelativeTime(dateString: string) {
   const diffDays = Math.floor(diffHours / 24);
   return `Hace ${diffDays} d`;
 }
+
+// Función para transmitir notificaciones de bloqueo de usuarios
+export const broadcastUserBlocked = (io: Server, userId: string, blockData: any) => {
+  io.to(`user:${userId}`).emit("userBlocked", {
+    userId,
+    reason: blockData.reason,
+    blockType: blockData.blockType,
+    expiresAt: blockData.expiresAt,
+    timestamp: new Date().toISOString(),
+    message: "Tu cuenta ha sido bloqueada por un administrador"
+  });
+  //console.log(`🚫 User ${userId} blocked - notification sent`);
+};

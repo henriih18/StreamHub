@@ -130,10 +130,14 @@ export default function MessagesPage() {
 
   const markAsRead = async (messageId: string) => {
     try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const token = localStorage.getItem("authToken") || user.token;
+
       const response = await fetch(`/api/messages/${messageId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ isRead: true }),
         credentials: "include",
@@ -187,12 +191,18 @@ export default function MessagesPage() {
 
   const markAllAsRead = async () => {
     try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const token = localStorage.getItem("authToken") || user.token;
+
       const unreadMessages = messages.filter((msg) => !msg.isRead);
       await Promise.all(
         unreadMessages.map((msg) =>
           fetch(`/api/messages/${msg.id}`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
             body: JSON.stringify({ isRead: true }),
           })
         )
@@ -209,8 +219,14 @@ export default function MessagesPage() {
 
   const deleteMessage = async (messageId: string) => {
     try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const token = localStorage.getItem("authToken") || user.token;
+
       await fetch(`/api/messages/${messageId}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       setMessages(messages.filter((msg) => msg.id !== messageId));
       if (selectedMessage?.id === messageId) {
@@ -487,7 +503,7 @@ export default function MessagesPage() {
                 : "No hay mensajes nuevos"}
             </p>
           </div>
-          {/* {unreadCount > 0 && (
+          {unreadCount > 0 && (
             <Button
               onClick={markAllAsRead}
               variant="outline"
@@ -496,7 +512,7 @@ export default function MessagesPage() {
               <Check className="w-4 h-4 mr-2" />
               Marcar todos como leídos
             </Button>
-          )} */}
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">

@@ -45,12 +45,15 @@ export default function Navigation({
   const [isAdmin, setIsAdmin] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+   const [loginNotified, setLoginNotified] = useState(false);
 
   // Verificar estado de administrador
   useEffect(() => {
     if (user) {
       const adminStatus = user && user.role === "ADMIN";
       setIsAdmin(adminStatus);
+
+      setLoginNotified(false);
 
       // Obtener mensajes si el usuario ha iniciado sesión
       fetchMessages();
@@ -85,7 +88,14 @@ export default function Navigation({
         // Actualice solo si el recuento cambió para evitar re-renderizaciones innecesarias
         if (newUnreadCount !== unreadCount) {
           setUnreadCount(newUnreadCount);
-          toast.info("Tienes un mensaje nuevo de Administración");
+          if (!loginNotified && newUnreadCount > 0) {
+            const messageText = newUnreadCount === 1 
+              ? "Tienes 1 mensaje de administración sin leer" 
+              : `Tienes ${newUnreadCount} mensajes administración sin leer`;
+            
+            toast.info(messageText);
+            setLoginNotified(true); // Marcar como notificado
+          }
         }
       }
     } catch (error) {

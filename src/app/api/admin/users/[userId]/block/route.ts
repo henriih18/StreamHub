@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { userCache } from "@/lib/cache";
+import { getIO } from "@/lib/socket";
 
 export async function POST(
   request: NextRequest,
@@ -87,6 +88,16 @@ export async function POST(
           type: "BLOCK_NOTICE",
         },
       });
+
+      const io = getIO();
+      if (io) {
+        const { broadcastUserBlocked } = await import("@/lib/socket");
+        broadcastUserBlocked(io, userId, {
+          reason,
+          blockType,
+          expiresAt,
+        });
+      }
     }
 
     return NextResponse.json({ user: updatedUser, block });

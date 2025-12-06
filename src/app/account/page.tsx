@@ -136,7 +136,7 @@ export default function AccountPage() {
     if (!user?.id) return;
 
     try {
-      const response = await fetch(`/api/auth/user?userId=${user.id}`);
+      const response = await fetch(`/api/auth/get-user?userId=${user.id}`)  //fetch(`/api/auth/user?userId=${user.id}`);
       if (response.ok) {
         const userData = await response.json();
         if (userData.user) {

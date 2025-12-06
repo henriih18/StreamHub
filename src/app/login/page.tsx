@@ -115,13 +115,13 @@ export default function LoginPage() {
         if (data.field) {
           setErrors({ [data.field]: data.error });
         }
+        setIsLoading(false);
       }
     } catch (error) {
       //console.error('Error:', error)
       toast.error("Error de conexión. Intenta nuevamente.");
-    } finally {
       setIsLoading(false);
-    }
+    } 
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

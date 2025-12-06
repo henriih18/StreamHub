@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Navigation from "@/components/navigation";
 import { AnnouncementBanner } from "@/components/announcement-banner";
@@ -75,6 +75,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
 
   const itemsPerPage = 9;
+  const blockHandledRef = useRef(false);
 
   // Seguimiento de usuarios en línea
   useOnlineTracking({
@@ -141,7 +142,36 @@ export default function Home() {
         })
       );
     },
+
+    //Manejar bloqueo de usuario
+
+    onUserBlocked: (blockData) => {
+      //console.log(" Usuario bloqueado, cerrando sesión:", blockData);
+
+      // Evitar múltiples ejecuciones
+      if (blockHandledRef.current) {
+        //console.log("Bloqueo ya manejado, ignorando...");
+        return;
+      }
+
+      // Marcar como manejado inmediatamente
+      blockHandledRef.current = true;
+
+      // Mostrar notificación (solo una vez)
+      toast.error(blockData.message || "Tu cuenta ha sido bloqueada");
+
+      // Limpiar localStorage
+      localStorage.removeItem("user");
+      localStorage.removeItem("authToken");
+
+      
+      router.push("/login");
+    },
   });
+
+  useEffect(() => {
+    blockHandledRef.current = false;
+  }, [user?.id]);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -511,9 +541,7 @@ export default function Home() {
         toast.success(
           `${accountType} "${
             account.name
-          }" agregado al carrito - ${quantityText} • $${account.price.toLocaleString(
-            "es-CO"
-          )}`
+          }" agregado al carrito - ${quantityText} • $${account.price.toLocaleString()}`
         );
       } else {
         const errorData = await response.json();

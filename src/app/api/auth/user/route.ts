@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error fetching user data:", error);
+    console.error("Error al obtener los datos del usuario:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }
