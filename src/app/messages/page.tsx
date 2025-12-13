@@ -78,7 +78,7 @@ export default function MessagesPage() {
   // Cargar artículos del carrito
   const loadCartItems = async () => {
     try {
-      const response = await fetch("/api/cart");
+      const response = await fetch(`/api/cart?userId=${user.id}`);
       if (response.ok) {
         const data = await response.json();
         setCartItems(data.items || []);
@@ -130,8 +130,10 @@ export default function MessagesPage() {
 
   const markAsRead = async (messageId: string) => {
     try {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      const token = localStorage.getItem("authToken") || user.token;
+      //const user = JSON.parse(localStorage.getItem("user") || "{}");
+      //const token = localStorage.getItem("authToken") || user.token;
+
+      const token = localStorage.getItem("authToken");
 
       const response = await fetch(`/api/messages/${messageId}`, {
         method: "POST",
@@ -191,8 +193,10 @@ export default function MessagesPage() {
 
   const markAllAsRead = async () => {
     try {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      const token = localStorage.getItem("authToken") || user.token;
+      //const user = JSON.parse(localStorage.getItem("user") || "{}");
+      //const token = localStorage.getItem("authToken") || user.token;
+
+      const token = localStorage.getItem("authToken");
 
       const unreadMessages = messages.filter((msg) => !msg.isRead);
       await Promise.all(
@@ -219,8 +223,9 @@ export default function MessagesPage() {
 
   const deleteMessage = async (messageId: string) => {
     try {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      const token = localStorage.getItem("authToken") || user.token;
+      //const user = JSON.parse(localStorage.getItem("user") || "{}");
+      //const token = localStorage.getItem("authToken") || user.token;
+      const token = localStorage.getItem("authToken");
 
       await fetch(`/api/messages/${messageId}`, {
         method: "DELETE",

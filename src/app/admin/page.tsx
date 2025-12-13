@@ -459,6 +459,10 @@ export default function AdminPage() {
   const [editingType, setEditingType] = useState<StreamingType | null>(null);
   const [showEditAccountDialog, setShowEditAccountDialog] = useState(false);
   const [showEditTypeDialog, setShowEditTypeDialog] = useState(false);
+  const [topVendorsBySales, setTopVendorsBySales] = useState<User[]>([]);
+  const [roleFilter, setRoleFilter] = useState<
+    "ALL" | "ADMIN" | "VENDEDOR" | "USER"
+  >("ALL");
 
   const [newAccount, setNewAccount] = useState({
     name: "",
@@ -1451,9 +1455,25 @@ export default function AdminPage() {
       );
       setStats(advancedStats);
 
+      // Para OFERTAS (usuarios normales):
+      const regularUsers = usersData.filter(
+        (user: User) => user.role === "USER"
+      );
+
+      const regularUsersWithOrderCount = regularUsers.map((user: User) => ({
+        ...user,
+        orderCount: ordersData.filter(
+          (order: Order) => order.user.email === user.email
+        ).length,
+      }));
+
+      const topRegularUsersBySales = regularUsersWithOrderCount
+        .sort((a: any, b: any) => b.orderCount - a.orderCount)
+        .slice(0, 10);
+
       // Calcular los mejores VENDEDORES por recuento de ventas
       const vendorUsers = usersData.filter(
-        (user: User) => user.role === "USER"
+        (user: User) => user.role === "VENDEDOR"
       );
 
       const vendorsWithOrderCount = vendorUsers.map((user: User) => ({
@@ -1467,7 +1487,8 @@ export default function AdminPage() {
         .sort((a: any, b: any) => b.orderCount - a.orderCount)
         .slice(0, 10);
 
-      setTopUsersBySales(topVendorsBySales);
+      setTopUsersBySales(topRegularUsersBySales);
+      setTopVendorsBySales(topVendorsBySales);
     } catch (error) {
       //console.error("Error en fetchData:", error);
       toast.error("Error al cargar datos");
@@ -5139,6 +5160,71 @@ export default function AdminPage() {
                         <CardDescription className="text-slate-400">
                           Ver detalles, recargar créditos y gestionar permisos
                         </CardDescription>
+                        <div className="flex flex-wrap gap-2 mt-4">
+                          <div className="flex flex-wrap gap-2 mt-4">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setRoleFilter("ALL")}
+                              className={`${
+                                roleFilter === "ALL"
+                                  ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600"
+                                  : "bg-transparent border-emerald-600 text-emerald-400 hover:bg-emerald-600 hover:text-white"
+                              }`}
+                            >
+                              Todos
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setRoleFilter("ADMIN")}
+                              className={`${
+                                roleFilter === "ADMIN"
+                                  ? "bg-yellow-600 hover:bg-yellow-700 text-white border-yellow-600"
+                                  : "bg-transparent border-yellow-600 text-yellow-400 hover:bg-yellow-600 hover:text-white"
+                              }`}
+                            >
+                              <Crown className="w-4 h-4 mr-1" />
+                              Admin
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setRoleFilter("VENDEDOR")}
+                              className={`${
+                                roleFilter === "VENDEDOR"
+                                  ? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+                                  : "bg-transparent border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white"
+                              }`}
+                            >
+                              <TrendingUp className="w-4 h-4 mr-1" />
+                              Vendedor
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setRoleFilter("USER")}
+                              className={`${
+                                roleFilter === "USER"
+                                  ? "bg-green-600 hover:bg-green-700 text-white border-green-600"
+                                  : "bg-transparent border-green-600 text-green-400 hover:bg-green-600 hover:text-white"
+                              }`}
+                            >
+                              <User className="w-4 h-4 mr-1" />
+                              Usuario
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="text-sm text-slate-400 mt-2">
+                          Mostrando{" "}
+                          {
+                            users.filter(
+                              (user) =>
+                                roleFilter === "ALL" || user.role === roleFilter
+                            ).length
+                          }{" "}
+                          de {users.length} usuarios
+                        </div>
                       </div>
 
                       <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:flex-nowrap">
@@ -5192,590 +5278,629 @@ export default function AdminPage() {
 
                   <CardContent>
                     <div className="space-y-4">
-                      {filteredUsers.map((user) => (
-                        <div
-                          key={user.id}
-                          className="p-4 bg-slate-700 rounded-lg"
-                        >
-                          {/* Cabecera */}
-                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3 gap-3">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-wrap items-center gap-2 mb-2">
-                                <h3 className="font-semibold text-white break-words">
-                                  {user.name || user.email}
-                                </h3>
-                                <div className="flex flex-wrap items-center gap-2 mt-1">
-                                  {user.isBlocked ? (
-                                    <Badge
-                                      variant="destructive"
-                                      className="bg-red-600"
-                                    >
-                                      <Ban className="w-3 h-3 mr-1" />
-                                      BLOQUEADO
-                                    </Badge>
-                                  ) : (
-                                    <Badge className="bg-green-600">
-                                      <CheckCircle className="w-3 h-3 mr-1" />
-                                      ACTIVO
-                                    </Badge>
-                                  )}
-                                  {user.role === "ADMIN" && (
-                                    <Badge
-                                      variant="outline"
-                                      className="border-yellow-600 text-yellow-400"
-                                    >
-                                      <Crown className="w-3 h-3 mr-1" />
-                                      ADMIN
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                              <p className="text-sm text-slate-400 mb-1 break-all">
-                                {user.email}
-                              </p>
-                              <p className="text-xs text-slate-500">
-                                Registrado:{" "}
-                                {new Date(user.createdAt).toLocaleDateString()}
-                              </p>
+                      {/* {filteredUsers.map((user) => ( */}
+                      {users
+                        .filter(
+                          (user) =>
+                            roleFilter === "ALL" || user.role === roleFilter
+                        )
+                        .map((user) => (
+                          <div
+                            key={user.id}
+                            className="p-4 bg-slate-700 rounded-lg"
+                          >
+                            {/* Cabecera */}
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3 gap-3">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-wrap items-center gap-2 mb-2">
+                                  <h3 className="font-semibold text-white break-words">
+                                    {user.name || user.email}
+                                  </h3>
+                                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                                    {user.isBlocked ? (
+                                      <Badge
+                                        variant="destructive"
+                                        className="bg-red-600"
+                                      >
+                                        <Ban className="w-3 h-3 mr-1" />
+                                        BLOQUEADO
+                                      </Badge>
+                                    ) : (
+                                      <Badge className="bg-green-600">
+                                        <CheckCircle className="w-3 h-3 mr-1" />
+                                        ACTIVO
+                                      </Badge>
+                                    )}
+                                    {user.role === "ADMIN" && (
+                                      <Badge
+                                        variant="outline"
+                                        className="border-yellow-600 text-yellow-400"
+                                      >
+                                        <Crown className="w-3 h-3 mr-1" />
+                                        ADMIN
+                                      </Badge>
+                                    )}
 
-                              {user.isBlocked && (
-                                <div className="mt-2 p-2 bg-red-900/30 border border-red-700/50 rounded text-xs">
-                                  <p className="text-red-400 font-medium">
-                                    <Ban className="w-3 h-3 inline mr-1" />
-                                    Usuario Bloqueado
-                                  </p>
-                                  {user.blockExpiresAt &&
-                                    new Date(user.blockExpiresAt) >
-                                      new Date() && (
+                                    {user.role === "VENDEDOR" && (
+                                      <Badge
+                                        variant="outline"
+                                        className="border-blue-600 text-blue-400"
+                                      >
+                                        <TrendingUp className="w-3 h-3 mr-1" />
+                                        VENDEDOR
+                                      </Badge>
+                                    )}
+                                    {user.role === "USER" && (
+                                      <Badge
+                                        variant="outline"
+                                        className="border-emerald-600 text-emerald-400"
+                                      >
+                                        <User className="w-3 h-3 mr-1" />
+                                        USUARIO
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                                <p className="text-sm text-slate-400 mb-1 break-all">
+                                  {user.email}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  Registrado:{" "}
+                                  {new Date(
+                                    user.createdAt
+                                  ).toLocaleDateString()}
+                                </p>
+
+                                {user.isBlocked && (
+                                  <div className="mt-2 p-2 bg-red-900/30 border border-red-700/50 rounded text-xs">
+                                    <p className="text-red-400 font-medium">
+                                      <Ban className="w-3 h-3 inline mr-1" />
+                                      Usuario Bloqueado
+                                    </p>
+                                    {user.blockExpiresAt &&
+                                      new Date(user.blockExpiresAt) >
+                                        new Date() && (
+                                        <p className="text-red-300 mt-1">
+                                          Hasta:{" "}
+                                          {formatDate(user.blockExpiresAt)}
+                                        </p>
+                                      )}
+                                    {user.blockReason && (
                                       <p className="text-red-300 mt-1">
-                                        Hasta: {formatDate(user.blockExpiresAt)}
+                                        Motivo: {user.blockReason}
                                       </p>
                                     )}
-                                  {user.blockReason && (
-                                    <p className="text-red-300 mt-1">
+                                  </div>
+                                )}
+
+                                {!user.isBlocked && user.blockReason && (
+                                  <div className="mt-2 p-2 bg-yellow-900/30 border border-yellow-700/50 rounded text-xs">
+                                    <p className="text-yellow-400 font-medium">
+                                      <AlertTriangle className="w-3 h-3 inline mr-1" />
+                                      Advertencia previa
+                                    </p>
+                                    <p className="text-yellow-300 mt-1">
                                       Motivo: {user.blockReason}
                                     </p>
-                                  )}
-                                </div>
-                              )}
-
-                              {!user.isBlocked && user.blockReason && (
-                                <div className="mt-2 p-2 bg-yellow-900/30 border border-yellow-700/50 rounded text-xs">
-                                  <p className="text-yellow-400 font-medium">
-                                    <AlertTriangle className="w-3 h-3 inline mr-1" />
-                                    Advertencia previa
-                                  </p>
-                                  <p className="text-yellow-300 mt-1">
-                                    Motivo: {user.blockReason}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="text-left sm:text-right flex-shrink-0">
-                              <p className="font-bold text-white text-lg">
-                                {formatCurrency(user.credits)}
-                              </p>
-                              <p className="text-sm text-slate-400">Créditos</p>
-                              <p className="text-xs text-slate-500 mt-1">
-                                Total gastado: {formatCurrency(user.totalSpent)}
-                              </p>
-                              <p className="text-xs text-slate-400">
-                                {user._count.orders} pedidos
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Botones */}
-                          <div className="flex flex-wrap gap-2 mt-3">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleViewUserOrders(user)}
-                              className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
-                            >
-                              <Eye className="w-4 h-4 mr-1" />
-                              Ver Pedidos
-                            </Button>
-
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => toggleUserRegistration(user.id)}
-                              className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
-                            >
-                              {expandedUserRegistration.has(user.id) ? (
-                                <>
-                                  <ChevronUp className="w-4 h-4 mr-1" />
-                                  Ocultar Registro
-                                </>
-                              ) : (
-                                <>
-                                  <User className="w-4 h-4 mr-1" />
-                                  Ver Registro
-                                </>
-                              )}
-                            </Button>
-
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1 sm:flex-none"
-                                >
-                                  <CreditCard className="w-4 h-4 mr-1" />
-                                  Recargar
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="bg-slate-800 border-slate-700 max-w-md w-[90%] sm:w-full">
-                                <DialogHeader>
-                                  <DialogTitle className="text-white">
-                                    Recargar Créditos
-                                  </DialogTitle>
-                                  <DialogDescription className="text-slate-400">
-                                    Recargar créditos para{" "}
-                                    {user.name || user.email}
-                                  </DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-4">
-                                  <div>
-                                    <Label
-                                      htmlFor="rechargeAmount"
-                                      className="text-slate-300"
-                                    >
-                                      Monto a recargar (COP)
-                                    </Label>
-                                    <Input
-                                      id="rechargeAmount"
-                                      type="number"
-                                      value={rechargeAmount}
-                                      onChange={(e) =>
-                                        setRechargeAmount(e.target.value)
-                                      }
-                                      placeholder="50000"
-                                      className="bg-slate-700 border-slate-600 text-white"
-                                    />
                                   </div>
-                                  <div className="flex flex-wrap gap-2">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => setRechargeAmount("10000")}
-                                      className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
-                                    >
-                                      $10.000
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => setRechargeAmount("20000")}
-                                      className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
-                                    >
-                                      $20.000
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => setRechargeAmount("50000")}
-                                      className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
-                                    >
-                                      $50.000
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() =>
-                                        setRechargeAmount("100000")
-                                      }
-                                      className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
-                                    >
-                                      $100.000
-                                    </Button>
-                                  </div>
-                                  <Button
-                                    onClick={() =>
-                                      handleCustomRecharge(user.id)
-                                    }
-                                    className="w-full bg-emerald-600 hover:bg-emerald-700"
-                                  >
-                                    Recargar{" "}
-                                    {formatCurrency(
-                                      parseFloat(rechargeAmount) || 0
-                                    )}
-                                  </Button>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
-
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => fetchRechargeHistory(user.id)}
-                              className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
-                            >
-                              <History className="w-4 h-4 mr-1" />
-                              Recargas
-                            </Button>
-
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openPermissionManager(user)}
-                              className="border-slate-600 text-slate-300 hover:bg-slate-600 relative flex-1 sm:flex-none"
-                            >
-                              <Shield className="w-4 h-4 mr-1" />
-                              Manage Permissions
-                              {userActionCounts[user.id] > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                                  {userActionCounts[user.id]}
-                                </span>
-                              )}
-                            </Button>
-                          </div>
-
-                          {/* Desplegable de Información de Registro */}
-                          {expandedUserRegistration.has(user.id) && (
-                            <div className="mt-4 p-4 bg-slate-800 rounded-lg border border-slate-600 overflow-visible">
-                              <div className="flex flex-wrap items-center justify-between mb-4 gap-2">
-                                <h4 className="text-white font-semibold flex items-center gap-2">
-                                  <User className="w-4 h-4" />
-                                  Información de Registro
-                                </h4>
-                                {editingUserRegistration === user.id ? (
-                                  <div className="flex gap-2 flex-wrap">
-                                    <Button
-                                      size="sm"
-                                      onClick={() =>
-                                        handleUpdateRegistrationInfo(user.id)
-                                      }
-                                      disabled={loadingUserRegistration.has(
-                                        user.id
-                                      )}
-                                      className="bg-green-600 hover:bg-green-700 text-white"
-                                    >
-                                      {loadingUserRegistration.has(user.id) ? (
-                                        <RefreshCw className="w-4 h-4 animate-spin" />
-                                      ) : (
-                                        <CheckCircle className="w-4 h-4" />
-                                      )}
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() =>
-                                        setEditingUserRegistration(null)
-                                      }
-                                      className="border-slate-600 text-slate-300"
-                                    >
-                                      <X className="w-4 h-4" />
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() =>
-                                      setEditingUserRegistration(user.id)
-                                    }
-                                    className="border-slate-600 text-slate-300"
-                                  >
-                                    <Edit className="w-4 h-4 mr-1" />
-                                    Editar
-                                  </Button>
                                 )}
                               </div>
 
-                              {loadingUserRegistration.has(user.id) ? (
-                                <div className="flex items-center justify-center py-8">
-                                  <RefreshCw className="w-6 h-6 animate-spin text-slate-400" />
-                                </div>
-                              ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  {/* Nombre Completo */}
-                                  <div className="space-y-2">
-                                    <Label className="text-slate-300 text-sm">
-                                      Nombre Completo
-                                    </Label>
-                                    {editingUserRegistration === user.id ? (
-                                      <Input
-                                        disabled
-                                        value={
-                                          userRegistrationData[user.id]
-                                            ?.fullName || ""
-                                        }
-                                        onChange={(e) =>
-                                          handleRegistrationInputChange(
-                                            user.id,
-                                            "fullName",
-                                            e.target.value
-                                          )
-                                        }
-                                        className="bg-slate-700 border-slate-600 text-white"
-                                        placeholder="Nombre completo"
-                                      />
-                                    ) : (
-                                      <p className="text-white bg-slate-700/50 p-2 rounded">
-                                        {userRegistrationData[user.id]
-                                          ?.fullName || "No especificado"}
-                                      </p>
-                                    )}
-                                  </div>
+                              <div className="text-left sm:text-right flex-shrink-0">
+                                <p className="font-bold text-white text-lg">
+                                  {formatCurrency(user.credits)}
+                                </p>
+                                <p className="text-sm text-slate-400">
+                                  Créditos
+                                </p>
+                                <p className="text-xs text-slate-500 mt-1">
+                                  Total gastado:{" "}
+                                  {formatCurrency(user.totalSpent)}
+                                </p>
+                                <p className="text-xs text-slate-400">
+                                  {user._count.orders} pedidos
+                                </p>
+                              </div>
+                            </div>
 
-                                  {/* Nombre de Usuario */}
-                                  <div className="space-y-2">
-                                    <Label className="text-slate-300 text-sm">
-                                      Nombre de Usuario
-                                    </Label>
-                                    {editingUserRegistration === user.id ? (
-                                      <Input
-                                        disabled
-                                        value={
-                                          userRegistrationData[user.id]
-                                            ?.username || ""
-                                        }
-                                        onChange={(e) =>
-                                          handleRegistrationInputChange(
-                                            user.id,
-                                            "username",
-                                            e.target.value
-                                          )
-                                        }
-                                        className="bg-slate-700 border-slate-600 text-white"
-                                        placeholder="Nombre de usuario"
-                                      />
-                                    ) : (
-                                      <p className="text-white bg-slate-700/50 p-2 rounded">
-                                        {userRegistrationData[user.id]
-                                          ?.username || "No especificado"}
-                                      </p>
-                                    )}
-                                  </div>
+                            {/* Botones */}
+                            <div className="flex flex-wrap gap-2 mt-3">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleViewUserOrders(user)}
+                                className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
+                              >
+                                <Eye className="w-4 h-4 mr-1" />
+                                Ver Pedidos
+                              </Button>
 
-                                  {/* Email */}
-                                  <div className="space-y-2">
-                                    <Label className="text-slate-300 text-sm">
-                                      Email
-                                    </Label>
-                                    {editingUserRegistration === user.id ? (
-                                      <Input
-                                        type="email"
-                                        value={
-                                          userRegistrationData[user.id]
-                                            ?.email || ""
-                                        }
-                                        onChange={(e) =>
-                                          handleRegistrationInputChange(
-                                            user.id,
-                                            "email",
-                                            e.target.value
-                                          )
-                                        }
-                                        className="bg-slate-700 border-slate-600 text-white"
-                                        placeholder="email@ejemplo.com"
-                                      />
-                                    ) : (
-                                      <p className="text-white bg-slate-700/50 p-2 rounded">
-                                        {userRegistrationData[user.id]?.email ||
-                                          "No especificado"}
-                                      </p>
-                                    )}
-                                  </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => toggleUserRegistration(user.id)}
+                                className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
+                              >
+                                {expandedUserRegistration.has(user.id) ? (
+                                  <>
+                                    <ChevronUp className="w-4 h-4 mr-1" />
+                                    Ocultar Registro
+                                  </>
+                                ) : (
+                                  <>
+                                    <User className="w-4 h-4 mr-1" />
+                                    Ver Registro
+                                  </>
+                                )}
+                              </Button>
 
-                                  {/* Teléfono */}
-                                  <div className="space-y-2">
-                                    <Label className="text-slate-300 text-sm">
-                                      Teléfono (Opcional)
-                                    </Label>
-                                    {editingUserRegistration === user.id ? (
-                                      <Input
-                                        type="tel"
-                                        value={
-                                          userRegistrationData[user.id]
-                                            ?.phone || ""
-                                        }
-                                        onChange={(e) =>
-                                          handleRegistrationInputChange(
-                                            user.id,
-                                            "phone",
-                                            e.target.value
-                                          )
-                                        }
-                                        className="bg-slate-700 border-slate-600 text-white"
-                                        placeholder="+57 300 123 4567"
-                                      />
-                                    ) : (
-                                      <p className="text-white bg-slate-700/50 p-2 rounded">
-                                        {userRegistrationData[user.id]?.phone ||
-                                          "No especificado"}
-                                      </p>
-                                    )}
-                                  </div>
-
-                                  {/* Créditos */}
-                                  <div className="space-y-2">
-                                    <Label className="text-slate-300 text-sm">
-                                      Créditos
-                                    </Label>
-                                    {editingUserRegistration === user.id ? (
-                                      <Input
-                                        disabled
-                                        type="number"
-                                        value={
-                                          userRegistrationData[user.id]
-                                            ?.credits || 0
-                                        }
-                                        onChange={(e) =>
-                                          handleRegistrationInputChange(
-                                            user.id,
-                                            "credits",
-                                            e.target.value
-                                          )
-                                        }
-                                        className="bg-slate-700 border-slate-600 text-white"
-                                        placeholder="0"
-                                        min="0"
-                                      />
-                                    ) : (
-                                      <p className="text-white bg-slate-700/50 p-2 rounded">
-                                        $
-                                        {userRegistrationData[
-                                          user.id
-                                        ]?.credits?.toLocaleString() || "0"}
-                                      </p>
-                                    )}
-                                  </div>
-
-                                  {/* Rol */}
-                                  <div className="space-y-2">
-                                    <Label className="text-slate-300 text-sm">
-                                      Rol
-                                    </Label>
-                                    {editingUserRegistration === user.id ? (
-                                      <Select
-                                        value={
-                                          userRegistrationData[user.id]?.role ||
-                                          "USER"
-                                        }
-                                        onValueChange={(value) =>
-                                          handleRegistrationInputChange(
-                                            user.id,
-                                            "role",
-                                            value
-                                          )
-                                        }
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1 sm:flex-none"
+                                  >
+                                    <CreditCard className="w-4 h-4 mr-1" />
+                                    Recargar
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="bg-slate-800 border-slate-700 max-w-md w-[90%] sm:w-full">
+                                  <DialogHeader>
+                                    <DialogTitle className="text-white">
+                                      Recargar Créditos
+                                    </DialogTitle>
+                                    <DialogDescription className="text-slate-400">
+                                      Recargar créditos para{" "}
+                                      {user.name || user.email}
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <div className="space-y-4">
+                                    <div>
+                                      <Label
+                                        htmlFor="rechargeAmount"
+                                        className="text-slate-300"
                                       >
-                                        <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
-                                          <SelectValue placeholder="Seleccionar rol" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-slate-800 border-slate-700">
-                                          <SelectItem
-                                            value="USER"
-                                            className="text-white"
-                                          >
-                                            Usuario
-                                          </SelectItem>
-                                          <SelectItem
-                                            value="VENDEDOR"
-                                            className="text-white"
-                                          >
-                                            Vendedor
-                                          </SelectItem>
-                                          <SelectItem
-                                            value="ADMIN"
-                                            className="text-white"
-                                          >
-                                            Administrador
-                                          </SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    ) : (
-                                      <div className="flex items-center gap-2">
-                                        <p className="text-white bg-slate-700/50 p-2 rounded flex-1">
-                                          {userRegistrationData[user.id]
-                                            ?.role === "ADMIN"
-                                            ? "Administrador"
-                                            : userRegistrationData[user.id]
-                                                ?.role === "VENDEDOR"
-                                            ? "Vendedor"
-                                            : "Usuario"}
-                                        </p>
-                                        <Badge
-                                          className={`${
-                                            userRegistrationData[user.id]
-                                              ?.role === "ADMIN"
-                                              ? "bg-purple-600"
-                                              : userRegistrationData[user.id]
-                                                  ?.role === "VENDEDOR"
-                                              ? "bg-blue-600"
-                                              : "bg-emerald-600"
-                                          } text-white`}
-                                        >
-                                          {userRegistrationData[user.id]
-                                            ?.role === "ADMIN"
-                                            ? "ADMIN"
-                                            : userRegistrationData[user.id]
-                                                ?.role === "VENDEDOR"
-                                            ? "VENDEDOR"
-                                            : "USER"}
-                                        </Badge>
-                                      </div>
-                                    )}
+                                        Monto a recargar (COP)
+                                      </Label>
+                                      <Input
+                                        id="rechargeAmount"
+                                        type="number"
+                                        value={rechargeAmount}
+                                        onChange={(e) =>
+                                          setRechargeAmount(e.target.value)
+                                        }
+                                        placeholder="50000"
+                                        className="bg-slate-700 border-slate-600 text-white"
+                                      />
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                          setRechargeAmount("10000")
+                                        }
+                                        className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
+                                      >
+                                        $10.000
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                          setRechargeAmount("20000")
+                                        }
+                                        className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
+                                      >
+                                        $20.000
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                          setRechargeAmount("50000")
+                                        }
+                                        className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
+                                      >
+                                        $50.000
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                          setRechargeAmount("100000")
+                                        }
+                                        className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
+                                      >
+                                        $100.000
+                                      </Button>
+                                    </div>
+                                    <Button
+                                      onClick={() =>
+                                        handleCustomRecharge(user.id)
+                                      }
+                                      className="w-full bg-emerald-600 hover:bg-emerald-700"
+                                    >
+                                      Recargar{" "}
+                                      {formatCurrency(
+                                        parseFloat(rechargeAmount) || 0
+                                      )}
+                                    </Button>
                                   </div>
+                                </DialogContent>
+                              </Dialog>
 
-                                  {/* Contraseña - Solo en modo edición */}
-                                  {editingUserRegistration === user.id && (
-                                    <>
-                                      <div className="space-y-2">
-                                        <Label className="text-slate-300 text-sm">
-                                          Contraseña
-                                        </Label>
-                                        <Input
-                                          type="password"
-                                          value={
-                                            userRegistrationData[user.id]
-                                              ?.password || ""
-                                          }
-                                          onChange={(e) =>
-                                            handleRegistrationInputChange(
-                                              user.id,
-                                              "password",
-                                              e.target.value
-                                            )
-                                          }
-                                          className="bg-slate-700 border-slate-600 text-white"
-                                          placeholder="Dejar en blanco para no cambiar"
-                                        />
-                                      </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => fetchRechargeHistory(user.id)}
+                                className="border-slate-600 text-slate-300 hover:bg-slate-600 flex-1 sm:flex-none"
+                              >
+                                <History className="w-4 h-4 mr-1" />
+                                Recargas
+                              </Button>
 
-                                      <div className="space-y-2">
-                                        <Label className="text-slate-300 text-sm">
-                                          Confirmar Contraseña
-                                        </Label>
-                                        <Input
-                                          type="password"
-                                          value={
-                                            userRegistrationData[user.id]
-                                              ?.confirmPassword || ""
-                                          }
-                                          onChange={(e) =>
-                                            handleRegistrationInputChange(
-                                              user.id,
-                                              "confirmPassword",
-                                              e.target.value
-                                            )
-                                          }
-                                          className="bg-slate-700 border-slate-600 text-white"
-                                          placeholder="Confirmar nueva contraseña"
-                                        />
-                                      </div>
-                                    </>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openPermissionManager(user)}
+                                className="border-slate-600 text-slate-300 hover:bg-slate-600 relative flex-1 sm:flex-none"
+                              >
+                                <Shield className="w-4 h-4 mr-1" />
+                                Manage Permissions
+                                {userActionCounts[user.id] > 0 && (
+                                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                                    {userActionCounts[user.id]}
+                                  </span>
+                                )}
+                              </Button>
+                            </div>
+
+                            {/* Desplegable de Información de Registro */}
+                            {expandedUserRegistration.has(user.id) && (
+                              <div className="mt-4 p-4 bg-slate-800 rounded-lg border border-slate-600 overflow-visible">
+                                <div className="flex flex-wrap items-center justify-between mb-4 gap-2">
+                                  <h4 className="text-white font-semibold flex items-center gap-2">
+                                    <User className="w-4 h-4" />
+                                    Información de Registro
+                                  </h4>
+                                  {editingUserRegistration === user.id ? (
+                                    <div className="flex gap-2 flex-wrap">
+                                      <Button
+                                        size="sm"
+                                        onClick={() =>
+                                          handleUpdateRegistrationInfo(user.id)
+                                        }
+                                        disabled={loadingUserRegistration.has(
+                                          user.id
+                                        )}
+                                        className="bg-green-600 hover:bg-green-700 text-white"
+                                      >
+                                        {loadingUserRegistration.has(
+                                          user.id
+                                        ) ? (
+                                          <RefreshCw className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                          <CheckCircle className="w-4 h-4" />
+                                        )}
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() =>
+                                          setEditingUserRegistration(null)
+                                        }
+                                        className="border-slate-600 text-slate-300"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() =>
+                                        setEditingUserRegistration(user.id)
+                                      }
+                                      className="border-slate-600 text-slate-300"
+                                    >
+                                      <Edit className="w-4 h-4 mr-1" />
+                                      Editar
+                                    </Button>
                                   )}
                                 </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
+
+                                {loadingUserRegistration.has(user.id) ? (
+                                  <div className="flex items-center justify-center py-8">
+                                    <RefreshCw className="w-6 h-6 animate-spin text-slate-400" />
+                                  </div>
+                                ) : (
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Nombre Completo */}
+                                    <div className="space-y-2">
+                                      <Label className="text-slate-300 text-sm">
+                                        Nombre Completo
+                                      </Label>
+                                      {editingUserRegistration === user.id ? (
+                                        <Input
+                                          disabled
+                                          value={
+                                            userRegistrationData[user.id]
+                                              ?.fullName || ""
+                                          }
+                                          onChange={(e) =>
+                                            handleRegistrationInputChange(
+                                              user.id,
+                                              "fullName",
+                                              e.target.value
+                                            )
+                                          }
+                                          className="bg-slate-700 border-slate-600 text-white"
+                                          placeholder="Nombre completo"
+                                        />
+                                      ) : (
+                                        <p className="text-white bg-slate-700/50 p-2 rounded">
+                                          {userRegistrationData[user.id]
+                                            ?.fullName || "No especificado"}
+                                        </p>
+                                      )}
+                                    </div>
+
+                                    {/* Nombre de Usuario */}
+                                    <div className="space-y-2">
+                                      <Label className="text-slate-300 text-sm">
+                                        Nombre de Usuario
+                                      </Label>
+                                      {editingUserRegistration === user.id ? (
+                                        <Input
+                                          disabled
+                                          value={
+                                            userRegistrationData[user.id]
+                                              ?.username || ""
+                                          }
+                                          onChange={(e) =>
+                                            handleRegistrationInputChange(
+                                              user.id,
+                                              "username",
+                                              e.target.value
+                                            )
+                                          }
+                                          className="bg-slate-700 border-slate-600 text-white"
+                                          placeholder="Nombre de usuario"
+                                        />
+                                      ) : (
+                                        <p className="text-white bg-slate-700/50 p-2 rounded">
+                                          {userRegistrationData[user.id]
+                                            ?.username || "No especificado"}
+                                        </p>
+                                      )}
+                                    </div>
+
+                                    {/* Email */}
+                                    <div className="space-y-2">
+                                      <Label className="text-slate-300 text-sm">
+                                        Email
+                                      </Label>
+                                      {editingUserRegistration === user.id ? (
+                                        <Input
+                                          type="email"
+                                          value={
+                                            userRegistrationData[user.id]
+                                              ?.email || ""
+                                          }
+                                          onChange={(e) =>
+                                            handleRegistrationInputChange(
+                                              user.id,
+                                              "email",
+                                              e.target.value
+                                            )
+                                          }
+                                          className="bg-slate-700 border-slate-600 text-white"
+                                          placeholder="email@ejemplo.com"
+                                        />
+                                      ) : (
+                                        <p className="text-white bg-slate-700/50 p-2 rounded">
+                                          {userRegistrationData[user.id]
+                                            ?.email || "No especificado"}
+                                        </p>
+                                      )}
+                                    </div>
+
+                                    {/* Teléfono */}
+                                    <div className="space-y-2">
+                                      <Label className="text-slate-300 text-sm">
+                                        Teléfono (Opcional)
+                                      </Label>
+                                      {editingUserRegistration === user.id ? (
+                                        <Input
+                                          type="tel"
+                                          value={
+                                            userRegistrationData[user.id]
+                                              ?.phone || ""
+                                          }
+                                          onChange={(e) =>
+                                            handleRegistrationInputChange(
+                                              user.id,
+                                              "phone",
+                                              e.target.value
+                                            )
+                                          }
+                                          className="bg-slate-700 border-slate-600 text-white"
+                                          placeholder="+57 300 123 4567"
+                                        />
+                                      ) : (
+                                        <p className="text-white bg-slate-700/50 p-2 rounded">
+                                          {userRegistrationData[user.id]
+                                            ?.phone || "No especificado"}
+                                        </p>
+                                      )}
+                                    </div>
+
+                                    {/* Créditos */}
+                                    <div className="space-y-2">
+                                      <Label className="text-slate-300 text-sm">
+                                        Créditos
+                                      </Label>
+                                      {editingUserRegistration === user.id ? (
+                                        <Input
+                                          disabled
+                                          type="number"
+                                          value={
+                                            userRegistrationData[user.id]
+                                              ?.credits || 0
+                                          }
+                                          onChange={(e) =>
+                                            handleRegistrationInputChange(
+                                              user.id,
+                                              "credits",
+                                              e.target.value
+                                            )
+                                          }
+                                          className="bg-slate-700 border-slate-600 text-white"
+                                          placeholder="0"
+                                          min="0"
+                                        />
+                                      ) : (
+                                        <p className="text-white bg-slate-700/50 p-2 rounded">
+                                          $
+                                          {userRegistrationData[
+                                            user.id
+                                          ]?.credits?.toLocaleString() || "0"}
+                                        </p>
+                                      )}
+                                    </div>
+
+                                    {/* Rol */}
+                                    <div className="space-y-2">
+                                      <Label className="text-slate-300 text-sm">
+                                        Rol
+                                      </Label>
+                                      {editingUserRegistration === user.id ? (
+                                        <Select
+                                          value={
+                                            userRegistrationData[user.id]
+                                              ?.role || "USER"
+                                          }
+                                          onValueChange={(value) =>
+                                            handleRegistrationInputChange(
+                                              user.id,
+                                              "role",
+                                              value
+                                            )
+                                          }
+                                        >
+                                          <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                                            <SelectValue placeholder="Seleccionar rol" />
+                                          </SelectTrigger>
+                                          <SelectContent className="bg-slate-800 border-slate-700">
+                                            <SelectItem
+                                              value="USER"
+                                              className="text-white"
+                                            >
+                                              Usuario
+                                            </SelectItem>
+                                            <SelectItem
+                                              value="VENDEDOR"
+                                              className="text-white"
+                                            >
+                                              Vendedor
+                                            </SelectItem>
+                                            <SelectItem
+                                              value="ADMIN"
+                                              className="text-white"
+                                            >
+                                              Administrador
+                                            </SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      ) : (
+                                        <div className="flex items-center gap-2">
+                                          <p className="text-white bg-slate-700/50 p-2 rounded flex-1">
+                                            {userRegistrationData[user.id]
+                                              ?.role === "ADMIN"
+                                              ? "Administrador"
+                                              : userRegistrationData[user.id]
+                                                  ?.role === "VENDEDOR"
+                                              ? "Vendedor"
+                                              : "Usuario"}
+                                          </p>
+                                          <Badge
+                                            className={`${
+                                              userRegistrationData[user.id]
+                                                ?.role === "ADMIN"
+                                                ? "bg-purple-600"
+                                                : userRegistrationData[user.id]
+                                                    ?.role === "VENDEDOR"
+                                                ? "bg-blue-600"
+                                                : "bg-emerald-600"
+                                            } text-white`}
+                                          >
+                                            {userRegistrationData[user.id]
+                                              ?.role === "ADMIN"
+                                              ? "ADMIN"
+                                              : userRegistrationData[user.id]
+                                                  ?.role === "VENDEDOR"
+                                              ? "VENDEDOR"
+                                              : "USER"}
+                                          </Badge>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Contraseña - Solo en modo edición */}
+                                    {editingUserRegistration === user.id && (
+                                      <>
+                                        <div className="space-y-2">
+                                          <Label className="text-slate-300 text-sm">
+                                            Contraseña
+                                          </Label>
+                                          <Input
+                                            type="password"
+                                            value={
+                                              userRegistrationData[user.id]
+                                                ?.password || ""
+                                            }
+                                            onChange={(e) =>
+                                              handleRegistrationInputChange(
+                                                user.id,
+                                                "password",
+                                                e.target.value
+                                              )
+                                            }
+                                            className="bg-slate-700 border-slate-600 text-white"
+                                            placeholder="Dejar en blanco para no cambiar"
+                                          />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                          <Label className="text-slate-300 text-sm">
+                                            Confirmar Contraseña
+                                          </Label>
+                                          <Input
+                                            type="password"
+                                            value={
+                                              userRegistrationData[user.id]
+                                                ?.confirmPassword || ""
+                                            }
+                                            onChange={(e) =>
+                                              handleRegistrationInputChange(
+                                                user.id,
+                                                "confirmPassword",
+                                                e.target.value
+                                              )
+                                            }
+                                            className="bg-slate-700 border-slate-600 text-white"
+                                            placeholder="Confirmar nueva contraseña"
+                                          />
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
                     </div>
                   </CardContent>
                 </Card>
@@ -7047,7 +7172,7 @@ export default function AdminPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {topUsersBySales.map((user, index) => (
+                    {topVendorsBySales.map((user, index) => (
                       <div
                         key={user.id}
                         className="flex flex-wrap items-center justify-between p-3 bg-slate-700 rounded-lg"

@@ -211,7 +211,7 @@ export default function AccountPage() {
   // Cargar artículos del carrito
   const loadCartItems = async () => {
     try {
-      const response = await fetch("/api/cart");
+      const response = await fetch(`/api/cart?userId=${user.id}`);
       if (response.ok) {
         const data = await response.json();
         setCartItems(data.items || []);
